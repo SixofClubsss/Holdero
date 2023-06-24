@@ -11,8 +11,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dReam-dApps/dReams/rpc"
+
 	"fyne.io/fyne/v2/widget"
-	"github.com/SixofClubsss/dReams/rpc"
 )
 
 type holdero_stats struct {

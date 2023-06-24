@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"strings"
 
+	dreams "github.com/dReam-dApps/dReams"
+	"github.com/dReam-dApps/dReams/menu"
+	"github.com/dReam-dApps/dReams/rpc"
+
 	"fyne.io/fyne/v2/canvas"
-	dreams "github.com/SixofClubsss/dReams"
-	"github.com/SixofClubsss/dReams/menu"
-	"github.com/SixofClubsss/dReams/rpc"
 )
 
 // Check if wallet owns Holdero table
