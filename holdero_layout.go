@@ -1,22 +1,27 @@
 package holdero
 
 import (
+	"image/color"
 	"time"
 
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
+	"github.com/dReam-dApps/dReams/holdero"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
 
+var H dreams.DreamsItems
+
 // Holdero tables menu tab layout
-func placeContract(change_screen *fyne.Container, h *dreams.DreamsItems, d dreams.DreamsObject) *container.Split {
+func placeContract(change_screen *fyne.Container, d dreams.DreamsObject) *container.Split {
 	Settings.Check = widget.NewCheck("", func(b bool) {
 		if !b {
 			disableOwnerControls(true)
@@ -70,7 +75,7 @@ func placeContract(change_screen *fyne.Container, h *dreams.DreamsItems, d dream
 					tabs.SelectIndex(0)
 					now := time.Now().Unix()
 					if now > Round.Last+33 {
-						holderoRefresh(h, d, 0)
+						holderoRefresh(d, 0)
 					}
 				} else {
 					tabs.SelectIndex(0)
@@ -115,8 +120,8 @@ func placeContract(change_screen *fyne.Container, h *dreams.DreamsItems, d dream
 }
 
 // Holdero tab layout
-func placeHoldero(change_screen *widget.Button, h *dreams.DreamsItems, d dreams.DreamsObject) *fyne.Container {
-	h.Back = *container.NewWithoutLayout(
+func placeHoldero(change_screen *widget.Button, d dreams.DreamsObject) *fyne.Container {
+	H.Back = *container.NewWithoutLayout(
 		HolderoTable(ResourcePokerTablePng),
 		Player1_label(nil, nil, nil),
 		Player2_label(nil, nil, nil),
@@ -124,13 +129,13 @@ func placeHoldero(change_screen *widget.Button, h *dreams.DreamsItems, d dreams.
 		Player4_label(nil, nil, nil),
 		Player5_label(nil, nil, nil),
 		Player6_label(nil, nil, nil),
-		h.TopLabel)
+		H.TopLabel)
 
-	holdero_label := container.NewHBox(h.LeftLabel, layout.NewSpacer(), h.RightLabel)
+	holdero_label := container.NewHBox(H.LeftLabel, layout.NewSpacer(), H.RightLabel)
 
-	h.Front = *placeHolderoCards(d.Window)
+	H.Front = *placeHolderoCards(d.Window)
 
-	h.Actions = *container.NewVBox(
+	H.Actions = *container.NewVBox(
 		layout.NewSpacer(),
 		SitButton(),
 		LeaveButton(),
@@ -141,20 +146,27 @@ func placeHoldero(change_screen *widget.Button, h *dreams.DreamsItems, d dreams.
 
 	options := container.NewVBox(layout.NewSpacer(), AutoOptions(), change_screen)
 
-	holdero_actions := container.NewHBox(options, layout.NewSpacer(), TimeOutWarning(), layout.NewSpacer(), layout.NewSpacer(), &h.Actions)
+	holdero_actions := container.NewHBox(options, layout.NewSpacer(), TimeOutWarning(), layout.NewSpacer(), layout.NewSpacer(), &H.Actions)
 
-	h.DApp = container.NewVBox(
+	H.DApp = container.NewVBox(
 		dwidget.LabelColor(holdero_label),
-		&h.Back,
-		&h.Front,
+		&H.Back,
+		&H.Front,
 		layout.NewSpacer(),
 		holdero_actions)
 
-	return h.DApp
+	return H.DApp
 }
 
 // Layout all objects for Holdero dApp
-func LayoutAllItems(h *dreams.DreamsItems, d dreams.DreamsObject) *container.Split {
+func LayoutAllItems(d dreams.DreamsObject) *container.Split {
+	H.LeftLabel = widget.NewLabel("")
+	H.RightLabel = widget.NewLabel("")
+	H.TopLabel = canvas.NewText(holdero.Display.Res, color.White)
+	H.TopLabel.Move(fyne.NewPos(387, 204))
+	H.LeftLabel.SetText("Seats: " + holdero.Display.Seats + "      Pot: " + holdero.Display.Pot + "      Blinds: " + holdero.Display.Blinds + "      Ante: " + holdero.Display.Ante + "      Dealer: " + holdero.Display.Dealer)
+	H.RightLabel.SetText(holdero.Display.Readout + "      Player ID: " + holdero.Display.PlayerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+
 	var holdero_objs *fyne.Container
 	var contract_objs *container.Split
 	contract_change_screen := widget.NewButton("Tables", nil)
@@ -167,11 +179,11 @@ func LayoutAllItems(h *dreams.DreamsItems, d dreams.DreamsObject) *container.Spl
 	}
 
 	tables_menu = true
-	holdero_objs = placeHoldero(contract_change_screen, h, d)
-	contract_objs = placeContract(holdero_objs, h, d)
+	holdero_objs = placeHoldero(contract_change_screen, d)
+	contract_objs = placeContract(holdero_objs, d)
 
 	// Main process
-	go fetch(h, d)
+	go fetch(d)
 
 	return contract_objs
 }

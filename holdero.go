@@ -96,6 +96,27 @@ var Poker holderoObjects
 var Table tableObjects
 var Settings settings
 
+func DreamsMenuIntro() (entries map[string][]string) {
+	entries = map[string][]string{
+		"Holdero": {
+			"Multiplayer Texas Hold'em style on chain poker",
+			"No limit, single raise game. Table owners choose game params",
+			"Six players max at a table",
+			"No side pots, must call or fold",
+			"Standard tables can be public or private, and can use Dero or dReam Tokens",
+			"dReam Tools", "Tournament tables can be set up to use any Token",
+			"View table listings or launch your own Holdero contract in the owned tab"},
+
+		"dReam Tools": {
+			"A suite of tools for Holdero, unlocked with ownership of a AZY or SIX playing card assets",
+			"Odds calculator",
+			"Bot player with 12 customizable parameters",
+			"Track playing stats for user and bot players"},
+	}
+
+	return
+}
+
 func OnConnected() {
 	Poker.Contract_entry.CursorColumn = 1
 	Poker.Contract_entry.Refresh()

@@ -67,7 +67,7 @@ func singleShot(turn, trigger bool) bool {
 }
 
 // Main Holdero process
-func fetch(h *dreams.DreamsItems, d dreams.DreamsObject) {
+func fetch(d dreams.DreamsObject) {
 	initValues()
 	time.Sleep(3 * time.Second)
 	var autoCF, autoD, autoB, trigger bool
@@ -79,7 +79,7 @@ func fetch(h *dreams.DreamsItems, d dreams.DreamsObject) {
 				Signal.Contract = false
 				disableActions()
 				Settings.Synced = false
-				setHolderoLabel(h)
+				setHolderoLabel()
 				d.WorkDone()
 				continue
 			}
@@ -119,7 +119,7 @@ func fetch(h *dreams.DreamsItems, d dreams.DreamsObject) {
 					Round.First_try = false
 					delay = 0
 					Round.Card_delay = false
-					go refreshHolderoPlayers(h)
+					go refreshHolderoPlayers()
 				}
 
 				if Round.Card_delay {
@@ -130,19 +130,19 @@ func fetch(h *dreams.DreamsItems, d dreams.DreamsObject) {
 						Round.Card_delay = false
 					}
 				} else {
-					setHolderoLabel(h)
+					setHolderoLabel()
 					GetUrls(Round.F_url, Round.B_url)
 					Called(Round.Flop, Round.Wager)
 					trigger = singleShot(Signal.My_turn, trigger)
-					holderoRefresh(h, d, offset)
+					holderoRefresh(d, offset)
 					// Auto check
 					if Settings.Auto_check && Signal.My_turn && !autoCF {
 						if !Signal.Reveal && !Signal.End && !Round.LocalEnd {
 							if Round.Cards.Local1 != "" {
 								ActionBuffer()
 								Check()
-								h.TopLabel.Text = "Auto Check/Fold Tx Sent"
-								h.TopLabel.Refresh()
+								H.TopLabel.Text = "Auto Check/Fold Tx Sent"
+								H.TopLabel.Refresh()
 								autoCF = true
 
 								go func() {
@@ -164,8 +164,8 @@ func fetch(h *dreams.DreamsItems, d dreams.DreamsObject) {
 									time.Sleep(2100 * time.Millisecond)
 									ActionBuffer()
 									DealHand()
-									h.TopLabel.Text = "Auto Deal Tx Sent"
-									h.TopLabel.Refresh()
+									H.TopLabel.Text = "Auto Deal Tx Sent"
+									H.TopLabel.Refresh()
 
 									if !d.IsWindows() {
 										time.Sleep(300 * time.Millisecond)
@@ -186,8 +186,8 @@ func fetch(h *dreams.DreamsItems, d dreams.DreamsObject) {
 									ActionBuffer()
 									odds, future := MakeOdds()
 									BetLogic(odds, future, true)
-									h.TopLabel.Text = "Auto Bet Tx Sent"
-									h.TopLabel.Refresh()
+									H.TopLabel.Text = "Auto Bet Tx Sent"
+									H.TopLabel.Refresh()
 
 									if !d.IsWindows() {
 										time.Sleep(300 * time.Millisecond)
@@ -212,8 +212,8 @@ func fetch(h *dreams.DreamsItems, d dreams.DreamsObject) {
 					skip = 0
 				}
 			} else {
-				waitLabel(h)
-				revealingKey(h, d)
+				waitLabel()
+				revealingKey(d)
 				skip++
 				if skip >= 25 {
 					Signal.Clicked = false
@@ -292,7 +292,7 @@ func disableOwnerControls(d bool) {
 }
 
 // Sets Holdero table info labels
-func setHolderoLabel(H *dreams.DreamsItems) {
+func setHolderoLabel() {
 	H.TopLabel.Text = Display.Res
 	H.LeftLabel.SetText("Seats: " + Display.Seats + "      Pot: " + Display.Pot + "      Blinds: " + Display.Blinds + "      Ante: " + Display.Ante + "      Dealer: " + Display.Dealer)
 	if Round.Asset {
@@ -318,7 +318,7 @@ func setHolderoLabel(H *dreams.DreamsItems) {
 }
 
 // Holdero label for waiting for block
-func waitLabel(H *dreams.DreamsItems) {
+func waitLabel() {
 	H.TopLabel.Text = ""
 	if Round.Asset {
 		if Round.Tourney {
@@ -336,7 +336,7 @@ func waitLabel(H *dreams.DreamsItems) {
 }
 
 // Refresh all Holdero gui objects
-func holderoRefresh(h *dreams.DreamsItems, d dreams.DreamsObject, offset int) {
+func holderoRefresh(d dreams.DreamsObject, offset int) {
 	go ShowAvatar(d.OnTab("Holdero"))
 	go refreshHolderoCards(Round.Cards.Local1, Round.Cards.Local2, d.Window)
 	if !Signal.Clicked {
@@ -413,13 +413,13 @@ func holderoRefresh(h *dreams.DreamsItems, d dreams.DreamsObject, offset int) {
 	}
 
 	go func() {
-		refreshHolderoPlayers(h)
-		h.DApp.Refresh()
+		refreshHolderoPlayers()
+		H.DApp.Refresh()
 	}()
 }
 
 // Refresh Holdero player names and avatars
-func refreshHolderoPlayers(H *dreams.DreamsItems) {
+func refreshHolderoPlayers() {
 	H.Back.Objects[0] = HolderoTable(ResourcePokerTablePng)
 	H.Back.Objects[0].Refresh()
 
@@ -445,7 +445,7 @@ func refreshHolderoPlayers(H *dreams.DreamsItems) {
 }
 
 // Reveal key notification and display
-func revealingKey(H *dreams.DreamsItems, d dreams.DreamsObject) {
+func revealingKey(d dreams.DreamsObject) {
 	if Signal.Reveal && Signal.My_turn && !Signal.End {
 		if !Round.Notified {
 			Display.Res = "Revealing Key"
