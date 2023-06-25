@@ -7,7 +7,6 @@ import (
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
-	"github.com/dReam-dApps/dReams/holdero"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 
@@ -162,10 +161,10 @@ func placeHoldero(change_screen *widget.Button, d dreams.DreamsObject) *fyne.Con
 func LayoutAllItems(d dreams.DreamsObject) *container.Split {
 	H.LeftLabel = widget.NewLabel("")
 	H.RightLabel = widget.NewLabel("")
-	H.TopLabel = canvas.NewText(holdero.Display.Res, color.White)
+	H.TopLabel = canvas.NewText(Display.Res, color.White)
 	H.TopLabel.Move(fyne.NewPos(387, 204))
-	H.LeftLabel.SetText("Seats: " + holdero.Display.Seats + "      Pot: " + holdero.Display.Pot + "      Blinds: " + holdero.Display.Blinds + "      Ante: " + holdero.Display.Ante + "      Dealer: " + holdero.Display.Dealer)
-	H.RightLabel.SetText(holdero.Display.Readout + "      Player ID: " + holdero.Display.PlayerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+	H.LeftLabel.SetText("Seats: " + Display.Seats + "      Pot: " + Display.Pot + "      Blinds: " + Display.Blinds + "      Ante: " + Display.Ante + "      Dealer: " + Display.Dealer)
+	H.RightLabel.SetText(Display.Readout + "      Player ID: " + Display.PlayerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 
 	var holdero_objs *fyne.Container
 	var contract_objs *container.Split
