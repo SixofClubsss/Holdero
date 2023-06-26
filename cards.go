@@ -443,7 +443,7 @@ func CustomCard(c int, face string) *canvas.Image {
 	mid := "/cards/" + face + "/"
 	path := dir + mid + cardEnd(c)
 
-	if dreams.FileExists(path, "dReams") {
+	if dreams.FileExists(path, "Holdero") {
 		return canvas.NewImageFromFile(path)
 	}
 
@@ -457,7 +457,7 @@ func CustomBack(back string) *canvas.Image {
 	post := "/cards/backs/" + back + ".png"
 	path := dir + post
 
-	if dreams.FileExists(path, "dReams") {
+	if dreams.FileExists(path, "Holdero") {
 		return canvas.NewImageFromFile(path)
 	}
 

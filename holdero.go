@@ -1564,7 +1564,7 @@ func DisableHolderoTools() {
 		if cards {
 			Odds.Enabled = true
 			Settings.tools.Show()
-			if !dreams.FileExists("config/stats.json", "dReams") {
+			if !dreams.FileExists("config/stats.json", "Holdero") {
 				WriteHolderoStats(Stats)
 				log.Println("[dReams] Created stats.json")
 			} else {

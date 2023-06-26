@@ -7,7 +7,6 @@ import (
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
-	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2"
@@ -95,7 +94,7 @@ func placeContract(change_screen *fyne.Container, d dreams.DreamsObject) *contai
 		max.Objects[1].Refresh()
 	}
 
-	mid := container.NewVBox(layout.NewSpacer(), container.NewAdaptiveGrid(2, menu.NameEntry(), TournamentButton(max.Objects, tabs)), ownersBoxMid())
+	mid := container.NewVBox(layout.NewSpacer(), TournamentButton(max.Objects, tabs), ownersBoxMid())
 
 	menu_bottom := container.NewGridWithColumns(3, ownersBoxLeft(max.Objects, tabs), mid, layout.NewSpacer())
 
