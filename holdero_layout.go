@@ -19,7 +19,7 @@ import (
 var H dreams.DreamsItems
 
 // Holdero tables menu tab layout
-func placeContract(change_screen *fyne.Container, d dreams.DreamsObject) *container.Split {
+func placeContract(change_screen *fyne.Container, d *dreams.DreamsObject) *container.Split {
 	Settings.Check = widget.NewCheck("", func(b bool) {
 		if !b {
 			disableOwnerControls(true)
@@ -118,7 +118,7 @@ func placeContract(change_screen *fyne.Container, d dreams.DreamsObject) *contai
 }
 
 // Holdero tab layout
-func placeHoldero(change_screen *widget.Button, d dreams.DreamsObject) *fyne.Container {
+func placeHoldero(change_screen *widget.Button, d *dreams.DreamsObject) *fyne.Container {
 	H.Back = *container.NewWithoutLayout(
 		HolderoTable(ResourcePokerTablePng),
 		Player1_label(nil, nil, nil),
@@ -157,7 +157,7 @@ func placeHoldero(change_screen *widget.Button, d dreams.DreamsObject) *fyne.Con
 }
 
 // Layout all objects for Holdero dApp
-func LayoutAllItems(d dreams.DreamsObject) *container.Split {
+func LayoutAllItems(d *dreams.DreamsObject) *container.Split {
 	H.LeftLabel = widget.NewLabel("")
 	H.RightLabel = widget.NewLabel("")
 	H.TopLabel = canvas.NewText(Display.Res, color.White)
