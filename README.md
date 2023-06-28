@@ -5,7 +5,7 @@ Written in Go and using [Fyne Toolkit](https://fyne.io/), Holdero is built on De
 
 Holdero dApp is available in [dReams](https://dreamdapps.io).
 
-#### Features
+### Features
 - Install and run your own tables
 - Customizable your tables with in game assets
 - Multiple tokens supported
@@ -15,7 +15,7 @@ Holdero dApp is available in [dReams](https://dreamdapps.io).
     - Customizable bot players
     - Track your stats
 
-#### Donations
+### Donations
 - **Dero Address**: dero1qyr8yjnu6cl2c5yqkls0hmxe6rry77kn24nmc5fje6hm9jltyvdd5qq4hn5pn
 
 ![DeroDonations](https://raw.githubusercontent.com/SixofClubsss/dreamdappsite/main/assets/DeroDonations.jpg)
