@@ -167,7 +167,7 @@ func downloadMemoryDeck(url string) {
 
 func downloadSharedImages(Url string, i int) int {
 	fileName := "card" + strconv.Itoa(i) + ".png"
-	log.Println("[dReams] Downloading ", Url+fileName)
+	log.Println("[Holdero] Downloading ", Url+fileName)
 
 	switch i {
 	case 0:
@@ -546,24 +546,24 @@ func SharedImage(c string) *canvas.Image {
 func downloadFileLocal(filepath string, url string) (err error) {
 	_, dir := os.Stat("cards")
 	if os.IsNotExist(dir) {
-		log.Println("[dReams] Creating Cards Dir")
+		log.Println("[Holdero] Creating Cards Dir")
 		mkdir := os.Mkdir("cards", 0755)
 		if mkdir != nil {
-			log.Println("[dReams]", mkdir)
+			log.Println("[Holdero]", mkdir)
 		} else {
 			mksub := os.Mkdir("cards/backs", 0755)
 			if mksub != nil {
-				log.Println("[dReams]", mksub)
+				log.Println("[Holdero]", mksub)
 			}
 		}
 	}
 
 	_, subdir := os.Stat("cards/backs")
 	if os.IsNotExist(subdir) {
-		log.Println("[dReams] Creating Backs Dir")
+		log.Println("[Holdero] Creating Backs Dir")
 		mkdir := os.Mkdir("cards/backs", 0755)
 		if mkdir != nil {
-			log.Println("[dReams]", mkdir)
+			log.Println("[Holdero]", mkdir)
 		}
 	}
 
@@ -601,7 +601,7 @@ func GetZipDeck(face, url string) {
 		log.Println("[GetZipDeck]", err)
 	}
 
-	log.Println("[dReams] Unzipped files:\n" + strings.Join(files, "\n"))
+	log.Println("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))
 }
 
 // Unzip a src file into destination

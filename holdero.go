@@ -325,7 +325,7 @@ func tableListings(tab *container.AppTabs) fyne.CanvasObject {
 				tab.Selected().Content.Refresh()
 
 			} else {
-				log.Println("[dReams] You own this contract")
+				log.Println("[Holdero] You own this contract")
 			}
 		}
 	})
@@ -1293,7 +1293,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 			var new []Bot_config
 			for i := range Stats.Bots {
 				if Stats.Bots[i].Name == entry.Text {
-					log.Println("[dReams] Deleting bot config")
+					log.Println("[Holdero] Deleting bot config")
 					if i > 0 {
 						new = append(Stats.Bots[0:i], Stats.Bots[i+1:]...)
 						config_opts = append(config_opts[0:i], config_opts[i+1:]...)
@@ -1342,7 +1342,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 			for i := range Stats.Bots {
 				if entry.Text == Stats.Bots[i].Name {
 					ex = true
-					log.Println("[dReams] Bot config name exists")
+					log.Println("[Holdero] Bot config name exists")
 				}
 			}
 
@@ -1351,7 +1351,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 				if WriteHolderoStats(Stats) {
 					config_opts = append(config_opts, entry.Text)
 					entry.SetOptions(config_opts)
-					log.Println("[dReams] Saved bot config")
+					log.Println("[Holdero] Saved bot config")
 				}
 			}
 		}
@@ -1566,7 +1566,7 @@ func DisableHolderoTools() {
 			Settings.tools.Show()
 			if !dreams.FileExists("config/stats.json", "Holdero") {
 				WriteHolderoStats(Stats)
-				log.Println("[dReams] Created stats.json")
+				log.Println("[Holdero] Created stats.json")
 			} else {
 				Stats = readSavedStats()
 			}

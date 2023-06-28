@@ -150,7 +150,7 @@ func ownersBoxLeft(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.Canvas
 		if err == nil {
 			CleanTable(uint64(c))
 		} else {
-			log.Println("[dReams] Invalid Clean Amount")
+			log.Println("[Holdero] Invalid Clean Amount")
 		}
 	})
 
