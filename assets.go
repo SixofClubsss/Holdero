@@ -143,7 +143,6 @@ func AvatarSelect(asset_map map[string]string) fyne.Widget {
 			Settings.Avatar = s
 		}
 
-		asset_info := ValidAsset(asset_map[s])
 		check := strings.Trim(s, " #0123456789")
 		if check == "DBC" {
 			Settings.AvatarUrl = "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".PNG"
@@ -156,7 +155,10 @@ func AvatarSelect(asset_map map[string]string) fyne.Widget {
 		} else if check == "Dero Seals" {
 			seal := strings.Trim(s, "Dero Sals#")
 			Settings.AvatarUrl = "https://ipfs.io/ipfs/QmP3HnzWpiaBA6ZE8c3dy5ExeG7hnYjSqkNfVbeVW5iEp6/low/" + seal + ".jpg"
-		} else if asset_info {
+		} else if check == "Dero Degen" {
+			degen := strings.Trim(s, "Dero gn#")
+			Settings.AvatarUrl = "https://ipfs.io/ipfs/QmZM6onfiS8yUHFwfVypYnc6t9ZrvmpT43F9HFTou6LJyg/" + degen + ".png"
+		} else if ValidAsset(asset_map[s]) {
 			agent := getAgentNumber(asset_map[s])
 			if agent >= 0 && agent < 172 {
 				Settings.AvatarUrl = "https://ipfs.io/ipfs/QmaRHXcQwbFdUAvwbjgpDtr5kwGiNpkCM2eDBzAbvhD7wh/low/" + strconv.Itoa(agent) + ".jpg"
