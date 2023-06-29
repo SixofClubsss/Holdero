@@ -837,7 +837,7 @@ func DealHandButton() fyne.Widget {
 //   - Setting the initial value based on if PlacedBet, Wager and Ante
 //   - If entry invalid, set to min bet value
 func BetAmount() fyne.CanvasObject {
-	Table.BetEntry = dwidget.DeroAmtEntry("", 0.1, 1)
+	Table.BetEntry = dwidget.NewDeroEntry("", 0.1, 1)
 	Table.BetEntry.Enable()
 	if Table.BetEntry.Text == "" {
 		Table.BetEntry.SetText("0.0")

@@ -56,7 +56,7 @@ func ownersBoxLeft(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.Canvas
 	player_select := widget.NewSelect(players, func(s string) {})
 	player_select.SetSelectedIndex(0)
 
-	blinds_entry := dwidget.DeroAmtEntry("Big Blind: ", 0.1, 1)
+	blinds_entry := dwidget.NewDeroEntry("Big Blind: ", 0.1, 1)
 	blinds_entry.SetPlaceHolder("Dero:")
 	blinds_entry.SetText("Big Blind: 0.0")
 	blinds_entry.Validator = validation.NewRegexp(`^(Big Blind: )\d{1,}\.\d{0,1}$|^(Big Blind: )\d{1,}$`, "Int or float required")
@@ -77,7 +77,7 @@ func ownersBoxLeft(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.Canvas
 		}
 	}
 
-	ante_entry := dwidget.DeroAmtEntry("Ante: ", 0.1, 1)
+	ante_entry := dwidget.NewDeroEntry("Ante: ", 0.1, 1)
 	ante_entry.SetPlaceHolder("Ante:")
 	ante_entry.SetText("Ante: 0.0")
 	ante_entry.Validator = validation.NewRegexp(`^(Ante: )\d{1,}\.\d{0,1}$|^(Ante: )\d{1,}$`, "Int or float required")
@@ -133,7 +133,7 @@ func ownersBoxLeft(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.Canvas
 		}
 	})
 
-	clean_entry := dwidget.DeroAmtEntry("Clean: ", 1, 0)
+	clean_entry := dwidget.NewDeroEntry("Clean: ", 1, 0)
 	clean_entry.AllowFloat = false
 	clean_entry.SetPlaceHolder("Atomic:")
 	clean_entry.SetText("Clean: 0")
