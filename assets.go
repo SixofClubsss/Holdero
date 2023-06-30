@@ -203,7 +203,7 @@ func getAgentNumber(scid string) int {
 		}
 
 		data := result.VariableStringKeys["metadata"]
-		var agent dreams.Agent
+		var agent menu.Agent
 
 		hx, _ := hex.DecodeString(data.(string))
 		if err := json.Unmarshal(hx, &agent); err == nil {
