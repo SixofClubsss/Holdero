@@ -84,6 +84,9 @@ type tableObjects struct {
 	Stats      struct {
 		Name    *canvas.Text
 		Desc    *canvas.Text
+		Owner   *canvas.Text
+		Chips   *canvas.Text
+		Blinds  *canvas.Text
 		Version *canvas.Text
 		Last    *canvas.Text
 		Seats   *canvas.Text

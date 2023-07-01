@@ -217,35 +217,55 @@ func ownersBoxMid() fyne.CanvasObject {
 }
 
 // Holdero table icon image with frame
-func tableIcon(r fyne.Resource) *fyne.Container {
-	Table.Stats.Image.SetMinSize(fyne.NewSize(100, 100))
-	Table.Stats.Image.Resize(fyne.NewSize(96, 96))
-	Table.Stats.Image.Move(fyne.NewPos(8, 3))
+func tableIcon(r fyne.Resource) fyne.CanvasObject {
+	Table.Stats.Image.SetMinSize(fyne.NewSize(90, 90))
 
 	frame := canvas.NewImageFromResource(r)
-	frame.Resize(fyne.NewSize(100, 100))
-	frame.Move(fyne.NewPos(5, 0))
+	frame.SetMinSize(fyne.NewSize(100, 100))
 
-	cont := container.NewWithoutLayout(&Table.Stats.Image, frame)
+	border := container.NewBorder(layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), &Table.Stats.Image)
 
-	return cont
+	return container.NewHBox(container.NewMax(border, frame), layout.NewSpacer())
 }
 
 // Holdero table stats display objects
 func displayTableStats() fyne.CanvasObject {
 	Table.Stats.Name = canvas.NewText(" Name: ", bundle.TextColor)
 	Table.Stats.Desc = canvas.NewText(" Description: ", bundle.TextColor)
+	Table.Stats.Owner = canvas.NewText(" Owner: ", bundle.TextColor)
+	Table.Stats.Chips = canvas.NewText(" Playing with: ", bundle.TextColor)
+	Table.Stats.Blinds = canvas.NewText(" Blinds: ", bundle.TextColor)
 	Table.Stats.Version = canvas.NewText(" Table Version: ", bundle.TextColor)
 	Table.Stats.Last = canvas.NewText(" Last Move: ", bundle.TextColor)
 	Table.Stats.Seats = canvas.NewText(" Table Closed ", bundle.TextColor)
 
 	Table.Stats.Name.TextSize = 18
 	Table.Stats.Desc.TextSize = 18
+	Table.Stats.Owner.TextSize = 18
+	Table.Stats.Chips.TextSize = 18
+	Table.Stats.Blinds.TextSize = 18
 	Table.Stats.Version.TextSize = 18
 	Table.Stats.Last.TextSize = 18
 	Table.Stats.Seats.TextSize = 18
 
-	Poker.Stats_box = *container.NewVBox(Table.Stats.Name, Table.Stats.Desc, Table.Stats.Version, Table.Stats.Last, Table.Stats.Seats, tableIcon(nil))
+	Table.Stats.Name.Hide()
+	Table.Stats.Desc.Hide()
+	Table.Stats.Version.Hide()
+	Table.Stats.Last.Hide()
+	Table.Stats.Owner.Hide()
+	Table.Stats.Chips.Hide()
+	Table.Stats.Blinds.Hide()
+
+	Poker.Stats_box = *container.NewVBox(
+		tableIcon(nil), layout.NewSpacer(),
+		Table.Stats.Name,
+		Table.Stats.Desc,
+		Table.Stats.Owner,
+		Table.Stats.Chips,
+		Table.Stats.Blinds,
+		Table.Stats.Version,
+		Table.Stats.Last,
+		Table.Stats.Seats)
 
 	return &Poker.Stats_box
 }

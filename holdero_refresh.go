@@ -98,7 +98,16 @@ func fetch(d *dreams.DreamsObject) {
 				Signal.Sit = true
 			}
 
-			Poker.Stats_box = *container.NewVBox(Table.Stats.Name, Table.Stats.Desc, Table.Stats.Version, Table.Stats.Last, Table.Stats.Seats, tableIcon(bundle.ResourceAvatarFramePng))
+			Poker.Stats_box = *container.NewVBox(
+				tableIcon(bundle.ResourceAvatarFramePng),
+				Table.Stats.Name,
+				Table.Stats.Desc,
+				Table.Stats.Owner,
+				Table.Stats.Chips,
+				Table.Stats.Blinds,
+				Table.Stats.Version,
+				Table.Stats.Last,
+				Table.Stats.Seats)
 			Poker.Stats_box.Refresh()
 
 			FetchHolderoSC()

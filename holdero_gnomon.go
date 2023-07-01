@@ -145,20 +145,12 @@ func createTableList() {
 // Get current Holdero table menu stats
 func getTableStats(scid string, single bool) {
 	if menu.Gnomes.IsReady() && len(scid) == 64 {
-		_, v := menu.Gnomes.GetSCIDValuesByKey(scid, "V:")
-		_, l := menu.Gnomes.GetSCIDValuesByKey(scid, "Last")
-		_, s := menu.Gnomes.GetSCIDValuesByKey(scid, "Seats at Table:")
-		// _, o := menu.Gnomes.GetSCIDValuesByKey(scid, "Open")
-		// p1, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player 1 ID:")
-		p2, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player2 ID:")
-		p3, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player3 ID:")
-		p4, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player4 ID:")
-		p5, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player5 ID:")
-		p6, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player6 ID:")
-		h := menu.GetSCHeaders(scid)
-
+		Table.Stats.Version.Show()
+		Table.Stats.Last.Show()
+		Table.Stats.Name.Show()
+		Table.Stats.Desc.Show()
 		if single {
-			if h != nil {
+			if h := menu.GetSCHeaders(scid); h != nil {
 				Table.Stats.Name.Text = (" Name: " + h[0])
 				Table.Stats.Name.Refresh()
 				Table.Stats.Desc.Text = (" Description: " + h[1])
@@ -178,7 +170,7 @@ func getTableStats(scid string, single bool) {
 			}
 		}
 
-		if v != nil {
+		if _, v := menu.Gnomes.GetSCIDValuesByKey(scid, "V:"); v != nil {
 			Table.Stats.Version.Text = (" Table Version: " + strconv.Itoa(int(v[0])))
 			Table.Stats.Version.Refresh()
 		} else {
@@ -186,7 +178,7 @@ func getTableStats(scid string, single bool) {
 			Table.Stats.Version.Refresh()
 		}
 
-		if l != nil {
+		if _, l := menu.Gnomes.GetSCIDValuesByKey(scid, "Last"); l != nil {
 			time, _ := rpc.MsToTime(strconv.Itoa(int(l[0]) * 1000))
 			Table.Stats.Last.Text = (" Last Move: " + time.String())
 			Table.Stats.Last.Refresh()
@@ -195,32 +187,54 @@ func getTableStats(scid string, single bool) {
 			Table.Stats.Last.Refresh()
 		}
 
-		if s != nil {
+		Table.Stats.Owner.Hide()
+		Table.Stats.Chips.Hide()
+		Table.Stats.Blinds.Hide()
+
+		if _, s := menu.Gnomes.GetSCIDValuesByKey(scid, "Seats at Table:"); s != nil {
 			if s[0] > 1 {
 				sit := 1
-				if p2 != nil {
+				if p2, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player2 ID:"); p2 != nil {
 					sit++
 				}
 
-				if p3 != nil {
+				if p3, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player3 ID:"); p3 != nil {
 					sit++
 				}
 
-				if p4 != nil {
+				if p4, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player4 ID:"); p4 != nil {
 					sit++
 				}
 
-				if p5 != nil {
+				if p5, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player5 ID:"); p5 != nil {
 					sit++
 				}
 
-				if p6 != nil {
+				if p6, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player6 ID:"); p6 != nil {
 					sit++
 				}
 
 				Table.Stats.Seats.Text = (" Seats at Table: " + strconv.Itoa(int(s[0])-sit))
 				Table.Stats.Seats.Refresh()
 			}
+
+			Table.Stats.Owner.Show()
+			Table.Stats.Chips.Show()
+			Table.Stats.Blinds.Show()
+
+			Table.Stats.Owner.Text = (" Owner: " + Round.P1_name)
+			Table.Stats.Owner.Refresh()
+
+			if Round.Asset {
+				Table.Stats.Chips.Text = (" Playing with: " + rpc.GetAssetSCIDName(Round.AssetID))
+			} else {
+				Table.Stats.Chips.Text = (" Playing with: Dero")
+			}
+			Table.Stats.Chips.Refresh()
+
+			Table.Stats.Blinds.Text = (" Blinds: " + blindString(rpc.Float64Type(Round.BB), rpc.Float64Type(Round.SB)))
+			Table.Stats.Blinds.Refresh()
+
 		} else {
 			Table.Stats.Seats.Text = (" Table Closed")
 			Table.Stats.Seats.Refresh()
