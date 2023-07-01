@@ -142,7 +142,7 @@ func placeHoldero(change_screen *widget.Button, d *dreams.DreamsObject) *fyne.Co
 		BetButton(),
 		BetAmount())
 
-	options := container.NewVBox(layout.NewSpacer(), AutoOptions(), change_screen)
+	options := container.NewVBox(layout.NewSpacer(), AutoOptions(d), change_screen)
 
 	holdero_actions := container.NewHBox(options, layout.NewSpacer(), TimeOutWarning(), layout.NewSpacer(), layout.NewSpacer(), &H.Actions)
 

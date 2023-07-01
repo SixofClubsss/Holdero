@@ -25,6 +25,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
@@ -971,7 +972,20 @@ func CheckButton() fyne.Widget {
 }
 
 // Automated options object for Holdero
-func AutoOptions() fyne.CanvasObject {
+func AutoOptions(d *dreams.DreamsObject) fyne.CanvasObject {
+	refresh := widget.NewButtonWithIcon("", fyne.Theme.Icon(fyne.CurrentApp().Settings().Theme(), "viewRefresh"), func() {
+		if !rpc.Daemon.IsConnected() || !rpc.Wallet.IsConnected() {
+			dialog.NewInformation("Not connected", "You are not connected to daemon or wallet", d.Window).Show()
+			return
+		}
+
+		if !Signal.Contract {
+			dialog.NewInformation("Not connected", "You are not connected to a Holdero SC", d.Window).Show()
+			return
+		}
+		FetchHolderoSC()
+	})
+
 	cf := widget.NewCheck("Auto Check/Fold", func(b bool) {
 		if b {
 			Settings.Auto_check = true
@@ -988,17 +1002,13 @@ func AutoOptions() fyne.CanvasObject {
 		}
 	})
 
-	checks := container.NewVBox(deal, cf)
-
 	Settings.tools = widget.NewButton("Tools", func() {
 		go holderoTools(deal, cf, Settings.tools)
 	})
 
 	DisableHolderoTools()
 
-	auto := container.NewVBox(checks, Settings.tools)
-
-	return auto
+	return container.NewVBox(container.NewHBox(refresh, layout.NewSpacer()), deal, cf, Settings.tools)
 }
 
 // Holdero warning label displayed when player is risking being timed out

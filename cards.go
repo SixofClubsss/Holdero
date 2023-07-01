@@ -847,12 +847,16 @@ func placeHolderoCards(w fyne.Window) *fyne.Container {
 }
 
 // Refresh Holdero card images
-func refreshHolderoCards(l1, l2 string, w fyne.Window) {
-	size := w.Content().Size()
-	Cards.Layout.Objects[0] = Hole_1(Card(l1), size.Width, size.Height)
+func refreshHolderoCards(l1, l2 string, d *dreams.DreamsObject) {
+	size := d.Window.Content().Size()
+	align := float32(0)
+	if d.OS() == "darwin" {
+		align = 10
+	}
+	Cards.Layout.Objects[0] = Hole_1(Card(l1), size.Width+align, size.Height)
 	Cards.Layout.Objects[0].Refresh()
 
-	Cards.Layout.Objects[1] = Hole_2(Card(l2), size.Width, size.Height)
+	Cards.Layout.Objects[1] = Hole_2(Card(l2), size.Width+align, size.Height)
 	Cards.Layout.Objects[1].Refresh()
 
 	Cards.Layout.Objects[2] = P1_a(Is_In(Round.Cards.P1C1, 1, Signal.End))

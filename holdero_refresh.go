@@ -10,7 +10,9 @@ import (
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 )
 
 var tables_menu bool
@@ -88,6 +90,7 @@ func fetch(d *dreams.DreamsObject) {
 				log.Println("[Holdero] Syncing")
 				createTableList()
 				Settings.Synced = true
+				H.Actions.Show()
 			}
 
 			if Signal.Contract {
@@ -97,6 +100,8 @@ func fetch(d *dreams.DreamsObject) {
 				disableOwnerControls(true)
 				Signal.Sit = true
 			}
+
+			FetchHolderoSC()
 
 			Poker.Stats_box = *container.NewVBox(
 				tableIcon(bundle.ResourceAvatarFramePng),
@@ -110,7 +115,6 @@ func fetch(d *dreams.DreamsObject) {
 				Table.Stats.Seats)
 			Poker.Stats_box.Refresh()
 
-			FetchHolderoSC()
 			if (Round.Turn == Round.ID && rpc.Wallet.Height > Signal.CHeight+4) ||
 				(Round.Turn != Round.ID && Round.ID >= 1) || (!Signal.My_turn && Round.ID >= 1) {
 				if Signal.Clicked {
@@ -249,32 +253,35 @@ func fetch(d *dreams.DreamsObject) {
 }
 
 // Do when disconnected
-func Disconnected(b bool) {
-	if b {
-		Round.ID = 0
-		Display.PlayerId = ""
-		Odds.Stop()
-		Settings.faces.Select.Options = []string{"Light", "Dark"}
-		Settings.backs.Select.Options = []string{"Light", "Dark"}
-		Settings.avatars.Select.Options = []string{"None"}
-		Settings.faces.URL = ""
-		Settings.backs.URL = ""
-		Settings.AvatarUrl = ""
-		Settings.faces.Select.SetSelectedIndex(0)
-		Settings.backs.Select.SetSelectedIndex(0)
-		Settings.avatars.Select.SetSelectedIndex(0)
-		Settings.faces.Select.Refresh()
-		Settings.backs.Select.Refresh()
-		Settings.avatars.Select.Refresh()
-		DisableHolderoTools()
-		Settings.Synced = false
-		Poker.table_owner = false
-	}
+func Disconnected() {
+	Round.ID = 0
+	Display.PlayerId = ""
+	Odds.Stop()
+	Settings.faces.Select.Options = []string{"Light", "Dark"}
+	Settings.backs.Select.Options = []string{"Light", "Dark"}
+	Settings.avatars.Select.Options = []string{"None"}
+	Settings.faces.URL = ""
+	Settings.backs.URL = ""
+	Settings.AvatarUrl = ""
+	Settings.faces.Select.SetSelectedIndex(0)
+	Settings.backs.Select.SetSelectedIndex(0)
+	Settings.avatars.Select.SetSelectedIndex(0)
+	Settings.faces.Select.Refresh()
+	Settings.backs.Select.Refresh()
+	Settings.avatars.Select.Refresh()
+	DisableHolderoTools()
+	Settings.Synced = false
+	Poker.table_owner = false
+	Poker.Table_list.UnselectAll()
 }
 
 func disableActions() {
+	H.Actions.Hide()
+	H.DApp.Objects[4].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Check).SetChecked(false)
+	H.DApp.Objects[4].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[2].(*widget.Check).SetChecked(false)
 	Settings.Check.SetChecked(false)
 	Poker.Contract_entry.SetText("")
+	clearShared()
 	disableOwnerControls(true)
 	Settings.Tables = []string{}
 	Settings.Owned = []string{}
@@ -347,7 +354,7 @@ func waitLabel() {
 // Refresh all Holdero gui objects
 func holderoRefresh(d *dreams.DreamsObject, offset int) {
 	go ShowAvatar(d.OnTab("Holdero"))
-	go refreshHolderoCards(Round.Cards.Local1, Round.Cards.Local2, d.Window)
+	go refreshHolderoCards(Round.Cards.Local1, Round.Cards.Local2, d)
 	if !Signal.Clicked {
 		if Round.ID == 0 && rpc.Wallet.IsConnected() {
 			if Signal.Sit {
