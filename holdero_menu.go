@@ -3,7 +3,6 @@ package holdero
 import (
 	"fmt"
 	"image/color"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -150,7 +149,7 @@ func ownersBoxLeft(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.Canvas
 		if err == nil {
 			CleanTable(uint64(c))
 		} else {
-			log.Println("[Holdero] Invalid Clean Amount")
+			logger.Println("[Holdero] Invalid Clean Amount")
 		}
 	})
 

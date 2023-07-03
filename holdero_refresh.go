@@ -1,7 +1,6 @@
 package holdero
 
 import (
-	"log"
 	"strconv"
 	"time"
 
@@ -87,7 +86,7 @@ func fetch(d *dreams.DreamsObject) {
 			}
 
 			if !Settings.Synced && menu.GnomonScan(d.IsConfiguring()) {
-				log.Println("[Holdero] Syncing")
+				logger.Println("[Holdero] Syncing")
 				createTableList()
 				Settings.Synced = true
 				H.Actions.Show()
@@ -246,7 +245,7 @@ func fetch(d *dreams.DreamsObject) {
 
 			d.WorkDone()
 		case <-d.CloseDapp():
-			log.Println("[Holdero] Done")
+			logger.Println("[Holdero] Done")
 			return
 		}
 	}

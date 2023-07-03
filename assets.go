@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -44,7 +43,7 @@ func FaceSelect() fyne.Widget {
 			dir := dreams.GetDir()
 			face := dir + "/cards/" + Settings.faces.Name + "/card1.png"
 			if !dreams.FileExists(face, "Holdero") {
-				log.Println("[Holdero] Downloading " + Settings.faces.URL)
+				logger.Println("[Holdero] Downloading " + Settings.faces.URL)
 				go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
 			}
 		} else if check == "SIXPC" {
@@ -52,7 +51,7 @@ func FaceSelect() fyne.Widget {
 			dir := dreams.GetDir()
 			face := dir + "/cards/" + Settings.faces.Name + "/card1.png"
 			if !dreams.FileExists(face, "Holdero") {
-				log.Println("[Holdero] Downloading " + Settings.faces.URL)
+				logger.Println("[Holdero] Downloading " + Settings.faces.URL)
 				go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
 			}
 		} else if check == "High-Strangeness" {
@@ -60,7 +59,7 @@ func FaceSelect() fyne.Widget {
 			dir := dreams.GetDir()
 			face := dir + "/cards/" + Settings.faces.Name + "/card1.png"
 			if !dreams.FileExists(face, "Holdero") {
-				log.Println("[Holdero] Downloading " + Settings.faces.URL)
+				logger.Println("[Holdero] Downloading " + Settings.faces.URL)
 				go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
 			}
 		} else {
@@ -98,7 +97,7 @@ func BackSelect() fyne.Widget {
 				dir := dreams.GetDir()
 				file := dir + "/cards/backs/" + s + ".png"
 				if !dreams.FileExists(file, "Holdero") {
-					log.Println("[Holdero] Downloading " + Settings.backs.URL)
+					logger.Println("[Holdero] Downloading " + Settings.backs.URL)
 					downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
 				}
 			} else if check == "SIXPCB" {
@@ -106,7 +105,7 @@ func BackSelect() fyne.Widget {
 				dir := dreams.GetDir()
 				back := dir + "/cards/backs/" + s + ".png"
 				if !dreams.FileExists(back, "Holdero") {
-					log.Println("[Holdero] Downloading " + Settings.backs.URL)
+					logger.Println("[Holdero] Downloading " + Settings.backs.URL)
 					downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
 				}
 			} else if check == "High-Strangeness" {
@@ -114,7 +113,7 @@ func BackSelect() fyne.Widget {
 				dir := dreams.GetDir()
 				back := dir + "/cards/backs/" + s + ".png"
 				if !dreams.FileExists(back, "Holdero") {
-					log.Println("[Holdero] Downloading " + Settings.backs.URL)
+					logger.Println("[Holdero] Downloading " + Settings.backs.URL)
 					downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
 				}
 			} else {
@@ -198,7 +197,7 @@ func getAgentNumber(scid string) int {
 
 		err := rpcClientD.CallFor(ctx, &result, "DERO.GetSC", params)
 		if err != nil {
-			log.Println("[getAgentNumber]", err)
+			logger.Println("[getAgentNumber]", err)
 			return 1200
 		}
 
@@ -221,12 +220,12 @@ func SharedDecks() fyne.Widget {
 	options := []string{"Shared Decks"}
 	Settings.SharedOn = widget.NewRadioGroup(options, func(string) {
 		if Settings.Shared || ((len(Round.Face) < 3 || len(Round.Back) < 3) && Round.ID != 1) {
-			log.Println("[Holdero] Shared Decks Off")
+			logger.Println("[Holdero] Shared Decks Off")
 			Settings.Shared = false
 			Settings.faces.Select.Enable()
 			Settings.backs.Select.Enable()
 		} else {
-			log.Println("[Holdero] Shared Decks On")
+			logger.Println("[Holdero] Shared Decks On")
 			Settings.Shared = true
 			if Round.ID == 1 {
 				if Settings.faces.Name != "" && Settings.faces.URL != "" && Settings.backs.Name != "" && Settings.backs.URL != "" {

@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -167,7 +166,7 @@ func downloadMemoryDeck(url string) {
 
 func downloadSharedImages(Url string, i int) int {
 	fileName := "card" + strconv.Itoa(i) + ".png"
-	log.Println("[Holdero] Downloading ", Url+fileName)
+	logger.Println("[Holdero] Downloading ", Url+fileName)
 
 	switch i {
 	case 0:
@@ -546,24 +545,24 @@ func SharedImage(c string) *canvas.Image {
 func downloadFileLocal(filepath string, url string) (err error) {
 	_, dir := os.Stat("cards")
 	if os.IsNotExist(dir) {
-		log.Println("[Holdero] Creating Cards Dir")
+		logger.Println("[Holdero] Creating Cards Dir")
 		mkdir := os.Mkdir("cards", 0755)
 		if mkdir != nil {
-			log.Println("[Holdero]", mkdir)
+			logger.Println("[Holdero]", mkdir)
 		} else {
 			mksub := os.Mkdir("cards/backs", 0755)
 			if mksub != nil {
-				log.Println("[Holdero]", mksub)
+				logger.Println("[Holdero]", mksub)
 			}
 		}
 	}
 
 	_, subdir := os.Stat("cards/backs")
 	if os.IsNotExist(subdir) {
-		log.Println("[Holdero] Creating Backs Dir")
+		logger.Println("[Holdero] Creating Backs Dir")
 		mkdir := os.Mkdir("cards/backs", 0755)
 		if mkdir != nil {
-			log.Println("[Holdero]", mkdir)
+			logger.Println("[Holdero]", mkdir)
 		}
 	}
 
@@ -598,10 +597,10 @@ func GetZipDeck(face, url string) {
 	files, err := Unzip("cards/"+face+".zip", "cards/"+face)
 
 	if err != nil {
-		log.Println("[GetZipDeck]", err)
+		logger.Println("[GetZipDeck]", err)
 	}
 
-	log.Println("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))
+	logger.Println("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))
 }
 
 // Unzip a src file into destination

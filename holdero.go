@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"log"
 	"math"
 	"os"
 	"sort"
@@ -14,11 +13,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/civilware/Gnomon/structures"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
+	"github.com/sirupsen/logrus"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -99,6 +100,7 @@ type tableObjects struct {
 var Poker holderoObjects
 var Table tableObjects
 var Settings settings
+var logger = structures.Logger.WithFields(logrus.Fields{})
 
 func DreamsMenuIntro() (entries map[string][]string) {
 	entries = map[string][]string{
@@ -329,7 +331,7 @@ func tableListings(tab *container.AppTabs) fyne.CanvasObject {
 				tab.Selected().Content.Refresh()
 
 			} else {
-				log.Println("[Holdero] You own this contract")
+				logger.Println("[Holdero] You own this contract")
 			}
 		}
 	})
@@ -761,31 +763,31 @@ func checkNames(seats string) bool {
 	switch seats {
 	case "2":
 		if menu.Username == Round.P1_name {
-			log.Println(err)
+			logger.Println(err)
 			return false
 		}
 		return true
 	case "3":
 		if menu.Username == Round.P1_name || menu.Username == Round.P2_name || menu.Username == Round.P3_name {
-			log.Println(err)
+			logger.Println(err)
 			return false
 		}
 		return true
 	case "4":
 		if menu.Username == Round.P1_name || menu.Username == Round.P2_name || menu.Username == Round.P3_name || menu.Username == Round.P4_name {
-			log.Println(err)
+			logger.Println(err)
 			return false
 		}
 		return true
 	case "5":
 		if menu.Username == Round.P1_name || menu.Username == Round.P2_name || menu.Username == Round.P3_name || menu.Username == Round.P4_name || menu.Username == Round.P5_name {
-			log.Println(err)
+			logger.Println(err)
 			return false
 		}
 		return true
 	case "6":
 		if menu.Username == Round.P1_name || menu.Username == Round.P2_name || menu.Username == Round.P3_name || menu.Username == Round.P4_name || menu.Username == Round.P5_name || menu.Username == Round.P6_name {
-			log.Println(err)
+			logger.Println(err)
 			return false
 		}
 		return true
@@ -803,7 +805,7 @@ func SitButton() fyne.Widget {
 				ActionBuffer()
 			}
 		} else {
-			log.Println("[Holdero] Pick a name")
+			logger.Println("[Holdero] Pick a name")
 		}
 	})
 
@@ -917,7 +919,7 @@ func BetAmount() fyne.CanvasObject {
 				}
 			}
 		} else {
-			log.Println("[BetAmount]", err)
+			logger.Println("[BetAmount]", err)
 			if Round.Ante == 0 {
 				Table.BetEntry.SetText(strconv.FormatFloat(float64(Round.BB)/100000, 'f', int(Table.BetEntry.Decimal), 64))
 			} else {
@@ -1306,7 +1308,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 			var new []Bot_config
 			for i := range Stats.Bots {
 				if Stats.Bots[i].Name == entry.Text {
-					log.Println("[Holdero] Deleting bot config")
+					logger.Println("[Holdero] Deleting bot config")
 					if i > 0 {
 						new = append(Stats.Bots[0:i], Stats.Bots[i+1:]...)
 						config_opts = append(config_opts[0:i], config_opts[i+1:]...)
@@ -1355,7 +1357,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 			for i := range Stats.Bots {
 				if entry.Text == Stats.Bots[i].Name {
 					ex = true
-					log.Println("[Holdero] Bot config name exists")
+					logger.Println("[Holdero] Bot config name exists")
 				}
 			}
 
@@ -1364,7 +1366,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 				if WriteHolderoStats(Stats) {
 					config_opts = append(config_opts, entry.Text)
 					entry.SetOptions(config_opts)
-					log.Println("[Holdero] Saved bot config")
+					logger.Println("[Holdero] Saved bot config")
 				}
 			}
 		}
@@ -1516,7 +1518,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	var rast *canvas.Raster
 	if img, _, err = image.Decode(bytes.NewReader(dreams.Theme.Img.Resource.Content())); err != nil {
 		if img, _, err = image.Decode(bytes.NewReader(bundle.ResourceBackgroundPng.Content())); err != nil {
-			log.Printf("[holderoTools] Fallback %s\n", err)
+			logger.Printf("[holderoTools] Fallback %s\n", err)
 			source := image.Rect(2, 2, 4, 4)
 
 			rast = canvas.NewRasterFromImage(source)
@@ -1579,7 +1581,7 @@ func DisableHolderoTools() {
 			Settings.tools.Show()
 			if !dreams.FileExists("config/stats.json", "Holdero") {
 				WriteHolderoStats(Stats)
-				log.Println("[Holdero] Created stats.json")
+				logger.Println("[Holdero] Created stats.json")
 			} else {
 				Stats = readSavedStats()
 			}
@@ -1592,13 +1594,13 @@ func readSavedStats() (saved Player_stats) {
 	file, err := os.ReadFile("config/stats.json")
 
 	if err != nil {
-		log.Println("[readSavedStats]", err)
+		logger.Println("[readSavedStats]", err)
 		return
 	}
 
 	err = json.Unmarshal(file, &saved)
 	if err != nil {
-		log.Println("[readSavedStats]", err)
+		logger.Println("[readSavedStats]", err)
 		return
 	}
 

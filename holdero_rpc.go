@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 	"time"
@@ -135,7 +134,7 @@ func FetchHolderoSC() {
 		}
 
 		if err := rpcClientD.CallFor(ctx, &result, "DERO.GetSC", params); err != nil {
-			log.Println("[FetchHolderoSC]", err)
+			logger.Println("[FetchHolderoSC]", err)
 			return
 		}
 
@@ -446,11 +445,11 @@ func SitDown(name, av string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[SitDown]", err)
+		logger.Println("[SitDown]", err)
 		return
 	}
 
-	log.Println("[Holdero] Sit Down TX:", txid)
+	logger.Println("[Holdero] Sit Down TX:", txid)
 	rpc.AddLog("Sit Down TX: " + txid.TXID)
 }
 
@@ -483,11 +482,11 @@ func Leave() {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[Leave]", err)
+		logger.Println("[Leave]", err)
 		return
 	}
 
-	log.Println("[Holdero] Leave TX:", txid)
+	logger.Println("[Holdero] Leave TX:", txid)
 	rpc.AddLog("Leave Down TX: " + txid.TXID)
 }
 
@@ -541,11 +540,11 @@ func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[SetTable]", err)
+		logger.Println("[SetTable]", err)
 		return
 	}
 
-	log.Println("[Holdero] Set Table TX:", txid)
+	logger.Println("[Holdero] Set Table TX:", txid)
 	rpc.AddLog("Set Table TX: " + txid.TXID)
 }
 
@@ -591,7 +590,7 @@ func DealHand() (tx string) {
 		} else {
 			t2 := rpc.GetAssetSCIDforTransfer(amount, Round.AssetID)
 			if t2.Destination == "" {
-				log.Println("[DealHand] Error getting asset SCID for transfer")
+				logger.Println("[DealHand] Error getting asset SCID for transfer")
 				return
 			}
 			t = append(t, t1, t2)
@@ -615,12 +614,12 @@ func DealHand() (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[DealHand]", err)
+		logger.Println("[DealHand]", err)
 		return
 	}
 
 	Display.Res = ""
-	log.Println("[Holdero] Deal TX:", txid)
+	logger.Println("[Holdero] Deal TX:", txid)
 	updateStatsWager(float64(amount) / 100000)
 	rpc.AddLog("Deal TX: " + txid.TXID)
 
@@ -647,7 +646,7 @@ func Bet(amt string) (tx string) {
 		} else {
 			t1 = rpc.GetAssetSCIDforTransfer(rpc.ToAtomic(amt, 1), Round.AssetID)
 			if t1.Destination == "" {
-				log.Println("[Bet] Error getting asset SCID for transfer")
+				logger.Println("[Bet] Error getting asset SCID for transfer")
 				return
 			}
 		}
@@ -670,7 +669,7 @@ func Bet(amt string) (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[Bet]", err)
+		logger.Println("[Bet]", err)
 		return
 	}
 
@@ -680,7 +679,7 @@ func Bet(amt string) (tx string) {
 
 	Display.Res = ""
 	Signal.PlacedBet = true
-	log.Println("[Holdero] Bet TX:", txid)
+	logger.Println("[Holdero] Bet TX:", txid)
 	rpc.AddLog("Bet TX: " + txid.TXID)
 
 	return txid.TXID
@@ -712,7 +711,7 @@ func Check() (tx string) {
 		} else {
 			t1 = rpc.GetAssetSCIDforTransfer(0, Round.AssetID)
 			if t1.Destination == "" {
-				log.Println("[Check] Error getting asset SCID for transfer")
+				logger.Println("[Check] Error getting asset SCID for transfer")
 				return
 			}
 		}
@@ -729,12 +728,12 @@ func Check() (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[Check]", err)
+		logger.Println("[Check]", err)
 		return
 	}
 
 	Display.Res = ""
-	log.Println("[Holdero] Check/Fold TX:", txid)
+	logger.Println("[Holdero] Check/Fold TX:", txid)
 	rpc.AddLog("Check/Fold TX: " + txid.TXID)
 
 	return txid.TXID
@@ -768,11 +767,11 @@ func PayOut(w string) string {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[PayOut]", err)
+		logger.Println("[PayOut]", err)
 		return ""
 	}
 
-	log.Println("[Holdero] Payout TX:", txid)
+	logger.Println("[Holdero] Payout TX:", txid)
 	rpc.AddLog("Holdero Payout TX: " + txid.TXID)
 
 	return txid.TXID
@@ -848,11 +847,11 @@ func PayoutSplit(r ranker, f1, f2, f3, f4, f5, f6 bool) string {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[PayoutSplit]", err)
+		logger.Println("[PayoutSplit]", err)
 		return ""
 	}
 
-	log.Println("[Holdero] Split Winner TX:", txid)
+	logger.Println("[Holdero] Split Winner TX:", txid)
 	rpc.AddLog("Split Winner TX: " + txid.TXID)
 
 	return txid.TXID
@@ -886,12 +885,12 @@ func RevealKey(key string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[RevealKey]", err)
+		logger.Println("[RevealKey]", err)
 		return
 	}
 
 	Display.Res = ""
-	log.Println("[Holdero] Reveal TX:", txid)
+	logger.Println("[Holdero] Reveal TX:", txid)
 	rpc.AddLog("Reveal TX: " + txid.TXID)
 }
 
@@ -922,11 +921,11 @@ func CleanTable(amt uint64) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[CleanTable]", err)
+		logger.Println("[CleanTable]", err)
 		return
 	}
 
-	log.Println("[Holdero] Clean Table TX:", txid)
+	logger.Println("[Holdero] Clean Table TX:", txid)
 	rpc.AddLog("Clean Table TX: " + txid.TXID)
 }
 
@@ -956,11 +955,11 @@ func TimeOut() {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[TimeOut]", err)
+		logger.Println("[TimeOut]", err)
 		return
 	}
 
-	log.Println("[Holdero] Timeout TX:", txid)
+	logger.Println("[Holdero] Timeout TX:", txid)
 	rpc.AddLog("Timeout TX: " + txid.TXID)
 }
 
@@ -990,11 +989,11 @@ func ForceStat() {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		log.Println("[ForceStart]", err)
+		logger.Println("[ForceStart]", err)
 		return
 	}
 
-	log.Println("[Holdero] Force Start TX:", txid)
+	logger.Println("[Holdero] Force Start TX:", txid)
 	rpc.AddLog("Force Start TX: " + txid.TXID)
 }
 
@@ -1037,11 +1036,11 @@ func SharedDeckUrl(face, faceUrl, back, backUrl string) {
 		}
 
 		if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-			log.Println("[SharedDeckUrl]", err)
+			logger.Println("[SharedDeckUrl]", err)
 			return
 		}
 
-		log.Println("[Holdero] Shared TX:", txid)
+		logger.Println("[Holdero] Shared TX:", txid)
 		rpc.AddLog("Shared TX: " + txid.TXID)
 	}
 }
@@ -1075,15 +1074,15 @@ func TourneyDeposit(bal uint64, name string) {
 		}
 
 		if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-			log.Println("[TourneyDeposit]", err)
+			logger.Println("[TourneyDeposit]", err)
 			return
 		}
 
-		log.Println("[Holdero] Tournament Deposit TX:", txid)
+		logger.Println("[Holdero] Tournament Deposit TX:", txid)
 		rpc.AddLog("Tournament Deposit TX: " + txid.TXID)
 
 	} else {
-		log.Println("[Holdero] No Tournament Chips")
+		logger.Println("[Holdero] No Tournament Chips")
 	}
 }
 
@@ -1123,7 +1122,7 @@ func GetHolderoCode(version int) string {
 		}
 
 		if err := rpcClientD.CallFor(ctx, &result, "DERO.GetSC", params); err != nil {
-			log.Println("[GetHoldero110Code]", err)
+			logger.Println("[GetHoldero110Code]", err)
 			return ""
 		}
 
@@ -1147,7 +1146,7 @@ func OwnerT3(o bool) (t *dero.Transfer) {
 		if fee, ok := rpc.FindStringKey(rpc.RatingSCID, "ContractUnlock", rpc.Daemon.Rpc).(float64); ok {
 			unlockFee = uint64(fee)
 		} else {
-			log.Println("[FetchFees] Could not get current contract unlock fee, using default")
+			logger.Println("[FetchFees] Could not get current contract unlock fee, using default")
 		}
 
 		t = &dero.Transfer{
@@ -1168,7 +1167,7 @@ func uploadHolderoContract(pub int) {
 
 		code := GetHolderoCode(pub)
 		if code == "" {
-			log.Println("[uploadHolderoContract] Could not get SC code")
+			logger.Println("[uploadHolderoContract] Could not get SC code")
 			return
 		}
 
@@ -1184,11 +1183,11 @@ func uploadHolderoContract(pub int) {
 		}
 
 		if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-			log.Println("[uploadHolderoContract]", err)
+			logger.Println("[uploadHolderoContract]", err)
 			return
 		}
 
-		log.Println("[Holdero] Upload TX:", txid)
+		logger.Println("[Holdero] Upload TX:", txid)
 		rpc.AddLog("Holdero Upload TX:" + txid.TXID)
 	}
 }

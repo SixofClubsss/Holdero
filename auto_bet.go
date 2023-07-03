@@ -3,7 +3,6 @@ package holdero
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"math"
 	"math/rand"
 	"os"
@@ -569,7 +568,7 @@ func pairOnBoard(cards []int, str string) (pair, trip int, sub []int) {
 
 		if i <= l-3 {
 			if sub[i] == sub[i+1] && sub[i] == sub[i+2] {
-				log.Println("[" + str + "] Trip")
+				logger.Println("[" + str + "] Trip")
 				sub = append(sub[0:i], sub[i+2:]...)
 				trip = cards[i]
 				break
@@ -577,7 +576,7 @@ func pairOnBoard(cards []int, str string) (pair, trip int, sub []int) {
 		}
 
 		if sub[i] == sub[i+1] {
-			log.Println("[" + str + "] Pair")
+			logger.Println("[" + str + "] Pair")
 			sub = append(sub[0:i], sub[i+1:]...)
 			pair = cards[i]
 		}
@@ -597,7 +596,7 @@ func runOnBoard(cards []int, str string) (run []int, run3, run4, off3, off4, in3
 		if i <= l-3 && !run4 && !off4 {
 			if cards[i] < 11 && cards[i] == cards[i+1]-1 && cards[i] == cards[i+2]-2 {
 				run = []int{cards[i], cards[i+1], cards[i+2]}
-				log.Println("[" + str + "] Three outside")
+				logger.Println("[" + str + "] Three outside")
 				run3 = true
 			}
 
@@ -607,13 +606,13 @@ func runOnBoard(cards []int, str string) (run []int, run3, run4, off3, off4, in3
 				(cards[l-1] == 14 && cards[i] == 2 && cards[i+1] == 4) ||
 				(cards[l-1] == 14 && cards[i] == 3 && cards[i+1] == 4) {
 				run = []int{cards[i], cards[i+1], cards[i+2]}
-				log.Println("[" + str + "] Three inside")
+				logger.Println("[" + str + "] Three inside")
 				off3 = true
 			}
 
 			if cards[i] == cards[i+1]-2 && cards[i] == cards[i+2]-4 {
 				run = []int{cards[i], cards[i+1], cards[i+2]}
-				log.Println("[" + str + "] Three middle")
+				logger.Println("[" + str + "] Three middle")
 				in3 = true
 			}
 		}
@@ -625,7 +624,7 @@ func runOnBoard(cards []int, str string) (run []int, run3, run4, off3, off4, in3
 		if i <= l-4 {
 			if cards[i] < 11 && cards[i] == cards[i+1]-1 && cards[i] == cards[i+2]-2 && cards[i] == cards[i+3]-3 {
 				run = []int{cards[i], cards[i+1], cards[i+2], cards[i+3]}
-				log.Println("[" + str + "] Four outside")
+				logger.Println("[" + str + "] Four outside")
 				run4 = true
 			}
 
@@ -638,7 +637,7 @@ func runOnBoard(cards []int, str string) (run []int, run3, run4, off3, off4, in3
 				(cards[l-1] == 14 && cards[i] == 3 && cards[i+1] == 4 && cards[i+2] == 5) ||
 				(cards[i] == 11 && cards[i+1] == 12 && cards[i+2] == 13 && cards[i+3] == 14) {
 				run = []int{cards[i], cards[i+1], cards[i+2], cards[i+3]}
-				log.Println("[" + str + "] Four inside")
+				logger.Println("[" + str + "] Four inside")
 				off4 = true
 			}
 		}
@@ -657,7 +656,7 @@ func suitedBoard(l int, cards []int, str string) (suit int, suit3, suit4 bool) {
 
 		if i <= l-3 && !suit3 {
 			if cards[i] == cards[i+1] && cards[i] == cards[i+2] {
-				log.Println("[" + str + "] Three suited")
+				logger.Println("[" + str + "] Three suited")
 				suit = cards[i]
 				suit3 = true
 			}
@@ -665,7 +664,7 @@ func suitedBoard(l int, cards []int, str string) (suit int, suit3, suit4 bool) {
 
 		if i <= l-4 {
 			if cards[i] == cards[i+1] && cards[i] == cards[i+2] && cards[i] == cards[i+3] {
-				log.Println("[" + str + "] Four suited")
+				logger.Println("[" + str + "] Four suited")
 				suit = cards[i]
 				suit4 = true
 			}
@@ -967,7 +966,7 @@ func randomize() (float64, float64, float64) {
 func findMyOuts(l, rank int, value, suit []int) (run []int, flush int, straight_outs, flush_outs float64) {
 	sort.Ints(value)
 	sort.Ints(suit)
-	log.Println("[findMyOuts]", value, suit)
+	logger.Println("[findMyOuts]", value, suit)
 	_, _, sub := pairOnBoard(value, "findMyOuts")
 	var run3, run4, off3, off4, in3, suit3, suit4 bool
 	run, run3, run4, off3, off4, in3 = runOnBoard(sub, "findMyOuts")
@@ -1434,7 +1433,7 @@ func BetLogic(odds, future float64, live bool) {
 
 // Prints odds info and adds to gui log
 func oddsLog(f, str string) {
-	log.Print(f, " ", str)
+	logger.Print(f, " ", str)
 	Odds.Label.SetText(Odds.Label.Text + str)
 }
 
@@ -1479,7 +1478,7 @@ func SaveBotConfig(i int, opt Bot_config) {
 func WriteHolderoStats(config Player_stats) bool {
 	file, err := os.Create("config/stats.json")
 	if err != nil {
-		log.Println("[WriteHolderoStats]", err)
+		logger.Println("[WriteHolderoStats]", err)
 		return false
 	}
 
@@ -1488,7 +1487,7 @@ func WriteHolderoStats(config Player_stats) bool {
 
 	_, err = file.Write(json)
 	if err != nil {
-		log.Println("[WriteHolderoStats]", err)
+		logger.Println("[WriteHolderoStats]", err)
 		return false
 	}
 

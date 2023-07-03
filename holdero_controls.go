@@ -3,7 +3,6 @@ package holdero
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/dReam-dApps/dReams/rpc"
@@ -249,7 +248,7 @@ func getAvatar(p int, id interface{}) string {
 	var player playerId
 
 	if err := json.Unmarshal([]byte(av), &player); err != nil {
-		log.Println("[getAvatar]", err)
+		logger.Println("[getAvatar]", err)
 		return ""
 	}
 

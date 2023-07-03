@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
-	"log"
 	"os"
 	"strconv"
 
@@ -38,7 +37,7 @@ func GenerateKey() string {
 	str := hex.EncodeToString(shasum[:])
 	rpc.Wallet.KeyLock = true
 	EncryptFile([]byte(str), "config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
-	log.Println("[Holdero] Round Key: ", str)
+	logger.Println("[Holdero] Round Key: ", str)
 	rpc.AddLog("Round Key: " + str)
 
 	return str
@@ -57,13 +56,13 @@ func Encrypt(data []byte, pass, add string) []byte {
 	block, _ := aes.NewCipher([]byte(createHash(pass)))
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		log.Println("[Encrypt]", err)
+		logger.Println("[Encrypt]", err)
 		return nil
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		log.Println("[Encrypt]", err)
+		logger.Println("[Encrypt]", err)
 		return nil
 	}
 
@@ -77,13 +76,13 @@ func Decrypt(data []byte, pass, add string) []byte {
 	key := []byte(createHash(pass))
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Println("[Decrypt]", err)
+		logger.Println("[Decrypt]", err)
 		return nil
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		log.Println("[Decrypt]", err)
+		logger.Println("[Decrypt]", err)
 		return nil
 	}
 
@@ -93,7 +92,7 @@ func Decrypt(data []byte, pass, add string) []byte {
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, extra)
 	if err != nil {
-		log.Println("[Decrypt]", err)
+		logger.Println("[Decrypt]", err)
 		return nil
 	}
 
