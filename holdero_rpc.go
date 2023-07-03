@@ -134,7 +134,7 @@ func FetchHolderoSC() {
 		}
 
 		if err := rpcClientD.CallFor(ctx, &result, "DERO.GetSC", params); err != nil {
-			logger.Println("[FetchHolderoSC]", err)
+			logger.Errorln("[FetchHolderoSC]", err)
 			return
 		}
 
@@ -445,7 +445,7 @@ func SitDown(name, av string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[SitDown]", err)
+		logger.Errorln("[SitDown]", err)
 		return
 	}
 
@@ -482,7 +482,7 @@ func Leave() {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[Leave]", err)
+		logger.Errorln("[Leave]", err)
 		return
 	}
 
@@ -540,7 +540,7 @@ func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[SetTable]", err)
+		logger.Errorln("[SetTable]", err)
 		return
 	}
 
@@ -590,7 +590,7 @@ func DealHand() (tx string) {
 		} else {
 			t2 := rpc.GetAssetSCIDforTransfer(amount, Round.AssetID)
 			if t2.Destination == "" {
-				logger.Println("[DealHand] Error getting asset SCID for transfer")
+				logger.Errorln("[DealHand] Error getting asset SCID for transfer")
 				return
 			}
 			t = append(t, t1, t2)
@@ -614,7 +614,7 @@ func DealHand() (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[DealHand]", err)
+		logger.Errorln("[DealHand]", err)
 		return
 	}
 
@@ -646,7 +646,7 @@ func Bet(amt string) (tx string) {
 		} else {
 			t1 = rpc.GetAssetSCIDforTransfer(rpc.ToAtomic(amt, 1), Round.AssetID)
 			if t1.Destination == "" {
-				logger.Println("[Bet] Error getting asset SCID for transfer")
+				logger.Errorln("[Bet] Error getting asset SCID for transfer")
 				return
 			}
 		}
@@ -669,7 +669,7 @@ func Bet(amt string) (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[Bet]", err)
+		logger.Errorln("[Bet]", err)
 		return
 	}
 
@@ -711,7 +711,7 @@ func Check() (tx string) {
 		} else {
 			t1 = rpc.GetAssetSCIDforTransfer(0, Round.AssetID)
 			if t1.Destination == "" {
-				logger.Println("[Check] Error getting asset SCID for transfer")
+				logger.Errorln("[Check] Error getting asset SCID for transfer")
 				return
 			}
 		}
@@ -728,7 +728,7 @@ func Check() (tx string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[Check]", err)
+		logger.Errorln("[Check]", err)
 		return
 	}
 
@@ -767,7 +767,7 @@ func PayOut(w string) string {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[PayOut]", err)
+		logger.Errorln("[PayOut]", err)
 		return ""
 	}
 
@@ -847,7 +847,7 @@ func PayoutSplit(r ranker, f1, f2, f3, f4, f5, f6 bool) string {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[PayoutSplit]", err)
+		logger.Errorln("[PayoutSplit]", err)
 		return ""
 	}
 
@@ -885,7 +885,7 @@ func RevealKey(key string) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[RevealKey]", err)
+		logger.Errorln("[RevealKey]", err)
 		return
 	}
 
@@ -921,7 +921,7 @@ func CleanTable(amt uint64) {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[CleanTable]", err)
+		logger.Errorln("[CleanTable]", err)
 		return
 	}
 
@@ -955,7 +955,7 @@ func TimeOut() {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[TimeOut]", err)
+		logger.Errorln("[TimeOut]", err)
 		return
 	}
 
@@ -989,7 +989,7 @@ func ForceStat() {
 	}
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-		logger.Println("[ForceStart]", err)
+		logger.Errorln("[ForceStart]", err)
 		return
 	}
 
@@ -1036,7 +1036,7 @@ func SharedDeckUrl(face, faceUrl, back, backUrl string) {
 		}
 
 		if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-			logger.Println("[SharedDeckUrl]", err)
+			logger.Errorln("[SharedDeckUrl]", err)
 			return
 		}
 
@@ -1074,7 +1074,7 @@ func TourneyDeposit(bal uint64, name string) {
 		}
 
 		if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-			logger.Println("[TourneyDeposit]", err)
+			logger.Errorln("[TourneyDeposit]", err)
 			return
 		}
 
@@ -1082,7 +1082,7 @@ func TourneyDeposit(bal uint64, name string) {
 		rpc.AddLog("Tournament Deposit TX: " + txid.TXID)
 
 	} else {
-		logger.Println("[Holdero] No Tournament Chips")
+		logger.Errorln("[Holdero] No Tournament Chips")
 	}
 }
 
@@ -1122,7 +1122,7 @@ func GetHolderoCode(version int) string {
 		}
 
 		if err := rpcClientD.CallFor(ctx, &result, "DERO.GetSC", params); err != nil {
-			logger.Println("[GetHoldero110Code]", err)
+			logger.Errorln("[GetHolderoCode]", err)
 			return ""
 		}
 
@@ -1167,7 +1167,7 @@ func uploadHolderoContract(pub int) {
 
 		code := GetHolderoCode(pub)
 		if code == "" {
-			logger.Println("[uploadHolderoContract] Could not get SC code")
+			logger.Errorln("[uploadHolderoContract] Could not get SC code")
 			return
 		}
 
@@ -1183,7 +1183,7 @@ func uploadHolderoContract(pub int) {
 		}
 
 		if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
-			logger.Println("[uploadHolderoContract]", err)
+			logger.Errorln("[uploadHolderoContract]", err)
 			return
 		}
 

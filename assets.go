@@ -197,7 +197,7 @@ func getAgentNumber(scid string) int {
 
 		err := rpcClientD.CallFor(ctx, &result, "DERO.GetSC", params)
 		if err != nil {
-			logger.Println("[getAgentNumber]", err)
+			logger.Errorln("[getAgentNumber]", err)
 			return 1200
 		}
 

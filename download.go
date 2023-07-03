@@ -548,11 +548,11 @@ func downloadFileLocal(filepath string, url string) (err error) {
 		logger.Println("[Holdero] Creating Cards Dir")
 		mkdir := os.Mkdir("cards", 0755)
 		if mkdir != nil {
-			logger.Println("[Holdero]", mkdir)
+			logger.Errorln("[Holdero]", mkdir)
 		} else {
 			mksub := os.Mkdir("cards/backs", 0755)
 			if mksub != nil {
-				logger.Println("[Holdero]", mksub)
+				logger.Errorln("[Holdero]", mksub)
 			}
 		}
 	}
@@ -562,7 +562,7 @@ func downloadFileLocal(filepath string, url string) (err error) {
 		logger.Println("[Holdero] Creating Backs Dir")
 		mkdir := os.Mkdir("cards/backs", 0755)
 		if mkdir != nil {
-			logger.Println("[Holdero]", mkdir)
+			logger.Errorln("[Holdero]", mkdir)
 		}
 	}
 
@@ -597,7 +597,7 @@ func GetZipDeck(face, url string) {
 	files, err := Unzip("cards/"+face+".zip", "cards/"+face)
 
 	if err != nil {
-		logger.Println("[GetZipDeck]", err)
+		logger.Errorln("[GetZipDeck]", err)
 	}
 
 	logger.Println("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))

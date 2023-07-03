@@ -248,7 +248,7 @@ func getAvatar(p int, id interface{}) string {
 	var player playerId
 
 	if err := json.Unmarshal([]byte(av), &player); err != nil {
-		logger.Println("[getAvatar]", err)
+		logger.Errorln("[getAvatar]", err)
 		return ""
 	}
 
