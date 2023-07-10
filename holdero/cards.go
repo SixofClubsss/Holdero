@@ -605,7 +605,7 @@ func placeHolderoCards(w fyne.Window) *fyne.Container {
 }
 
 // Refresh Holdero card images
-func refreshHolderoCards(l1, l2 string, d *dreams.DreamsObject) {
+func refreshHolderoCards(l1, l2 string, d *dreams.AppObject) {
 	size := d.Window.Content().Size()
 	align := float32(0)
 	if d.OS() == "darwin" {

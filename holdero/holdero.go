@@ -974,7 +974,7 @@ func CheckButton() fyne.Widget {
 }
 
 // Automated options object for Holdero
-func AutoOptions(d *dreams.DreamsObject) fyne.CanvasObject {
+func AutoOptions(d *dreams.AppObject) fyne.CanvasObject {
 	refresh := widget.NewButtonWithIcon("", fyne.Theme.Icon(fyne.CurrentApp().Settings().Theme(), "viewRefresh"), func() {
 		if !rpc.Daemon.IsConnected() || !rpc.Wallet.IsConnected() {
 			dialog.NewInformation("Not connected", "You are not connected to daemon or wallet", d.Window).Show()

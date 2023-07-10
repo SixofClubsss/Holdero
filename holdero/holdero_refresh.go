@@ -68,7 +68,7 @@ func singleShot(turn, trigger bool) bool {
 }
 
 // Main Holdero process
-func fetch(d *dreams.DreamsObject) {
+func fetch(d *dreams.AppObject) {
 	initValues()
 	time.Sleep(3 * time.Second)
 	var autoCF, autoD, autoB, trigger bool
@@ -353,7 +353,7 @@ func waitLabel() {
 }
 
 // Refresh all Holdero gui objects
-func holderoRefresh(d *dreams.DreamsObject, offset int) {
+func holderoRefresh(d *dreams.AppObject, offset int) {
 	go ShowAvatar(d.OnTab("Holdero"))
 	go refreshHolderoCards(Round.Cards.Local1, Round.Cards.Local2, d)
 	if !Signal.Clicked {
@@ -462,7 +462,7 @@ func refreshHolderoPlayers() {
 }
 
 // Reveal key notification and display
-func revealingKey(d *dreams.DreamsObject) {
+func revealingKey(d *dreams.AppObject) {
 	if Signal.Reveal && Signal.My_turn && !Signal.End {
 		if !Round.Notified {
 			Display.Res = "Revealing Key"

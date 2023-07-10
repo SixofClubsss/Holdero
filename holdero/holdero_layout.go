@@ -16,10 +16,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-var H dreams.DreamsItems
+var H dreams.ContainerStack
 
 // Holdero tables menu tab layout
-func placeContract(change_screen *fyne.Container, d *dreams.DreamsObject) *container.Split {
+func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *container.Split {
 	Settings.Check = widget.NewCheck("", func(b bool) {
 		if !b {
 			disableOwnerControls(true)
@@ -118,7 +118,7 @@ func placeContract(change_screen *fyne.Container, d *dreams.DreamsObject) *conta
 }
 
 // Holdero tab layout
-func placeHoldero(change_screen *widget.Button, d *dreams.DreamsObject) *fyne.Container {
+func placeHoldero(change_screen *widget.Button, d *dreams.AppObject) *fyne.Container {
 	H.Back = *container.NewWithoutLayout(
 		HolderoTable(ResourcePokerTablePng),
 		Player1_label(nil, nil, nil),
@@ -157,7 +157,7 @@ func placeHoldero(change_screen *widget.Button, d *dreams.DreamsObject) *fyne.Co
 }
 
 // Layout all objects for Holdero dApp
-func LayoutAllItems(d *dreams.DreamsObject) *container.Split {
+func LayoutAllItems(d *dreams.AppObject) *container.Split {
 	H.LeftLabel = widget.NewLabel("")
 	H.RightLabel = widget.NewLabel("")
 	H.TopLabel = canvas.NewText(Display.Res, color.White)
