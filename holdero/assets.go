@@ -158,6 +158,11 @@ func AvatarSelect(asset_map map[string]string) fyne.Widget {
 			degen := strings.Trim(s, "Dero gn#")
 			Settings.AvatarUrl = "https://ipfs.io/ipfs/QmZM6onfiS8yUHFwfVypYnc6t9ZrvmpT43F9HFTou6LJyg/" + degen + ".png"
 		} else if ValidAsset(asset_map[s]) {
+			if url := menu.GetAssetUrl(1, asset_map[s]); url != "" {
+				Settings.AvatarUrl = url
+				return
+			}
+
 			agent := getAgentNumber(asset_map[s])
 			if agent >= 0 && agent < 172 {
 				Settings.AvatarUrl = "https://ipfs.io/ipfs/QmaRHXcQwbFdUAvwbjgpDtr5kwGiNpkCM2eDBzAbvhD7wh/low/" + strconv.Itoa(agent) + ".jpg"
