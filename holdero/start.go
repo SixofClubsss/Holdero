@@ -20,6 +20,7 @@ import (
 	"github.com/dReam-dApps/dReams/dwidget"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
+	"github.com/sirupsen/logrus"
 )
 
 const app_tag = "Holdero"
@@ -28,11 +29,11 @@ const app_tag = "Holdero"
 func StartApp() {
 	n := runtime.NumCPU()
 	runtime.GOMAXPROCS(n)
-	menu.InitLogrusLog(runtime.GOOS == "windows")
+	menu.InitLogrusLog(logrus.InfoLevel)
 	config := menu.ReadDreamsConfig(app_tag)
 
 	// Initialize Fyne app and window
-	a := app.NewWithID("Holdero Desktop")
+	a := app.NewWithID(fmt.Sprintf("%s Desktop Client", app_tag))
 	a.Settings().SetTheme(bundle.DeroTheme(config.Skin))
 	w := a.NewWindow(app_tag)
 	w.SetIcon(ResourcePokerBotIconPng)
@@ -80,7 +81,7 @@ func StartApp() {
 	}()
 
 	// Initialize vars
-	rpc.Wallet.TokenBal = make(map[string]uint64)
+	rpc.InitBalances()
 	menu.Control.Contract_rating = make(map[string]uint64)
 	menu.Gnomes.DBType = "boltdb"
 	menu.Gnomes.Fast = true
@@ -206,5 +207,5 @@ func StartApp() {
 	}()
 	w.ShowAndRun()
 	<-done
-	logger.Printf("[%s] Closed", app_tag)
+	logger.Printf("[%s] Closed\n", app_tag)
 }
