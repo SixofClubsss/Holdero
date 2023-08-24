@@ -270,19 +270,6 @@ func SharedDecks() fyne.Widget {
 	return Settings.SharedOn
 }
 
-// Tournament deposit button
-//   - Pass main window obj and tabs to reset to
-func TournamentButton(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.CanvasObject {
-	Table.Tournament = widget.NewButton("Tournament", func() {
-		obj[1] = tourneyConfirm(obj, tabs)
-		obj[1].Refresh()
-	})
-
-	Table.Tournament.Hide()
-
-	return Table.Tournament
-}
-
 // Confirmation for dReams-Dero swap pairs
 //   - c defines swap for Dero or dReams
 //   - amt of Dero in atomic units
@@ -340,37 +327,6 @@ func DreamsConfirm(c, amt float64, obj *fyne.Container, reset fyne.CanvasObject)
 		obj.Objects[0] = reset
 		obj.Objects[0].Refresh()
 	}()
-
-	return container.NewMax(content)
-}
-
-// Holdero tournament chip deposit confirmation
-//   - Pass main window obj and tabs to reset to
-func tourneyConfirm(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.CanvasObject {
-	bal := rpc.TokenBalance(TourneySCID)
-	balance := float64(bal) / 100000
-	a := fmt.Sprint(strconv.FormatFloat(balance, 'f', 2, 64))
-	text := fmt.Sprintf("You are about to deposit %s Tournament Chips into leader board contract\n\nConfirm", a)
-
-	label := widget.NewLabel(text)
-	label.Wrapping = fyne.TextWrapWord
-	label.Alignment = fyne.TextAlignCenter
-
-	confirm_button := widget.NewButton("Confirm", func() {
-		TourneyDeposit(bal, menu.Username)
-		obj[1] = tabs
-		obj[1].Refresh()
-
-	})
-
-	cancel_button := widget.NewButton("Cancel", func() {
-		obj[1] = tabs
-		obj[1].Refresh()
-
-	})
-
-	buttons := container.NewAdaptiveGrid(2, confirm_button, cancel_button)
-	content := container.NewVBox(layout.NewSpacer(), label, layout.NewSpacer(), buttons)
 
 	return container.NewMax(content)
 }

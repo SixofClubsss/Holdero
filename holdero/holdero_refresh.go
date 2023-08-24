@@ -103,7 +103,7 @@ func fetch(d *dreams.AppObject) {
 			FetchHolderoSC()
 
 			Poker.Stats_box = *container.NewVBox(
-				tableIcon(bundle.ResourceAvatarFramePng),
+				container.NewMax(tableIcon(bundle.ResourceAvatarFramePng)),
 				Table.Stats.Name,
 				Table.Stats.Desc,
 				Table.Stats.Owner,

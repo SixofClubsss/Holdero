@@ -94,9 +94,7 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *containe
 		max.Objects[1].Refresh()
 	}
 
-	mid := container.NewVBox(layout.NewSpacer(), TournamentButton(max.Objects, tabs), ownersBoxMid())
-
-	menu_bottom := container.NewGridWithColumns(3, ownersBoxLeft(max.Objects, tabs), mid, layout.NewSpacer())
+	menu_bottom := container.NewVBox(layout.NewSpacer(), container.NewHBox(container.NewMax(ownersBox(d))))
 
 	contract_cont := container.NewHScroll(holderoContractEntry())
 	contract_cont.SetMinSize(fyne.NewSize(640, 35.1875))

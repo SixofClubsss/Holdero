@@ -226,7 +226,7 @@ func holderoContractEntry() fyne.Widget {
 		if rpc.Daemon.IsConnected() && !wait {
 			wait = true
 			text := Poker.Contract_entry.Text
-			clearShared()
+			go clearShared()
 			if len(text) == 64 {
 				if checkTableOwner(text) {
 					disableOwnerControls(false)
@@ -236,6 +236,7 @@ func holderoContractEntry() fyne.Widget {
 						Poker.owner.owners_mid.Show()
 					} else {
 						Poker.owner.chips.Hide()
+						Poker.owner.chips.SetSelected("DERO")
 						Poker.owner.timeout.Hide()
 						Poker.owner.owners_mid.Hide()
 					}
@@ -253,6 +254,7 @@ func holderoContractEntry() fyne.Widget {
 				Settings.Check.SetChecked(false)
 				Table.Tournament.Hide()
 			}
+			FetchHolderoSC()
 			wait = false
 		}
 	}
@@ -286,7 +288,7 @@ func tableListings(tab *container.AppTabs) fyne.CanvasObject {
 			return len(Settings.Tables)
 		},
 		func() fyne.CanvasObject {
-			return container.NewHBox(canvas.NewImageFromImage(nil), widget.NewLabel(""))
+			return container.NewHBox(container.NewMax(canvas.NewImageFromImage(nil)), widget.NewLabel(""))
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			o.(*fyne.Container).Objects[1].(*widget.Label).SetText(Settings.Tables[i])
@@ -302,7 +304,7 @@ func tableListings(tab *container.AppTabs) fyne.CanvasObject {
 
 				badge := canvas.NewImageFromResource(menu.DisplayRating(menu.Control.Contract_rating[key]))
 				badge.SetMinSize(fyne.NewSize(35, 35))
-				o.(*fyne.Container).Objects[0] = badge
+				o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = badge
 			}
 		})
 

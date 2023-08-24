@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
 	"github.com/dReam-dApps/dReams/menu"
@@ -16,6 +17,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/validation"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
@@ -50,9 +52,9 @@ func HolderoIndicator() (ind menu.DreamsIndicator) {
 }
 
 // Holdero owner control objects, left section
-func ownersBoxLeft(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.CanvasObject {
-	players := []string{"Players", "Close Table", "2 Players", "3 Players", "4 Players", "5 Players", "6 Players"}
-	player_select := widget.NewSelect(players, func(s string) {})
+func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
+	players := []string{"2 Players", "3 Players", "4 Players", "5 Players", "6 Players"}
+	player_select := widget.NewSelect(players, nil)
 	player_select.SetSelectedIndex(0)
 
 	blinds_entry := dwidget.NewDeroEntry("Big Blind: ", 0.1, 1)
@@ -101,6 +103,7 @@ func ownersBoxLeft(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.Canvas
 	Poker.owner.chips = widget.NewRadioGroup(options, nil)
 	Poker.owner.chips.SetSelected("DERO")
 	Poker.owner.chips.Horizontal = true
+	Poker.owner.chips.Required = true
 	Poker.owner.chips.OnChanged = func(s string) {
 		if s == "ASSET" {
 			blinds_entry.Increment = 1
@@ -124,11 +127,28 @@ func ownersBoxLeft(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.Canvas
 	}
 
 	set_button := widget.NewButton("Set Table", func() {
+		if Display.Seats != "" {
+			info := fmt.Sprintf("This table is already open with %s seats", Display.Seats)
+			dialog.NewInformation("Set Table", info, d.Window).Show()
+			return
+		}
+
 		bb := Poker.owner.blind_amount
 		sb := Poker.owner.blind_amount / 2
 		ante := Poker.owner.ante_amount
+		chips := Poker.owner.chips.Selected
 		if menu.Username != "" {
-			SetTable(player_select.SelectedIndex(), bb, sb, ante, Poker.owner.chips.Selected, menu.Username, Settings.AvatarUrl)
+			trim := strings.TrimSuffix(player_select.Selected, " Players")
+			if players, err := strconv.ParseInt(trim, 10, 64); err == nil {
+				info := fmt.Sprintf("Setting table for,\n\nPlayers: (%d)\n\nChips: (%s)\n\nBlinds: (%s/%s)\n\nAnte: (%s)", players, chips, rpc.FromAtomic(bb, 5), rpc.FromAtomic(sb, 5), rpc.FromAtomic(ante, 5))
+				dialog.NewConfirm("Set Table", info, func(b bool) {
+					if b {
+						SetTable(int(players), bb, sb, ante, chips, menu.Username, Settings.AvatarUrl)
+					}
+				}, d.Window).Show()
+			}
+		} else {
+			dialog.NewInformation("Set Table", "Choose a name before setting table", d.Window).Show()
 		}
 	})
 
@@ -144,39 +164,111 @@ func ownersBoxLeft(obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.Canvas
 	}
 
 	clean_button := widget.NewButton("Clean Table", func() {
+		if Display.Seats == "" {
+			dialog.NewInformation("Clean Table", "Table needs to be opened to clean", d.Window).Show()
+			return
+		}
+
 		trimmed := strings.Trim(clean_entry.Text, "Clean: ")
 		c, err := strconv.Atoi(trimmed)
-		if err == nil {
-			CleanTable(uint64(c))
-		} else {
+		if err != nil {
+			dialog.NewInformation("Clean Table", "Invalid clean amount", d.Window).Show()
 			logger.Errorln("[Holdero] Invalid Clean Amount")
+			return
 		}
+
+		if c > int(Round.Pot) {
+			if Round.Pot == 0 {
+				dialog.NewInformation("Clean Table", "This pot is empty", d.Window).Show()
+				return
+			}
+
+			dialog.NewInformation("Clean Table", fmt.Sprintf("There is only %s %s in this pot", rpc.FromAtomic(Round.Pot, 5), Poker.owner.chips.Selected), d.Window).Show()
+			return
+		}
+
+		if c == 0 {
+			dialog.NewConfirm("Clean Table", "Would you like to reset this table?", func(b bool) {
+				if b {
+					CleanTable(0)
+				}
+			}, d.Window).Show()
+
+			return
+		}
+
+		dialog.NewConfirm("Clean Table", fmt.Sprintf("Would you like to withdraw %s %s from this table and reset it? ", rpc.FromAtomic(trimmed, 5), Poker.owner.chips.Selected), func(b bool) {
+			if b {
+				CleanTable(uint64(c))
+			}
+		}, d.Window).Show()
 	})
 
 	Poker.owner.timeout = widget.NewButton("Timeout", func() {
-		obj[1] = timeOutConfirm(obj, tabs)
-		obj[1].Refresh()
+		if Display.Seats == "" {
+			dialog.NewInformation("Timeout", "This table is closed", d.Window).Show()
+			return
+		}
+
+		dialog.NewConfirm("Timeout", "Would you like to timeout the current player at this table?", func(b bool) {
+			if b {
+				TimeOut()
+			}
+		}, d.Window).Show()
 	})
 
 	force := widget.NewButton("Force Start", func() {
-		ForceStat()
+		if Display.Seats == "" {
+			dialog.NewInformation("Force Start", "This table is closed", d.Window).Show()
+			return
+		}
+
+		if Round.Pot != 0 {
+			dialog.NewInformation("Force Start", "This table is already started", d.Window).Show()
+			return
+		}
+
+		dialog.NewConfirm("Force Start", "Would you like to start this table before all seats are filled?", func(b bool) {
+			if b {
+				ForceStat()
+			}
+		}, d.Window).Show()
 	})
 
-	players_items := container.NewAdaptiveGrid(2, player_select, layout.NewSpacer())
-	blind_items := container.NewAdaptiveGrid(2, blinds_entry, Poker.owner.chips)
-	ante_items := container.NewAdaptiveGrid(2, ante_entry, set_button)
-	clean_items := container.NewAdaptiveGrid(2, clean_entry, clean_button)
-	time_items := container.NewAdaptiveGrid(2, Poker.owner.timeout, force)
+	close := widget.NewButton("Close Table", func() {
+		if Round.Pot != 0 {
+			dialog.NewInformation("Close Table", "There is still funds to be paid out at this table", d.Window).Show()
+			return
+		}
 
-	Poker.owner.owners_left = container.NewVBox(players_items, blind_items, ante_items, clean_items, time_items)
-	Poker.owner.owners_left.Hide()
+		if Display.Seats == "" {
+			dialog.NewInformation("Close Table", "This table is already closed", d.Window).Show()
+			return
+		}
 
-	return Poker.owner.owners_left
-}
+		dialog.NewConfirm("Close Table", "Would you like to close this table?", func(b bool) {
+			if b {
+				SetTable(1, 0, 0, 0, "", "", "")
+			}
+		}, d.Window).Show()
+	})
 
-// Holdero owner control objects, middle section
-func ownersBoxMid() fyne.CanvasObject {
-	kick_label := widget.NewLabel("      Auto Kick after")
+	left_form := []*widget.FormItem{}
+	left_form = append(left_form, widget.NewFormItem("Seats", player_select))
+	left_form = append(left_form, widget.NewFormItem("Chips", Poker.owner.chips))
+	left_form = append(left_form, widget.NewFormItem("Blinds", blinds_entry))
+	left_form = append(left_form, widget.NewFormItem("Ante", ante_entry))
+
+	button_spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+	spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+	spacer.SetMinSize(Poker.owner.chips.Size())
+
+	mid_form := []*widget.FormItem{}
+	mid_form = append(mid_form, widget.NewFormItem("Clean Amount", clean_entry))
+	mid_form = append(mid_form, widget.NewFormItem("", clean_button))
+	mid_form = append(mid_form, widget.NewFormItem("", spacer))
+	mid_form = append(mid_form, widget.NewFormItem("", close))
+
 	k_times := []string{"Off", "2m", "5m"}
 	auto_remove := widget.NewSelect(k_times, func(s string) {
 		switch s {
@@ -190,9 +282,8 @@ func ownersBoxMid() fyne.CanvasObject {
 			Times.Kick = 0
 		}
 	})
-	auto_remove.PlaceHolder = "Kick after"
+	auto_remove.PlaceHolder = "Kick after:"
 
-	pay_label := widget.NewLabel("      Payout Delay")
 	p_times := []string{"30s", "60s"}
 	delay := widget.NewSelect(p_times, func(s string) {
 		switch s {
@@ -204,15 +295,62 @@ func ownersBoxMid() fyne.CanvasObject {
 			Times.Delay = 30
 		}
 	})
-	delay.PlaceHolder = "Payout delay"
+	delay.PlaceHolder = "Payout delay:"
 
-	kick := container.NewVBox(layout.NewSpacer(), kick_label, auto_remove)
-	pay := container.NewVBox(layout.NewSpacer(), pay_label, delay)
+	Table.Tournament = widget.NewButton("Tournament", func() {
+		bal := rpc.TokenBalance(TourneySCID)
+		balance := float64(bal) / 100000
+		if balance == 0 {
+			dialog.NewInformation("Tournament Deposit", "You have no Tournament chips to deposit", d.Window).Show()
+			return
+		}
 
-	Poker.owner.owners_mid = container.NewAdaptiveGrid(2, kick, pay)
+		info := fmt.Sprintf("Would you like to deposit %s Tournament Chips into leader board contract?", strconv.FormatFloat(balance, 'f', 5, 64))
+		dialog.NewConfirm("Tournament Deposit", info, func(b bool) {
+			if b {
+				TourneyDeposit(bal, menu.Username)
+			}
+		}, d.Window).Show()
+	})
+
+	Table.Tournament.Hide()
+
+	right_form := []*widget.FormItem{}
+	right_form = append(right_form, widget.NewFormItem("Auto Kick", auto_remove))
+	right_form = append(right_form, widget.NewFormItem("Payout Delay", delay))
+	right_form = append(right_form, widget.NewFormItem("", spacer))
+	right_form = append(right_form, widget.NewFormItem("", layout.NewSpacer()))
+	right_form = append(right_form, widget.NewFormItem("", Poker.owner.timeout))
+
+	Poker.owner.owners_mid = container.NewVBox(widget.NewForm(right_form...))
 	Poker.owner.owners_mid.Hide()
 
-	return Poker.owner.owners_mid
+	instructions := "Connect to your wallet and daemon\n\nClick on a table in the list to connect to it\n\nClick on 'View Table' to play\n\nYou can create and view your tables in the 'Owned' tab\n\nTo start a game on a table you own:\n---\nSelect number of seats at the table (6 max)\n\nSelect DERO or ASSET as chips\n\nSelect blinds and any required ante (can be 0)\n\nClick 'Set Table' to open your table for others to join\n\nClick 'Force Start' if you'd like to start the table before all the seats are filled\n\nWhen done playing, click 'Close Table' to close it\n\n'Clean Table' is your reset button, it shuffles the deck and move the turn to the next player,\nif clean amount is above 0 it will withdraw that amount (in atomic uints) from the table\n\nAuto kick time default is off, and payout default is 30 seconds\n\nVisit dreamdapps.io for more docs"
+	help_button := widget.NewButton("How to Play", func() {
+		dialog.NewInformation("How to Play", instructions, d.Window).Show()
+	})
+
+	help_spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+	help_spacer.SetMinSize(fyne.NewSize(180, 0))
+
+	Poker.owner.owners_left = container.NewHBox(
+		container.NewVBox(widget.NewForm(left_form...), layout.NewSpacer(),
+			container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, set_button))),
+		container.NewVBox(widget.NewForm(mid_form...), layout.NewSpacer(),
+			container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, force))))
+
+	mid := container.NewVBox(Poker.owner.owners_mid, layout.NewSpacer(),
+		container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, Table.Tournament)))
+
+	right := container.NewMax(container.NewAdaptiveGrid(2, layout.NewSpacer(), layout.NewSpacer()),
+		container.NewVBox(layout.NewSpacer(),
+			container.NewHBox(help_spacer, container.NewMax(button_spacer, help_button))))
+
+	Poker.owner.owners_left.Hide()
+	button_spacer.SetMinSize(ante_entry.Size())
+	spacer.SetMinSize(Poker.owner.chips.Size())
+
+	return container.NewHBox(Poker.owner.owners_left, mid, right)
 }
 
 // Holdero table icon image with frame
@@ -256,7 +394,8 @@ func displayTableStats() fyne.CanvasObject {
 	Table.Stats.Blinds.Hide()
 
 	Poker.Stats_box = *container.NewVBox(
-		tableIcon(nil), layout.NewSpacer(),
+		container.NewMax(tableIcon(nil)),
+		layout.NewSpacer(),
 		Table.Stats.Name,
 		Table.Stats.Desc,
 		Table.Stats.Owner,
@@ -266,32 +405,7 @@ func displayTableStats() fyne.CanvasObject {
 		Table.Stats.Last,
 		Table.Stats.Seats)
 
-	return &Poker.Stats_box
-}
-
-// Confirmation of manual Holdero timeout
-func timeOutConfirm(obj []fyne.CanvasObject, reset *container.AppTabs) fyne.CanvasObject {
-	var confirm_display = widget.NewLabel("")
-	confirm_display.Wrapping = fyne.TextWrapWord
-	confirm_display.Alignment = fyne.TextAlignCenter
-
-	confirm_display.SetText("Confirm Time Out on Current Player")
-
-	cancel_button := widget.NewButton("Cancel", func() {
-		obj[1] = reset
-		obj[1].Refresh()
-	})
-	confirm_button := widget.NewButton("Confirm", func() {
-		TimeOut()
-		obj[1] = reset
-		obj[1].Refresh()
-	})
-
-	display := container.NewVBox(layout.NewSpacer(), confirm_display, layout.NewSpacer())
-	options := container.NewAdaptiveGrid(2, confirm_button, cancel_button)
-	content := container.NewBorder(nil, options, nil, nil, display)
-
-	return container.NewMax(bundle.Alpha120, content)
+	return container.NewMax(&Poker.Stats_box)
 }
 
 // Confirmation for Holdero contract installs
