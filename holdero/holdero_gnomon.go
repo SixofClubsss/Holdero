@@ -41,7 +41,7 @@ func checkHolderoContract(scid string) bool {
 	_, version := menu.Gnomes.GetSCIDValuesByKey(scid, "V:")
 	_, tourney := menu.Gnomes.GetSCIDValuesByKey(scid, "Tournament")
 	if deck != nil && version != nil && version[0] >= 100 {
-		Signal.Contract = true
+		signals.contract = true
 	}
 
 	if tourney != nil && tourney[0] == 1 {
@@ -113,10 +113,10 @@ func createTableList() {
 					if d >= 1 && v >= 100 {
 						if checkTableOwner(scid) {
 							owned = append(owned, name+"   "+desc+"   "+scid)
-							Poker.Holdero_unlock.Hide()
-							Poker.Holdero_new.Show()
+							table.unlock.Hide()
+							table.new.Show()
 							owner = true
-							Poker.table_owner = true
+							table.owner.valid = true
 						}
 					}
 				}
@@ -124,72 +124,72 @@ func createTableList() {
 		}
 
 		if !owner {
-			Poker.Holdero_unlock.Show()
-			Poker.Holdero_new.Hide()
-			Poker.table_owner = false
+			table.unlock.Show()
+			table.new.Hide()
+			table.owner.valid = false
 		}
 
 		t := len(list)
 		list = append(list, "  Holdero Tables: "+strconv.Itoa(t))
 		sort.Strings(list)
-		Settings.Tables = list
+		table.Public.SCIDs = list
 
 		sort.Strings(owned)
-		Settings.Owned = owned
+		table.Owned.SCIDs = owned
 
-		Poker.Table_list.Refresh()
-		Poker.Owned_list.Refresh()
+		table.Public.List.Refresh()
+		table.Owned.List.Refresh()
 	}
 }
 
 // Get current Holdero table menu stats
 func getTableStats(scid string, single bool) {
 	if menu.Gnomes.IsReady() && len(scid) == 64 {
-		Table.Stats.Version.Show()
-		Table.Stats.Last.Show()
-		Table.Stats.Name.Show()
-		Table.Stats.Desc.Show()
+		table.stats.version.Show()
+		table.stats.last.Show()
+		table.stats.name.Show()
+		table.stats.desc.Show()
 		if single {
 			if h := menu.GetSCHeaders(scid); h != nil {
-				Table.Stats.Name.Text = (" Name: " + h[0])
-				Table.Stats.Name.Refresh()
-				Table.Stats.Desc.Text = (" Description: " + h[1])
-				Table.Stats.Desc.Refresh()
+				table.stats.name.Text = (" Name: " + h[0])
+				table.stats.name.Refresh()
+				table.stats.desc.Text = (" Description: " + h[1])
+				table.stats.desc.Refresh()
 				if len(h[2]) > 6 {
-					Table.Stats.Image, _ = dreams.DownloadFile(h[2], h[0])
+					table.stats.image, _ = dreams.DownloadFile(h[2], h[0])
 				} else {
-					Table.Stats.Image = *canvas.NewImageFromImage(nil)
+					table.stats.image = *canvas.NewImageFromImage(nil)
 				}
 
 			} else {
-				Table.Stats.Name.Text = (" Name: ?")
-				Table.Stats.Name.Refresh()
-				Table.Stats.Desc.Text = (" Description: ?")
-				Table.Stats.Desc.Refresh()
-				Table.Stats.Image = *canvas.NewImageFromImage(nil)
+				table.stats.name.Text = (" Name: ?")
+				table.stats.name.Refresh()
+				table.stats.desc.Text = (" Description: ?")
+				table.stats.desc.Refresh()
+				table.stats.image = *canvas.NewImageFromImage(nil)
 			}
 		}
 
 		if _, v := menu.Gnomes.GetSCIDValuesByKey(scid, "V:"); v != nil {
-			Table.Stats.Version.Text = (" Table Version: " + strconv.Itoa(int(v[0])))
-			Table.Stats.Version.Refresh()
+			table.stats.version.Text = (" Table Version: " + strconv.Itoa(int(v[0])))
+			table.stats.version.Refresh()
 		} else {
-			Table.Stats.Version.Text = (" Table Version: ?")
-			Table.Stats.Version.Refresh()
+			table.stats.version.Text = (" Table Version: ?")
+			table.stats.version.Refresh()
 		}
 
 		if _, l := menu.Gnomes.GetSCIDValuesByKey(scid, "Last"); l != nil {
 			time, _ := rpc.MsToTime(strconv.Itoa(int(l[0]) * 1000))
-			Table.Stats.Last.Text = (" Last Move: " + time.String())
-			Table.Stats.Last.Refresh()
+			table.stats.last.Text = (" Last Move: " + time.String())
+			table.stats.last.Refresh()
 		} else {
-			Table.Stats.Last.Text = (" Last Move: ?")
-			Table.Stats.Last.Refresh()
+			table.stats.last.Text = (" Last Move: ?")
+			table.stats.last.Refresh()
 		}
 
-		Table.Stats.Owner.Hide()
-		Table.Stats.Chips.Hide()
-		Table.Stats.Blinds.Hide()
+		table.stats.owner.Hide()
+		table.stats.chips.Hide()
+		table.stats.blinds.Hide()
 
 		if _, s := menu.Gnomes.GetSCIDValuesByKey(scid, "Seats at Table:"); s != nil {
 			if s[0] > 1 {
@@ -214,30 +214,30 @@ func getTableStats(scid string, single bool) {
 					sit++
 				}
 
-				Table.Stats.Seats.Text = (" Seats at Table: " + strconv.Itoa(int(s[0])-sit))
-				Table.Stats.Seats.Refresh()
+				table.stats.seats.Text = (" Seats at Table: " + strconv.Itoa(int(s[0])-sit))
+				table.stats.seats.Refresh()
 			}
 
-			Table.Stats.Owner.Show()
-			Table.Stats.Chips.Show()
-			Table.Stats.Blinds.Show()
+			table.stats.owner.Show()
+			table.stats.chips.Show()
+			table.stats.blinds.Show()
 
-			Table.Stats.Owner.Text = (" Owner: " + Round.P1_name)
-			Table.Stats.Owner.Refresh()
+			table.stats.owner.Text = (" Owner: " + round.p1.name)
+			table.stats.owner.Refresh()
 
-			if Round.Asset {
-				Table.Stats.Chips.Text = (" Playing with: " + rpc.GetAssetSCIDName(Round.AssetID))
+			if round.asset {
+				table.stats.chips.Text = (" Playing with: " + rpc.GetAssetSCIDName(round.assetID))
 			} else {
-				Table.Stats.Chips.Text = (" Playing with: Dero")
+				table.stats.chips.Text = (" Playing with: Dero")
 			}
-			Table.Stats.Chips.Refresh()
+			table.stats.chips.Refresh()
 
-			Table.Stats.Blinds.Text = (" Blinds: " + blindString(rpc.Float64Type(Round.BB), rpc.Float64Type(Round.SB)))
-			Table.Stats.Blinds.Refresh()
+			table.stats.blinds.Text = (" Blinds: " + blindString(rpc.Float64Type(round.BB), rpc.Float64Type(round.SB)))
+			table.stats.blinds.Refresh()
 
 		} else {
-			Table.Stats.Seats.Text = (" Table Closed")
-			Table.Stats.Seats.Refresh()
+			table.stats.seats.Text = (" Table Closed")
+			table.stats.seats.Refresh()
 		}
 	}
 }

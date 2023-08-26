@@ -20,26 +20,26 @@ var H dreams.ContainerStack
 
 // Holdero tables menu tab layout
 func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *container.Split {
-	Settings.Check = widget.NewCheck("", func(b bool) {
+	Settings.check = widget.NewCheck("", func(b bool) {
 		if !b {
 			disableOwnerControls(true)
 		}
 	})
-	Settings.Check.Disable()
+	Settings.check.Disable()
 
-	check_box := container.NewVBox(Settings.Check)
+	check_box := container.NewVBox(Settings.check)
 
 	var tabs *container.AppTabs
-	Poker.Holdero_unlock = widget.NewButton("Unlock Holdero Contract", nil)
-	Poker.Holdero_unlock.Hide()
+	table.unlock = widget.NewButton("Unlock Holdero Contract", nil)
+	table.unlock.Hide()
 
-	Poker.Holdero_new = widget.NewButton("New Holdero Table", nil)
-	Poker.Holdero_new.Hide()
+	table.new = widget.NewButton("New Holdero Table", nil)
+	table.new.Hide()
 
 	unlock_cont := container.NewVBox(
 		layout.NewSpacer(),
-		Poker.Holdero_unlock,
-		Poker.Holdero_new)
+		table.unlock,
+		table.new)
 
 	owner_buttons := container.NewAdaptiveGrid(2, container.NewMax(layout.NewSpacer()), unlock_cont)
 	owned_tab := container.NewBorder(nil, owner_buttons, nil, nil, myTables())
@@ -65,14 +65,14 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *containe
 
 		if ti.Text == "View Table" {
 			go func() {
-				if len(Round.Contract) == 64 {
+				if len(round.Contract) == 64 {
 					FetchHolderoSC()
 					tables_menu = false
 					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content = change_screen
 					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content.Refresh()
 					tabs.SelectIndex(0)
 					now := time.Now().Unix()
-					if now > Round.Last+33 {
+					if now > round.Last+33 {
 						holderoRefresh(d, 0)
 					}
 				} else {
@@ -84,12 +84,12 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *containe
 
 	max := container.NewMax(bundle.Alpha120, tabs)
 
-	Poker.Holdero_unlock.OnTapped = func() {
+	table.unlock.OnTapped = func() {
 		max.Objects[1] = holderoMenuConfirm(1, max.Objects, tabs)
 		max.Objects[1].Refresh()
 	}
 
-	Poker.Holdero_new.OnTapped = func() {
+	table.new.OnTapped = func() {
 		max.Objects[1] = holderoMenuConfirm(2, max.Objects, tabs)
 		max.Objects[1].Refresh()
 	}
@@ -158,10 +158,10 @@ func placeHoldero(change_screen *widget.Button, d *dreams.AppObject) *fyne.Conta
 func LayoutAllItems(d *dreams.AppObject) *container.Split {
 	H.LeftLabel = widget.NewLabel("")
 	H.RightLabel = widget.NewLabel("")
-	H.TopLabel = canvas.NewText(Display.Res, color.White)
+	H.TopLabel = canvas.NewText(round.display.results, color.White)
 	H.TopLabel.Move(fyne.NewPos(387, 204))
-	H.LeftLabel.SetText("Seats: " + Display.Seats + "      Pot: " + Display.Pot + "      Blinds: " + Display.Blinds + "      Ante: " + Display.Ante + "      Dealer: " + Display.Dealer)
-	H.RightLabel.SetText(Display.Readout + "      Player ID: " + Display.PlayerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+	H.LeftLabel.SetText("Seats: " + round.display.seats + "      Pot: " + round.display.pot + "      Blinds: " + round.display.blinds + "      Ante: " + round.display.ante + "      Dealer: " + round.display.dealer)
+	H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 
 	var holdero_objs *fyne.Container
 	var contract_objs *container.Split

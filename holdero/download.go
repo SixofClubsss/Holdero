@@ -15,66 +15,69 @@ import (
 )
 
 type sharedCards struct {
-	P1_avatar canvas.Image
-	P2_avatar canvas.Image
-	P3_avatar canvas.Image
-	P4_avatar canvas.Image
-	P5_avatar canvas.Image
-	P6_avatar canvas.Image
-
-	GotP1 bool
-	GotP2 bool
-	GotP3 bool
-	GotP4 bool
-	GotP5 bool
-	GotP6 bool
+	avatar struct {
+		p1 canvas.Image
+		p2 canvas.Image
+		p3 canvas.Image
+		p4 canvas.Image
+		p5 canvas.Image
+		p6 canvas.Image
+	}
+	loaded struct {
+		p1 bool
+		p2 bool
+		p3 bool
+		p4 bool
+		p5 bool
+		p6 bool
+	}
 }
 
-var Shared sharedCards
+var shared sharedCards
 
 // Clear Holdero card values when player changes table
 func clearShared() {
-	Round.Winning_hand = []int{}
-	Display.Res = ""
-	Round.First_try = true
-	Round.AssetID = ""
-	Round.P1_url = ""
-	Round.P2_url = ""
-	Round.P3_url = ""
-	Round.P4_url = ""
-	Round.P5_url = ""
-	Round.P6_url = ""
-	Round.P1_name = ""
-	Round.P2_name = ""
-	Round.P3_name = ""
-	Round.P4_name = ""
-	Round.P5_name = ""
-	Round.P6_name = ""
-	Round.Bettor = ""
-	Round.Raiser = ""
-	Round.Last = 0
-	Signal.Reveal = false
-	Signal.Out1 = false
-	Signal.Odds = false
+	round.winningHand = []int{}
+	round.display.results = ""
+	round.first = true
+	round.assetID = ""
+	round.p1.url = ""
+	round.p2.url = ""
+	round.p3.url = ""
+	round.p4.url = ""
+	round.p5.name = ""
+	round.p6.url = ""
+	round.p1.name = ""
+	round.p2.name = ""
+	round.p3.name = ""
+	round.p4.name = ""
+	round.p5.name = ""
+	round.p6.name = ""
+	round.bettor = ""
+	round.raiser = ""
+	round.Last = 0
+	signals.reveal = false
+	signals.Out1 = false
+	signals.odds = false
 	Odds.Bot.Name = ""
 	autoBetDefault()
-	Shared.GotP1 = false
-	Shared.GotP2 = false
-	Shared.GotP3 = false
-	Shared.GotP4 = false
-	Shared.GotP5 = false
-	Shared.GotP6 = false
-	Shared.P1_avatar = *canvas.NewImageFromImage(nil)
-	Shared.P2_avatar = *canvas.NewImageFromImage(nil)
-	Shared.P3_avatar = *canvas.NewImageFromImage(nil)
-	Shared.P4_avatar = *canvas.NewImageFromImage(nil)
-	Shared.P5_avatar = *canvas.NewImageFromImage(nil)
-	Shared.P6_avatar = *canvas.NewImageFromImage(nil)
+	shared.loaded.p1 = false
+	shared.loaded.p2 = false
+	shared.loaded.p3 = false
+	shared.loaded.p4 = false
+	shared.loaded.p5 = false
+	shared.loaded.p6 = false
+	shared.avatar.p1 = *canvas.NewImageFromImage(nil)
+	shared.avatar.p2 = *canvas.NewImageFromImage(nil)
+	shared.avatar.p3 = *canvas.NewImageFromImage(nil)
+	shared.avatar.p4 = *canvas.NewImageFromImage(nil)
+	shared.avatar.p5 = *canvas.NewImageFromImage(nil)
+	shared.avatar.p6 = *canvas.NewImageFromImage(nil)
 }
 
 // Gets shared card urls from connected table
 func GetUrls(face, back string) {
-	if Round.ID != 1 {
+	if round.ID != 1 {
 		Settings.faces.URL = face
 		Settings.backs.URL = back
 	}
@@ -85,64 +88,64 @@ func GetUrls(face, back string) {
 func ShowAvatar(tab bool) {
 	if tab {
 		var err error
-		if Round.P1_url != "" {
-			if !Shared.GotP1 {
-				if Shared.P1_avatar, err = dreams.DownloadFile(Round.P1_url, "P1"); err == nil {
-					Shared.GotP1 = true
+		if round.p1.url != "" {
+			if !shared.loaded.p1 {
+				if shared.avatar.p1, err = dreams.DownloadFile(round.p1.url, "P1"); err == nil {
+					shared.loaded.p1 = true
 				}
 			}
 		} else {
-			Shared.GotP1 = false
+			shared.loaded.p1 = false
 		}
 
-		if Round.P2_url != "" {
-			if !Shared.GotP2 {
-				if Shared.P2_avatar, err = dreams.DownloadFile(Round.P2_url, "P2"); err == nil {
-					Shared.GotP2 = true
+		if round.p2.url != "" {
+			if !shared.loaded.p2 {
+				if shared.avatar.p2, err = dreams.DownloadFile(round.p2.url, "P2"); err == nil {
+					shared.loaded.p2 = true
 				}
 			}
 		} else {
-			Shared.GotP2 = false
+			shared.loaded.p2 = false
 		}
 
-		if Round.P3_url != "" {
-			if !Shared.GotP3 {
-				if Shared.P3_avatar, err = dreams.DownloadFile(Round.P3_url, "P3"); err == nil {
-					Shared.GotP3 = true
+		if round.p3.url != "" {
+			if !shared.loaded.p3 {
+				if shared.avatar.p3, err = dreams.DownloadFile(round.p3.url, "P3"); err == nil {
+					shared.loaded.p3 = true
 				}
 			}
 		} else {
-			Shared.GotP3 = false
+			shared.loaded.p3 = false
 		}
 
-		if Round.P4_url != "" {
-			if !Shared.GotP4 {
-				if Shared.P4_avatar, err = dreams.DownloadFile(Round.P4_url, "P4"); err == nil {
-					Shared.GotP4 = true
+		if round.p4.url != "" {
+			if !shared.loaded.p4 {
+				if shared.avatar.p4, err = dreams.DownloadFile(round.p4.url, "P4"); err == nil {
+					shared.loaded.p4 = true
 				}
 			}
 		} else {
-			Shared.GotP4 = false
+			shared.loaded.p4 = false
 		}
 
-		if Round.P5_url != "" {
-			if !Shared.GotP5 {
-				if Shared.P5_avatar, err = dreams.DownloadFile(Round.P5_url, "P5"); err == nil {
-					Shared.GotP5 = true
+		if round.p5.name != "" {
+			if !shared.loaded.p5 {
+				if shared.avatar.p5, err = dreams.DownloadFile(round.p5.name, "P5"); err == nil {
+					shared.loaded.p5 = true
 				}
 			}
 		} else {
-			Shared.GotP5 = false
+			shared.loaded.p5 = false
 		}
 
-		if Round.P6_url != "" {
-			if !Shared.GotP6 {
-				if Shared.P6_avatar, err = dreams.DownloadFile(Round.P6_url, "P6"); err == nil {
-					Shared.GotP6 = true
+		if round.p6.url != "" {
+			if !shared.loaded.p6 {
+				if shared.avatar.p6, err = dreams.DownloadFile(round.p6.url, "P6"); err == nil {
+					shared.loaded.p6 = true
 				}
 			}
 		} else {
-			Shared.GotP6 = false
+			shared.loaded.p6 = false
 		}
 	}
 }

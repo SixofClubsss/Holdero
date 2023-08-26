@@ -135,42 +135,42 @@ func AvatarSelect(asset_map map[string]string) fyne.Widget {
 	Settings.avatars.Select = widget.NewSelect(options, func(s string) {
 		switch Settings.avatars.Select.SelectedIndex() {
 		case -1:
-			Settings.Avatar = "None"
+			Settings.avatar.name = "None"
 		case 0:
-			Settings.Avatar = "None"
+			Settings.avatar.name = "None"
 		default:
-			Settings.Avatar = s
+			Settings.avatar.name = s
 		}
 
 		check := strings.Trim(s, " #0123456789")
 		if check == "DBC" {
-			Settings.AvatarUrl = "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".PNG"
+			Settings.avatar.url = "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".PNG"
 		} else if check == "HighStrangeness" {
-			Settings.AvatarUrl = "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/" + s + "/" + s + ".jpg"
+			Settings.avatar.url = "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/" + s + "/" + s + ".jpg"
 		} else if check == "AZYDS" {
-			Settings.AvatarUrl = "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + "-IC.png"
+			Settings.avatar.url = "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + "-IC.png"
 		} else if check == "SIXART" {
-			Settings.AvatarUrl = "https://raw.githubusercontent.com/SixofClubsss/SIXART/main/" + s + "/" + s + "-IC.png"
+			Settings.avatar.url = "https://raw.githubusercontent.com/SixofClubsss/SIXART/main/" + s + "/" + s + "-IC.png"
 		} else if check == "Dero Seals" {
 			seal := strings.Trim(s, "Dero Sals#")
-			Settings.AvatarUrl = "https://ipfs.io/ipfs/QmP3HnzWpiaBA6ZE8c3dy5ExeG7hnYjSqkNfVbeVW5iEp6/low/" + seal + ".jpg"
+			Settings.avatar.url = "https://ipfs.io/ipfs/QmP3HnzWpiaBA6ZE8c3dy5ExeG7hnYjSqkNfVbeVW5iEp6/low/" + seal + ".jpg"
 		} else if check == "Dero Degen" {
 			degen := strings.Trim(s, "Dero gn#")
-			Settings.AvatarUrl = "https://ipfs.io/ipfs/QmZM6onfiS8yUHFwfVypYnc6t9ZrvmpT43F9HFTou6LJyg/" + degen + ".png"
+			Settings.avatar.url = "https://ipfs.io/ipfs/QmZM6onfiS8yUHFwfVypYnc6t9ZrvmpT43F9HFTou6LJyg/" + degen + ".png"
 		} else if ValidAsset(asset_map[s]) {
 			if url := menu.GetAssetUrl(1, asset_map[s]); url != "" {
-				Settings.AvatarUrl = url
+				Settings.avatar.url = url
 				return
 			}
 
 			agent := getAgentNumber(asset_map[s])
 			if agent >= 0 && agent < 172 {
-				Settings.AvatarUrl = "https://ipfs.io/ipfs/QmaRHXcQwbFdUAvwbjgpDtr5kwGiNpkCM2eDBzAbvhD7wh/low/" + strconv.Itoa(agent) + ".jpg"
+				Settings.avatar.url = "https://ipfs.io/ipfs/QmaRHXcQwbFdUAvwbjgpDtr5kwGiNpkCM2eDBzAbvhD7wh/low/" + strconv.Itoa(agent) + ".jpg"
 			} else if agent < 1200 {
-				Settings.AvatarUrl = "https://ipfs.io/ipfs/QmQQyKoE9qDnzybeDCXhyMhwQcPmLaVy3AyYAzzC2zMauW/low/" + strconv.Itoa(agent) + ".jpg"
+				Settings.avatar.url = "https://ipfs.io/ipfs/QmQQyKoE9qDnzybeDCXhyMhwQcPmLaVy3AyYAzzC2zMauW/low/" + strconv.Itoa(agent) + ".jpg"
 			}
 		} else if s == "None" {
-			Settings.AvatarUrl = ""
+			Settings.avatar.url = ""
 		}
 	})
 
@@ -223,16 +223,16 @@ func getAgentNumber(scid string) int {
 //   - If cards are not present locally, it is downloaded
 func SharedDecks() fyne.Widget {
 	options := []string{"Shared Decks"}
-	Settings.SharedOn = widget.NewRadioGroup(options, func(string) {
-		if Settings.Shared || ((len(Round.Face) < 3 || len(Round.Back) < 3) && Round.ID != 1) {
+	Settings.shared = widget.NewRadioGroup(options, func(string) {
+		if Settings.sharing || ((len(round.cards.Faces.Name) < 3 || len(round.cards.Backs.Name) < 3) && round.ID != 1) {
 			logger.Println("[Holdero] Shared Decks Off")
-			Settings.Shared = false
+			Settings.sharing = false
 			Settings.faces.Select.Enable()
 			Settings.backs.Select.Enable()
 		} else {
 			logger.Println("[Holdero] Shared Decks On")
-			Settings.Shared = true
-			if Round.ID == 1 {
+			Settings.sharing = true
+			if round.ID == 1 {
 				if Settings.faces.Name != "" && Settings.faces.URL != "" && Settings.backs.Name != "" && Settings.backs.URL != "" {
 					SharedDeckUrl(Settings.faces.Name, Settings.faces.URL, Settings.backs.Name, Settings.backs.URL)
 					dir := dreams.GetDir()
@@ -251,23 +251,23 @@ func SharedDecks() fyne.Widget {
 				Settings.faces.Select.Disable()
 				Settings.backs.Select.Disable()
 				dir := dreams.GetDir()
-				back := "/cards/backs/" + Round.Back + ".png"
-				face := "/cards/" + Round.Face + "/card1.png"
+				back := "/cards/backs/" + round.cards.Backs.Name + ".png"
+				face := "/cards/" + round.cards.Faces.Name + "/card1.png"
 
 				if !dreams.FileExists(dir+face, "Holdero") {
-					go GetZipDeck(Round.Face, Round.F_url)
+					go GetZipDeck(round.cards.Faces.Name, round.cards.Faces.Url)
 				}
 
 				if !dreams.FileExists(dir+back, "Holdero") {
-					downloadFileLocal("cards/backs/"+Round.Back+".png", Round.B_url)
+					downloadFileLocal("cards/backs/"+round.cards.Backs.Name+".png", round.cards.Backs.Url)
 				}
 			}
 		}
 	})
 
-	Settings.SharedOn.Disable()
+	Settings.shared.Disable()
 
-	return Settings.SharedOn
+	return Settings.shared
 }
 
 // Confirmation for dReams-Dero swap pairs

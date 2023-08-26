@@ -49,6 +49,7 @@ func StartApp() {
 		Background: container.NewMax(&dreams.Theme.Img),
 	}
 	d.SetChannels(1)
+	d.OnTab("Holdero")
 
 	closeFunc := func() {
 		save := dreams.SaveData{
@@ -102,6 +103,10 @@ func StartApp() {
 	connect_box.Button.OnTapped = func() {
 		rpc.GetAddress(app_tag)
 		rpc.Ping()
+		if len(rpc.Wallet.Address) > 13 {
+			menu.Control.Names.Options = []string{rpc.Wallet.Address[0:12]}
+			menu.Control.Names.Refresh()
+		}
 		if rpc.Daemon.IsConnected() && !menu.Gnomes.IsInitialized() && !menu.Gnomes.Start {
 			filter := []string{
 				GetHolderoCode(0),
@@ -112,10 +117,6 @@ func StartApp() {
 				rpc.GetSCCode(rpc.NameSCID)}
 
 			go menu.StartGnomon(app_tag, menu.Gnomes.DBType, filter, 0, 0, nil)
-			if len(rpc.Wallet.Address) > 13 {
-				menu.Control.Names.Options = []string{rpc.Wallet.Address[0:12]}
-				menu.Control.Names.Refresh()
-			}
 		}
 	}
 
@@ -148,7 +149,7 @@ func StartApp() {
 			case <-ticker.C: // do on interval
 				rpc.Ping()
 				rpc.EchoWallet(app_tag)
-				rpc.Wallet.GetBalance()
+				rpc.GetDreamsBalances(rpc.SCIDs)
 
 				connect_box.RefreshBalance()
 				if !rpc.Startup {

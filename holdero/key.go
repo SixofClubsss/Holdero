@@ -18,7 +18,7 @@ import (
 func Card(hash string) int {
 	for i := 1; i < 53; i++ {
 		finder := strconv.Itoa(i)
-		add := rpc.Wallet.ClientKey + finder + Round.SC_seed
+		add := rpc.Wallet.ClientKey + finder + round.seed
 		card := sha256.Sum256([]byte(add))
 		str := hex.EncodeToString(card[:])
 

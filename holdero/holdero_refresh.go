@@ -18,45 +18,45 @@ var tables_menu bool
 
 // Sets bet amount and current bet readout
 func ifBet(w, r uint64) {
-	if w > 0 && r > 0 && !Signal.PlacedBet {
+	if w > 0 && r > 0 && !signals.placedBet {
 		float := float64(w) / 100000
 		wager := strconv.FormatFloat(float, 'f', 1, 64)
-		Table.BetEntry.SetText(wager)
-		Display.Res = Round.Raiser + " Raised, " + wager + " to Call "
-	} else if w > 0 && !Signal.PlacedBet {
+		table.betEntry.SetText(wager)
+		round.display.results = round.raiser + " Raised, " + wager + " to Call "
+	} else if w > 0 && !signals.placedBet {
 		float := float64(w) / 100000
 		wager := strconv.FormatFloat(float, 'f', 1, 64)
-		Table.BetEntry.SetText(wager)
-		Display.Res = Round.Bettor + " Bet " + wager
-	} else if r > 0 && Signal.PlacedBet {
+		table.betEntry.SetText(wager)
+		round.display.results = round.bettor + " Bet " + wager
+	} else if r > 0 && signals.placedBet {
 		float := float64(r) / 100000
 		raised := strconv.FormatFloat(float, 'f', 1, 64)
-		Table.BetEntry.SetText(raised)
-		Display.Res = Round.Raiser + " Raised, " + raised + " to Call"
-	} else if w == 0 && !Signal.Bet {
+		table.betEntry.SetText(raised)
+		round.display.results = round.raiser + " Raised, " + raised + " to Call"
+	} else if w == 0 && !signals.bet {
 		var float float64
-		if Round.Ante == 0 {
-			float = float64(Round.BB) / 100000
+		if round.Ante == 0 {
+			float = float64(round.BB) / 100000
 		} else {
-			float = float64(Round.Ante) / 100000
+			float = float64(round.Ante) / 100000
 		}
 		this := strconv.FormatFloat(float, 'f', 1, 64)
-		Table.BetEntry.SetText(this)
-		if !Signal.Reveal {
-			Display.Res = "Check or Bet"
-			Table.BetEntry.Enable()
+		table.betEntry.SetText(this)
+		if !signals.reveal {
+			round.display.results = "Check or Bet"
+			table.betEntry.Enable()
 		}
-	} else if !Signal.Deal {
-		Display.Res = "Deal Hand"
+	} else if !signals.deal {
+		round.display.results = "Deal Hand"
 	}
 
-	Table.BetEntry.Refresh()
+	table.betEntry.Refresh()
 }
 
 // Single shot triggering ifBet() on players turn
 func singleShot(turn, trigger bool) bool {
 	if turn && !trigger {
-		ifBet(Round.Wager, Round.Raised)
+		ifBet(round.Wager, round.Raised)
 		return true
 	}
 
@@ -77,80 +77,80 @@ func fetch(d *dreams.AppObject) {
 		select {
 		case <-d.Receive():
 			if !rpc.Wallet.IsConnected() || !rpc.Daemon.IsConnected() {
-				Signal.Contract = false
+				signals.contract = false
 				disableActions()
-				Settings.Synced = false
+				Settings.synced = false
 				setHolderoLabel()
 				d.WorkDone()
 				continue
 			}
 
-			if !Settings.Synced && menu.GnomonScan(d.IsConfiguring()) {
+			if !Settings.synced && menu.GnomonScan(d.IsConfiguring()) {
 				logger.Println("[Holdero] Syncing")
 				createTableList()
-				Settings.Synced = true
+				Settings.synced = true
 				H.Actions.Show()
 			}
 
-			if Signal.Contract {
-				Settings.Check.SetChecked(true)
+			if signals.contract {
+				Settings.check.SetChecked(true)
 			} else {
-				Settings.Check.SetChecked(false)
+				Settings.check.SetChecked(false)
 				disableOwnerControls(true)
-				Signal.Sit = true
+				signals.sit = true
 			}
 
 			FetchHolderoSC()
 
-			Poker.Stats_box = *container.NewVBox(
+			table.stats.Container = *container.NewVBox(
 				container.NewMax(tableIcon(bundle.ResourceAvatarFramePng)),
-				Table.Stats.Name,
-				Table.Stats.Desc,
-				Table.Stats.Owner,
-				Table.Stats.Chips,
-				Table.Stats.Blinds,
-				Table.Stats.Version,
-				Table.Stats.Last,
-				Table.Stats.Seats)
-			Poker.Stats_box.Refresh()
+				table.stats.name,
+				table.stats.desc,
+				table.stats.owner,
+				table.stats.chips,
+				table.stats.blinds,
+				table.stats.version,
+				table.stats.last,
+				table.stats.seats)
+			table.stats.Container.Refresh()
 
-			if (Round.Turn == Round.ID && rpc.Wallet.Height > Signal.CHeight+4) ||
-				(Round.Turn != Round.ID && Round.ID >= 1) || (!Signal.My_turn && Round.ID >= 1) {
-				if Signal.Clicked {
+			if (round.Turn == round.ID && rpc.Wallet.Height > signals.height+4) ||
+				(round.Turn != round.ID && round.ID >= 1) || (!signals.myTurn && round.ID >= 1) {
+				if signals.clicked {
 					trigger = false
 					autoCF = false
 					autoD = false
 					autoB = false
-					Signal.Reveal = false
+					signals.reveal = false
 				}
-				Signal.Clicked = false
+				signals.clicked = false
 			}
 
-			if !Signal.Clicked {
-				if Round.First_try {
-					Round.First_try = false
+			if !signals.clicked {
+				if round.first {
+					round.first = false
 					delay = 0
-					Round.Card_delay = false
+					round.delay = false
 					go refreshHolderoPlayers()
 				}
 
-				if Round.Card_delay {
+				if round.delay {
 					now := time.Now().Unix()
 					delay++
-					if delay >= 17 || now > Round.Last+60 {
+					if delay >= 17 || now > round.Last+60 {
 						delay = 0
-						Round.Card_delay = false
+						round.delay = false
 					}
 				} else {
 					setHolderoLabel()
-					GetUrls(Round.F_url, Round.B_url)
-					Called(Round.Flop, Round.Wager)
-					trigger = singleShot(Signal.My_turn, trigger)
+					GetUrls(round.cards.Faces.Url, round.cards.Backs.Url)
+					Called(round.flop, round.Wager)
+					trigger = singleShot(signals.myTurn, trigger)
 					holderoRefresh(d, offset)
 					// Auto check
-					if Settings.Auto_check && Signal.My_turn && !autoCF {
-						if !Signal.Reveal && !Signal.End && !Round.LocalEnd {
-							if Round.Cards.Local1 != "" {
+					if Settings.auto.check && signals.myTurn && !autoCF {
+						if !signals.reveal && !signals.end && !round.localEnd {
+							if round.cards.Local1 != "" {
 								ActionBuffer()
 								Check()
 								H.TopLabel.Text = "Auto Check/Fold Tx Sent"
@@ -160,7 +160,7 @@ func fetch(d *dreams.AppObject) {
 								go func() {
 									if !d.IsWindows() {
 										time.Sleep(500 * time.Millisecond)
-										Round.Notified = d.Notification("dReams - Holdero", "Auto Check/Fold TX Sent")
+										round.notified = d.Notification("dReams - Holdero", "Auto Check/Fold TX Sent")
 									}
 								}()
 							}
@@ -168,9 +168,9 @@ func fetch(d *dreams.AppObject) {
 					}
 
 					// Auto deal
-					if Settings.Auto_deal && Signal.My_turn && !autoD && GameIsActive() {
-						if !Signal.Reveal && !Signal.End && !Round.LocalEnd {
-							if Round.Cards.Local1 == "" {
+					if Settings.auto.deal && signals.myTurn && !autoD && GameIsActive() {
+						if !signals.reveal && !signals.end && !round.localEnd {
+							if round.cards.Local1 == "" {
 								autoD = true
 								go func() {
 									time.Sleep(2100 * time.Millisecond)
@@ -181,7 +181,7 @@ func fetch(d *dreams.AppObject) {
 
 									if !d.IsWindows() {
 										time.Sleep(300 * time.Millisecond)
-										Round.Notified = d.Notification("dReams - Holdero", "Auto Deal TX Sent")
+										round.notified = d.Notification("dReams - Holdero", "Auto Deal TX Sent")
 									}
 								}()
 							}
@@ -189,9 +189,9 @@ func fetch(d *dreams.AppObject) {
 					}
 
 					// Auto bet
-					if Odds.IsRunning() && Signal.My_turn && !autoB && GameIsActive() {
-						if !Signal.Reveal && !Signal.End && !Round.LocalEnd {
-							if Round.Cards.Local1 != "" {
+					if Odds.IsRunning() && signals.myTurn && !autoB && GameIsActive() {
+						if !signals.reveal && !signals.end && !round.localEnd {
+							if round.cards.Local1 != "" {
 								autoB = true
 								go func() {
 									time.Sleep(2100 * time.Millisecond)
@@ -203,22 +203,22 @@ func fetch(d *dreams.AppObject) {
 
 									if !d.IsWindows() {
 										time.Sleep(300 * time.Millisecond)
-										Round.Notified = d.Notification("dReams - Holdero", "Auto Bet TX Sent")
+										round.notified = d.Notification("dReams - Holdero", "Auto Bet TX Sent")
 									}
 								}()
 							}
 						}
 					}
 
-					if Round.ID > 1 && Signal.My_turn && !Signal.End && !Round.LocalEnd {
+					if round.ID > 1 && signals.myTurn && !signals.end && !round.localEnd {
 						now := time.Now().Unix()
-						if now > Round.Last+100 {
-							Table.Warning.Show()
+						if now > round.Last+100 {
+							table.warning.Show()
 						} else {
-							Table.Warning.Hide()
+							table.warning.Hide()
 						}
 					} else {
-						Table.Warning.Hide()
+						table.warning.Hide()
 					}
 
 					skip = 0
@@ -228,13 +228,13 @@ func fetch(d *dreams.AppObject) {
 				revealingKey(d)
 				skip++
 				if skip >= 25 {
-					Signal.Clicked = false
+					signals.clicked = false
 					skip = 0
 					trigger = false
 					autoCF = false
 					autoD = false
 					autoB = false
-					Signal.Reveal = false
+					signals.reveal = false
 				}
 			}
 
@@ -254,15 +254,15 @@ func fetch(d *dreams.AppObject) {
 // Do when disconnected
 func Disconnected(b bool) {
 	if b {
-		Round.ID = 0
-		Display.PlayerId = ""
+		round.ID = 0
+		round.display.playerId = ""
 		Odds.Stop()
 		Settings.faces.Select.Options = []string{"Light", "Dark"}
 		Settings.backs.Select.Options = []string{"Light", "Dark"}
 		Settings.avatars.Select.Options = []string{"None"}
 		Settings.faces.URL = ""
 		Settings.backs.URL = ""
-		Settings.AvatarUrl = ""
+		Settings.avatar.url = ""
 		Settings.faces.Select.SetSelectedIndex(0)
 		Settings.backs.Select.SetSelectedIndex(0)
 		Settings.avatars.Select.SetSelectedIndex(0)
@@ -270,9 +270,9 @@ func Disconnected(b bool) {
 		Settings.backs.Select.Refresh()
 		Settings.avatars.Select.Refresh()
 		DisableHolderoTools()
-		Settings.Synced = false
-		Poker.table_owner = false
-		Poker.Table_list.UnselectAll()
+		Settings.synced = false
+		table.owner.valid = false
+		table.Public.List.UnselectAll()
 	}
 }
 
@@ -280,53 +280,53 @@ func disableActions() {
 	H.Actions.Hide()
 	H.DApp.Objects[4].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Check).SetChecked(false)
 	H.DApp.Objects[4].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[2].(*widget.Check).SetChecked(false)
-	Settings.Check.SetChecked(false)
-	Poker.Contract_entry.SetText("")
+	Settings.check.SetChecked(false)
+	table.entry.SetText("")
 	clearShared()
 	disableOwnerControls(true)
-	Settings.Tables = []string{}
-	Settings.Owned = []string{}
-	Poker.Holdero_unlock.Hide()
-	Poker.Holdero_new.Hide()
-	Table.Tournament.Hide()
-	Poker.Holdero_unlock.Refresh()
-	Poker.Holdero_new.Refresh()
-	Table.Tournament.Refresh()
+	table.Public.SCIDs = []string{}
+	table.Owned.SCIDs = []string{}
+	table.unlock.Hide()
+	table.new.Hide()
+	table.tournament.Hide()
+	table.unlock.Refresh()
+	table.new.Refresh()
+	table.tournament.Refresh()
 }
 
 // Disable Holdero owner actions
 func disableOwnerControls(d bool) {
 	if d {
-		Poker.owner.owners_left.Hide()
-		Poker.owner.owners_mid.Hide()
+		table.owner.owners_left.Hide()
+		table.owner.owners_mid.Hide()
 	} else {
-		Poker.owner.owners_left.Show()
-		Poker.owner.owners_mid.Show()
+		table.owner.owners_left.Show()
+		table.owner.owners_mid.Show()
 	}
 
-	Poker.owner.owners_left.Refresh()
-	Poker.owner.owners_mid.Refresh()
+	table.owner.owners_left.Refresh()
+	table.owner.owners_mid.Refresh()
 }
 
 // Sets Holdero table info labels
 func setHolderoLabel() {
-	H.TopLabel.Text = Display.Res
-	H.LeftLabel.SetText("Seats: " + Display.Seats + "      Pot: " + Display.Pot + "      Blinds: " + Display.Blinds + "      Ante: " + Display.Ante + "      Dealer: " + Display.Dealer)
-	if Round.Asset {
-		if Round.Tourney {
-			H.RightLabel.SetText(Display.Readout + "      Player ID: " + Display.PlayerId + "      Chip Balance: " + rpc.DisplayBalance("Tournament") + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+	H.TopLabel.Text = round.display.results
+	H.LeftLabel.SetText("Seats: " + round.display.seats + "      Pot: " + round.display.pot + "      Blinds: " + round.display.blinds + "      Ante: " + round.display.ante + "      Dealer: " + round.display.dealer)
+	if round.asset {
+		if round.tourney {
+			H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      Chip Balance: " + rpc.DisplayBalance("Tournament") + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 		} else {
-			asset_name := rpc.GetAssetSCIDName(Round.AssetID)
-			H.RightLabel.SetText(Display.Readout + "      Player ID: " + Display.PlayerId + "      " + asset_name + " Balance: " + rpc.DisplayBalance(asset_name) + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+			asset_name := rpc.GetAssetSCIDName(round.assetID)
+			H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      " + asset_name + " Balance: " + rpc.DisplayBalance(asset_name) + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 		}
 	} else {
-		H.RightLabel.SetText(Display.Readout + "      Player ID: " + Display.PlayerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+		H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 	}
 
-	if Signal.Contract {
-		Settings.SharedOn.Enable()
+	if signals.contract {
+		Settings.shared.Enable()
 	} else {
-		Settings.SharedOn.Disable()
+		Settings.shared.Disable()
 	}
 
 	H.TopLabel.Refresh()
@@ -337,16 +337,16 @@ func setHolderoLabel() {
 // Holdero label for waiting for block
 func waitLabel() {
 	H.TopLabel.Text = ""
-	if Round.Asset {
-		if Round.Tourney {
-			H.RightLabel.SetText("Wait for Block" + "      Player ID: " + Display.PlayerId + "      Chip Balance: " + rpc.DisplayBalance("Tournament") + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+	if round.asset {
+		if round.tourney {
+			H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      Chip Balance: " + rpc.DisplayBalance("Tournament") + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 		} else {
-			asset_name := rpc.GetAssetSCIDName(Round.AssetID)
-			H.RightLabel.SetText("Wait for Block" + "      Player ID: " + Display.PlayerId + "      " + asset_name + " Balance: " + rpc.DisplayBalance(asset_name) + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+			asset_name := rpc.GetAssetSCIDName(round.assetID)
+			H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      " + asset_name + " Balance: " + rpc.DisplayBalance(asset_name) + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 		}
 
 	} else {
-		H.RightLabel.SetText("Wait for Block" + "      Player ID: " + Display.PlayerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+		H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 	}
 	H.TopLabel.Refresh()
 	H.RightLabel.Refresh()
@@ -355,77 +355,77 @@ func waitLabel() {
 // Refresh all Holdero gui objects
 func holderoRefresh(d *dreams.AppObject, offset int) {
 	go ShowAvatar(d.OnTab("Holdero"))
-	go refreshHolderoCards(Round.Cards.Local1, Round.Cards.Local2, d)
-	if !Signal.Clicked {
-		if Round.ID == 0 && rpc.Wallet.IsConnected() {
-			if Signal.Sit {
-				Table.Sit.Hide()
+	go refreshHolderoCards(round.cards.Local1, round.cards.Local2, d)
+	if !signals.clicked {
+		if round.ID == 0 && rpc.Wallet.IsConnected() {
+			if signals.sit {
+				table.sit.Hide()
 			} else {
-				Table.Sit.Show()
+				table.sit.Show()
 			}
-			Table.Leave.Hide()
-			Table.Deal.Hide()
-			Table.Check.Hide()
-			Table.Bet.Hide()
-			Table.BetEntry.Hide()
-		} else if !Signal.End && !Signal.Reveal && Signal.My_turn && rpc.Wallet.IsConnected() {
-			if Signal.Sit {
-				Table.Sit.Hide()
+			table.leave.Hide()
+			table.deal.Hide()
+			table.check.Hide()
+			table.bet.Hide()
+			table.betEntry.Hide()
+		} else if !signals.end && !signals.reveal && signals.myTurn && rpc.Wallet.IsConnected() {
+			if signals.sit {
+				table.sit.Hide()
 			} else {
-				Table.Sit.Show()
-			}
-
-			if Signal.Leave {
-				Table.Leave.Hide()
-			} else {
-				Table.Leave.Show()
+				table.sit.Show()
 			}
 
-			if Signal.Deal {
-				Table.Deal.Hide()
+			if signals.leave {
+				table.leave.Hide()
 			} else {
-				Table.Deal.Show()
+				table.leave.Show()
 			}
 
-			Table.Check.SetText(Display.C_Button)
-			Table.Bet.SetText(Display.B_Button)
-			if Signal.Bet {
-				Table.Check.Hide()
-				Table.Bet.Hide()
-				Table.BetEntry.Hide()
+			if signals.deal {
+				table.deal.Hide()
 			} else {
-				Table.Check.Show()
-				Table.Bet.Show()
-				Table.BetEntry.Show()
+				table.deal.Show()
 			}
 
-			if !Round.Notified {
+			table.check.SetText(round.display.checkButton)
+			table.bet.SetText(round.display.betButton)
+			if signals.bet {
+				table.check.Hide()
+				table.bet.Hide()
+				table.betEntry.Hide()
+			} else {
+				table.check.Show()
+				table.bet.Show()
+				table.betEntry.Show()
+			}
+
+			if !round.notified {
 				if !d.IsWindows() {
-					Round.Notified = d.Notification("dReams - Holdero", "Your Turn")
+					round.notified = d.Notification("dReams - Holdero", "Your Turn")
 				}
 			}
 		} else {
-			if Signal.Sit {
-				Table.Sit.Hide()
-			} else if !Signal.Sit && rpc.Wallet.IsConnected() {
-				Table.Sit.Show()
+			if signals.sit {
+				table.sit.Hide()
+			} else if !signals.sit && rpc.Wallet.IsConnected() {
+				table.sit.Show()
 			}
-			Table.Leave.Hide()
-			Table.Deal.Hide()
-			Table.Check.Hide()
-			Table.Bet.Hide()
-			Table.BetEntry.Hide()
+			table.leave.Hide()
+			table.deal.Hide()
+			table.check.Hide()
+			table.bet.Hide()
+			table.betEntry.Hide()
 
-			if !Signal.My_turn && !Signal.End && !Round.LocalEnd {
-				Display.Res = ""
-				Round.Notified = false
+			if !signals.myTurn && !signals.end && !round.localEnd {
+				round.display.results = ""
+				round.notified = false
 			}
 		}
 	}
 
 	if tables_menu {
 		if offset%3 == 0 {
-			go getTableStats(Round.Contract, false)
+			go getTableStats(round.Contract, false)
 		}
 	}
 
@@ -463,14 +463,14 @@ func refreshHolderoPlayers() {
 
 // Reveal key notification and display
 func revealingKey(d *dreams.AppObject) {
-	if Signal.Reveal && Signal.My_turn && !Signal.End {
-		if !Round.Notified {
-			Display.Res = "Revealing Key"
-			H.TopLabel.Text = Display.Res
+	if signals.reveal && signals.myTurn && !signals.end {
+		if !round.notified {
+			round.display.results = "Revealing Key"
+			H.TopLabel.Text = round.display.results
 			H.TopLabel.Refresh()
 
 			if !d.IsWindows() {
-				Round.Notified = d.Notification("dReams - Holdero", "Revealing Key")
+				round.notified = d.Notification("dReams - Holdero", "Revealing Key")
 			}
 		}
 	}

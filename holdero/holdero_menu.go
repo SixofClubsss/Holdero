@@ -64,13 +64,13 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	blinds_entry.OnChanged = func(s string) {
 		if blinds_entry.Validate() != nil {
 			blinds_entry.SetText("Big Blind: 0.0")
-			Poker.owner.blind_amount = 0
+			table.owner.blinds = 0
 		} else {
 			trimmed := strings.Trim(s, "Biglnd: ")
 			if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
 				if uint64(f*100000)%10000 == 0 {
 					blinds_entry.SetText(blinds_entry.Prefix + strconv.FormatFloat(roundFloat(f, 1), 'f', int(blinds_entry.Decimal), 64))
-					Poker.owner.blind_amount = uint64(roundFloat(f*100000, 1))
+					table.owner.blinds = uint64(roundFloat(f*100000, 1))
 				} else {
 					blinds_entry.SetText(blinds_entry.Prefix + strconv.FormatFloat(roundFloat(f, 1), 'f', int(blinds_entry.Decimal), 64))
 				}
@@ -85,13 +85,13 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	ante_entry.OnChanged = func(s string) {
 		if ante_entry.Validate() != nil {
 			ante_entry.SetText("Ante: 0.0")
-			Poker.owner.ante_amount = 0
+			table.owner.ante = 0
 		} else {
 			trimmed := strings.Trim(s, ante_entry.Prefix)
 			if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
 				if uint64(f*100000)%10000 == 0 {
 					ante_entry.SetText(ante_entry.Prefix + strconv.FormatFloat(roundFloat(f, 1), 'f', int(ante_entry.Decimal), 64))
-					Poker.owner.ante_amount = uint64(roundFloat(f*100000, 1))
+					table.owner.ante = uint64(roundFloat(f*100000, 1))
 				} else {
 					ante_entry.SetText(ante_entry.Prefix + strconv.FormatFloat(roundFloat(f, 1), 'f', int(ante_entry.Decimal), 64))
 				}
@@ -100,11 +100,11 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	}
 
 	options := []string{"DERO", "ASSET"}
-	Poker.owner.chips = widget.NewRadioGroup(options, nil)
-	Poker.owner.chips.SetSelected("DERO")
-	Poker.owner.chips.Horizontal = true
-	Poker.owner.chips.Required = true
-	Poker.owner.chips.OnChanged = func(s string) {
+	table.owner.chips = widget.NewRadioGroup(options, nil)
+	table.owner.chips.SetSelected("DERO")
+	table.owner.chips.Horizontal = true
+	table.owner.chips.Required = true
+	table.owner.chips.OnChanged = func(s string) {
 		if s == "ASSET" {
 			blinds_entry.Increment = 1
 			blinds_entry.Decimal = 0
@@ -127,23 +127,23 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	}
 
 	set_button := widget.NewButton("Set Table", func() {
-		if Display.Seats != "" {
-			info := fmt.Sprintf("This table is already open with %s seats", Display.Seats)
+		if round.display.seats != "" {
+			info := fmt.Sprintf("This table is already open with %s seats", round.display.seats)
 			dialog.NewInformation("Set Table", info, d.Window).Show()
 			return
 		}
 
-		bb := Poker.owner.blind_amount
-		sb := Poker.owner.blind_amount / 2
-		ante := Poker.owner.ante_amount
-		chips := Poker.owner.chips.Selected
+		bb := table.owner.blinds
+		sb := table.owner.blinds / 2
+		ante := table.owner.ante
+		chips := table.owner.chips.Selected
 		if menu.Username != "" {
 			trim := strings.TrimSuffix(player_select.Selected, " Players")
 			if players, err := strconv.ParseInt(trim, 10, 64); err == nil {
 				info := fmt.Sprintf("Setting table for,\n\nPlayers: (%d)\n\nChips: (%s)\n\nBlinds: (%s/%s)\n\nAnte: (%s)", players, chips, rpc.FromAtomic(bb, 5), rpc.FromAtomic(sb, 5), rpc.FromAtomic(ante, 5))
 				dialog.NewConfirm("Set Table", info, func(b bool) {
 					if b {
-						SetTable(int(players), bb, sb, ante, chips, menu.Username, Settings.AvatarUrl)
+						SetTable(int(players), bb, sb, ante, chips, menu.Username, Settings.avatar.url)
 					}
 				}, d.Window).Show()
 			}
@@ -164,7 +164,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	}
 
 	clean_button := widget.NewButton("Clean Table", func() {
-		if Display.Seats == "" {
+		if round.display.seats == "" {
 			dialog.NewInformation("Clean Table", "Table needs to be opened to clean", d.Window).Show()
 			return
 		}
@@ -177,13 +177,13 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 			return
 		}
 
-		if c > int(Round.Pot) {
-			if Round.Pot == 0 {
+		if c > int(round.Pot) {
+			if round.Pot == 0 {
 				dialog.NewInformation("Clean Table", "This pot is empty", d.Window).Show()
 				return
 			}
 
-			dialog.NewInformation("Clean Table", fmt.Sprintf("There is only %s %s in this pot", rpc.FromAtomic(Round.Pot, 5), Poker.owner.chips.Selected), d.Window).Show()
+			dialog.NewInformation("Clean Table", fmt.Sprintf("There is only %s %s in this pot", rpc.FromAtomic(round.Pot, 5), table.owner.chips.Selected), d.Window).Show()
 			return
 		}
 
@@ -197,15 +197,15 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 			return
 		}
 
-		dialog.NewConfirm("Clean Table", fmt.Sprintf("Would you like to withdraw %s %s from this table and reset it? ", rpc.FromAtomic(trimmed, 5), Poker.owner.chips.Selected), func(b bool) {
+		dialog.NewConfirm("Clean Table", fmt.Sprintf("Would you like to withdraw %s %s from this table and reset it? ", rpc.FromAtomic(trimmed, 5), table.owner.chips.Selected), func(b bool) {
 			if b {
 				CleanTable(uint64(c))
 			}
 		}, d.Window).Show()
 	})
 
-	Poker.owner.timeout = widget.NewButton("Timeout", func() {
-		if Display.Seats == "" {
+	table.owner.timeout = widget.NewButton("Timeout", func() {
+		if round.display.seats == "" {
 			dialog.NewInformation("Timeout", "This table is closed", d.Window).Show()
 			return
 		}
@@ -218,12 +218,12 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	})
 
 	force := widget.NewButton("Force Start", func() {
-		if Display.Seats == "" {
+		if round.display.seats == "" {
 			dialog.NewInformation("Force Start", "This table is closed", d.Window).Show()
 			return
 		}
 
-		if Round.Pot != 0 {
+		if round.Pot != 0 {
 			dialog.NewInformation("Force Start", "This table is already started", d.Window).Show()
 			return
 		}
@@ -236,12 +236,12 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	})
 
 	close := widget.NewButton("Close Table", func() {
-		if Round.Pot != 0 {
+		if round.Pot != 0 {
 			dialog.NewInformation("Close Table", "There is still funds to be paid out at this table", d.Window).Show()
 			return
 		}
 
-		if Display.Seats == "" {
+		if round.display.seats == "" {
 			dialog.NewInformation("Close Table", "This table is already closed", d.Window).Show()
 			return
 		}
@@ -255,13 +255,13 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 	left_form := []*widget.FormItem{}
 	left_form = append(left_form, widget.NewFormItem("Seats", player_select))
-	left_form = append(left_form, widget.NewFormItem("Chips", Poker.owner.chips))
+	left_form = append(left_form, widget.NewFormItem("Chips", table.owner.chips))
 	left_form = append(left_form, widget.NewFormItem("Blinds", blinds_entry))
 	left_form = append(left_form, widget.NewFormItem("Ante", ante_entry))
 
 	button_spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
 	spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-	spacer.SetMinSize(Poker.owner.chips.Size())
+	spacer.SetMinSize(table.owner.chips.Size())
 
 	mid_form := []*widget.FormItem{}
 	mid_form = append(mid_form, widget.NewFormItem("Clean Amount", clean_entry))
@@ -273,13 +273,13 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	auto_remove := widget.NewSelect(k_times, func(s string) {
 		switch s {
 		case "Off":
-			Times.Kick = 0
+			signals.times.kick = 0
 		case "2m":
-			Times.Kick = 120
+			signals.times.kick = 120
 		case "5m":
-			Times.Kick = 300
+			signals.times.kick = 300
 		default:
-			Times.Kick = 0
+			signals.times.kick = 0
 		}
 	})
 	auto_remove.PlaceHolder = "Kick after:"
@@ -288,16 +288,16 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	delay := widget.NewSelect(p_times, func(s string) {
 		switch s {
 		case "30s":
-			Times.Delay = 30
+			signals.times.delay = 30
 		case "60s":
-			Times.Delay = 60
+			signals.times.delay = 60
 		default:
-			Times.Delay = 30
+			signals.times.delay = 30
 		}
 	})
 	delay.PlaceHolder = "Payout delay:"
 
-	Table.Tournament = widget.NewButton("Tournament", func() {
+	table.tournament = widget.NewButton("Tournament", func() {
 		bal := rpc.TokenBalance(TourneySCID)
 		balance := float64(bal) / 100000
 		if balance == 0 {
@@ -313,17 +313,17 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		}, d.Window).Show()
 	})
 
-	Table.Tournament.Hide()
+	table.tournament.Hide()
 
 	right_form := []*widget.FormItem{}
 	right_form = append(right_form, widget.NewFormItem("Auto Kick", auto_remove))
 	right_form = append(right_form, widget.NewFormItem("Payout Delay", delay))
 	right_form = append(right_form, widget.NewFormItem("", spacer))
 	right_form = append(right_form, widget.NewFormItem("", layout.NewSpacer()))
-	right_form = append(right_form, widget.NewFormItem("", Poker.owner.timeout))
+	right_form = append(right_form, widget.NewFormItem("", table.owner.timeout))
 
-	Poker.owner.owners_mid = container.NewVBox(widget.NewForm(right_form...))
-	Poker.owner.owners_mid.Hide()
+	table.owner.owners_mid = container.NewVBox(widget.NewForm(right_form...))
+	table.owner.owners_mid.Hide()
 
 	instructions := "Connect to your wallet and daemon\n\nClick on a table in the list to connect to it\n\nClick on 'View Table' to play\n\nYou can create and view your tables in the 'Owned' tab\n\nTo start a game on a table you own:\n---\nSelect number of seats at the table (6 max)\n\nSelect DERO or ASSET as chips\n\nSelect blinds and any required ante (can be 0)\n\nClick 'Set Table' to open your table for others to join\n\nClick 'Force Start' if you'd like to start the table before all the seats are filled\n\nWhen done playing, click 'Close Table' to close it\n\n'Clean Table' is your reset button, it shuffles the deck and move the turn to the next player,\nif clean amount is above 0 it will withdraw that amount (in atomic uints) from the table\n\nAuto kick time default is off, and payout default is 30 seconds\n\nVisit dreamdapps.io for more docs"
 	help_button := widget.NewButton("How to Play", func() {
@@ -333,79 +333,79 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	help_spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
 	help_spacer.SetMinSize(fyne.NewSize(180, 0))
 
-	Poker.owner.owners_left = container.NewHBox(
+	table.owner.owners_left = container.NewHBox(
 		container.NewVBox(widget.NewForm(left_form...), layout.NewSpacer(),
 			container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, set_button))),
 		container.NewVBox(widget.NewForm(mid_form...), layout.NewSpacer(),
 			container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, force))))
 
-	mid := container.NewVBox(Poker.owner.owners_mid, layout.NewSpacer(),
-		container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, Table.Tournament)))
+	mid := container.NewVBox(table.owner.owners_mid, layout.NewSpacer(),
+		container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, table.tournament)))
 
 	right := container.NewMax(container.NewAdaptiveGrid(2, layout.NewSpacer(), layout.NewSpacer()),
 		container.NewVBox(layout.NewSpacer(),
 			container.NewHBox(help_spacer, container.NewMax(button_spacer, help_button))))
 
-	Poker.owner.owners_left.Hide()
+	table.owner.owners_left.Hide()
 	button_spacer.SetMinSize(ante_entry.Size())
-	spacer.SetMinSize(Poker.owner.chips.Size())
+	spacer.SetMinSize(table.owner.chips.Size())
 
-	return container.NewHBox(Poker.owner.owners_left, mid, right)
+	return container.NewHBox(table.owner.owners_left, mid, right)
 }
 
 // Holdero table icon image with frame
 func tableIcon(r fyne.Resource) fyne.CanvasObject {
-	Table.Stats.Image.SetMinSize(fyne.NewSize(90, 90))
+	table.stats.image.SetMinSize(fyne.NewSize(90, 90))
 
 	frame := canvas.NewImageFromResource(r)
 	frame.SetMinSize(fyne.NewSize(100, 100))
 
-	border := container.NewBorder(layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), &Table.Stats.Image)
+	border := container.NewBorder(layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), &table.stats.image)
 
 	return container.NewHBox(container.NewMax(border, frame), layout.NewSpacer())
 }
 
 // Holdero table stats display objects
 func displayTableStats() fyne.CanvasObject {
-	Table.Stats.Name = canvas.NewText(" Name: ", bundle.TextColor)
-	Table.Stats.Desc = canvas.NewText(" Description: ", bundle.TextColor)
-	Table.Stats.Owner = canvas.NewText(" Owner: ", bundle.TextColor)
-	Table.Stats.Chips = canvas.NewText(" Playing with: ", bundle.TextColor)
-	Table.Stats.Blinds = canvas.NewText(" Blinds: ", bundle.TextColor)
-	Table.Stats.Version = canvas.NewText(" Table Version: ", bundle.TextColor)
-	Table.Stats.Last = canvas.NewText(" Last Move: ", bundle.TextColor)
-	Table.Stats.Seats = canvas.NewText(" Table Closed ", bundle.TextColor)
+	table.stats.name = canvas.NewText(" Name: ", bundle.TextColor)
+	table.stats.desc = canvas.NewText(" Description: ", bundle.TextColor)
+	table.stats.owner = canvas.NewText(" Owner: ", bundle.TextColor)
+	table.stats.chips = canvas.NewText(" Playing with: ", bundle.TextColor)
+	table.stats.blinds = canvas.NewText(" Blinds: ", bundle.TextColor)
+	table.stats.version = canvas.NewText(" Table Version: ", bundle.TextColor)
+	table.stats.last = canvas.NewText(" Last Move: ", bundle.TextColor)
+	table.stats.seats = canvas.NewText(" Table Closed ", bundle.TextColor)
 
-	Table.Stats.Name.TextSize = 18
-	Table.Stats.Desc.TextSize = 18
-	Table.Stats.Owner.TextSize = 18
-	Table.Stats.Chips.TextSize = 18
-	Table.Stats.Blinds.TextSize = 18
-	Table.Stats.Version.TextSize = 18
-	Table.Stats.Last.TextSize = 18
-	Table.Stats.Seats.TextSize = 18
+	table.stats.name.TextSize = 18
+	table.stats.desc.TextSize = 18
+	table.stats.owner.TextSize = 18
+	table.stats.chips.TextSize = 18
+	table.stats.blinds.TextSize = 18
+	table.stats.version.TextSize = 18
+	table.stats.last.TextSize = 18
+	table.stats.seats.TextSize = 18
 
-	Table.Stats.Name.Hide()
-	Table.Stats.Desc.Hide()
-	Table.Stats.Version.Hide()
-	Table.Stats.Last.Hide()
-	Table.Stats.Owner.Hide()
-	Table.Stats.Chips.Hide()
-	Table.Stats.Blinds.Hide()
+	table.stats.name.Hide()
+	table.stats.desc.Hide()
+	table.stats.version.Hide()
+	table.stats.last.Hide()
+	table.stats.owner.Hide()
+	table.stats.chips.Hide()
+	table.stats.blinds.Hide()
 
-	Poker.Stats_box = *container.NewVBox(
+	table.stats.Container = *container.NewVBox(
 		container.NewMax(tableIcon(nil)),
 		layout.NewSpacer(),
-		Table.Stats.Name,
-		Table.Stats.Desc,
-		Table.Stats.Owner,
-		Table.Stats.Chips,
-		Table.Stats.Blinds,
-		Table.Stats.Version,
-		Table.Stats.Last,
-		Table.Stats.Seats)
+		table.stats.name,
+		table.stats.desc,
+		table.stats.owner,
+		table.stats.chips,
+		table.stats.blinds,
+		table.stats.version,
+		table.stats.last,
+		table.stats.seats)
 
-	return container.NewMax(&Poker.Stats_box)
+	return container.NewMax(&table.stats.Container)
 }
 
 // Confirmation for Holdero contract installs
@@ -415,7 +415,7 @@ func holderoMenuConfirm(c int, obj []fyne.CanvasObject, tabs *container.AppTabs)
 	var text string
 	switch c {
 	case 1:
-		Poker.Holdero_unlock.Hide()
+		table.unlock.Hide()
 		text = `You are about to unlock and install your first Holdero Table
 		
 To help support the project, there is a ` + fmt.Sprintf("%.5f", unlock_fee) + ` DERO donation attached to preform this action
@@ -438,7 +438,7 @@ HGC holders can choose to install a HGC table
 
 Public table that uses HGC or DERO`
 	case 2:
-		Poker.Holdero_new.Hide()
+		table.new.Hide()
 		text = `You are about to install a new Holdero table
 
 Gas fee to install new table is 0.30000 DERO
@@ -469,7 +469,7 @@ Public table that uses HGC or DERO`
 		}
 
 		if c == 2 {
-			Poker.Holdero_new.Show()
+			table.new.Show()
 		}
 
 		obj[1] = tabs
@@ -492,9 +492,9 @@ Public table that uses HGC or DERO`
 	cancel_button := widget.NewButton("Cancel", func() {
 		switch c {
 		case 1:
-			Poker.Holdero_unlock.Show()
+			table.unlock.Show()
 		case 2:
-			Poker.Holdero_new.Show()
+			table.new.Show()
 		default:
 
 		}

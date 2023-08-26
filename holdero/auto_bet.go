@@ -56,7 +56,7 @@ type Player_stats struct {
 	Bots   []Bot_config  `json:"bots"`
 }
 
-var Stats Player_stats
+var stats Player_stats
 var Odds bet_data
 
 // Start Holdero bot
@@ -880,27 +880,27 @@ func MakeOdds() (odds float64, future float64) {
 	fmt.Println()
 	Odds.community = []int{}
 	Odds.Label.SetText("")
-	if Round.Flop1 > 0 {
-		Odds.community = append(Odds.community, Round.Flop1)
+	if round.cards.flop1 > 0 {
+		Odds.community = append(Odds.community, round.cards.flop1)
 	}
 
-	if Round.Flop2 > 0 {
-		Odds.community = append(Odds.community, Round.Flop2)
+	if round.cards.flop2 > 0 {
+		Odds.community = append(Odds.community, round.cards.flop2)
 	}
 
-	if Round.Flop3 > 0 {
-		Odds.community = append(Odds.community, Round.Flop3)
+	if round.cards.flop3 > 0 {
+		Odds.community = append(Odds.community, round.cards.flop3)
 	}
 
-	if Round.TurnCard > 0 {
-		Odds.community = append(Odds.community, Round.TurnCard)
+	if round.cards.turn > 0 {
+		Odds.community = append(Odds.community, round.cards.turn)
 	}
 
-	if Round.RiverCard > 0 {
-		Odds.community = append(Odds.community, Round.RiverCard)
+	if round.cards.river > 0 {
+		Odds.community = append(Odds.community, round.cards.river)
 	}
 
-	Odds.hole = [2]int{Card(Round.Cards.Local1), Card(Round.Cards.Local2)}
+	Odds.hole = [2]int{Card(round.cards.Local1), Card(round.cards.Local2)}
 
 	if Odds.hole[:] == nil || Odds.hole[0] == 0 || Odds.hole[1] == 0 {
 		oddsLog("[makeOdds]", fmt.Sprintln("No Cards"))
@@ -1039,11 +1039,11 @@ func findMyOuts(l, rank int, value, suit []int) (run []int, flush int, straight_
 
 // Check minimum bet at current table
 func MinBet() uint64 {
-	if Round.Ante == 0 {
-		return Round.BB
+	if round.Ante == 0 {
+		return round.BB
 	}
 
-	return Round.Ante
+	return round.Ante
 }
 
 // Check if bet is greater than allowed by Odds.Bot.Max
@@ -1054,10 +1054,10 @@ func maxBet(amt float64) bool {
 // If bet is to be called
 func callBet(m float64, live bool) bool {
 	var amt float64
-	if Signal.PlacedBet && Round.Raised > 0 {
-		amt = float64(Round.Raised) / 100000
+	if signals.placedBet && round.Raised > 0 {
+		amt = float64(round.Raised) / 100000
 	} else {
-		amt = float64(Round.Wager) / 100000
+		amt = float64(round.Wager) / 100000
 	}
 
 	if maxBet(amt) {
@@ -1070,7 +1070,7 @@ func callBet(m float64, live bool) bool {
 		return false
 	}
 	curr := "Dero"
-	if Round.Asset {
+	if round.asset {
 		curr = "Tokens"
 	}
 
@@ -1084,7 +1084,7 @@ func callBet(m float64, live bool) bool {
 
 // If bet is to be raised
 func raiseBet(m float64, live bool) bool {
-	amt := (float64(Round.Wager) / 100000) * m
+	amt := (float64(round.Wager) / 100000) * m
 	if maxBet(amt) {
 		oddsLog("[raiseBet]", fmt.Sprintln("Setting bet amount to max", amt))
 		amt = Odds.Bot.Max
@@ -1105,7 +1105,7 @@ func raiseBet(m float64, live bool) bool {
 
 // Check if bet can be raised
 func canRaise() bool {
-	if !Signal.PlacedBet && Round.Raised == 0 && Round.Wager > 0 {
+	if !signals.placedBet && round.Raised == 0 && round.Wager > 0 {
 		oddsLog("[canRaise]", "true")
 		return true
 	}
@@ -1115,8 +1115,8 @@ func canRaise() bool {
 
 // Check if wallet balance is to low to call bet
 func lowBalance(amt float64) bool {
-	if Round.Asset {
-		return amt > float64(rpc.Wallet.ReadTokenBalance(rpc.GetAssetSCIDName(Round.AssetID)))/100000
+	if round.asset {
+		return amt > float64(rpc.Wallet.ReadTokenBalance(rpc.GetAssetSCIDName(round.assetID)))/100000
 	} else {
 		return amt > float64(rpc.Wallet.ReadBalance())/100000
 	}
@@ -1125,10 +1125,10 @@ func lowBalance(amt float64) bool {
 // Find if player is in last position
 func lastPosition(id int) bool {
 	last := 0
-	ins := []bool{Signal.In1, Signal.In2, Signal.In3, Signal.In4, Signal.In5, Signal.In6}
-	folds := []bool{Round.F1, Round.F2, Round.F3, Round.F4, Round.F5, Round.F6}
+	ins := []bool{signals.In1, signals.In2, signals.In3, signals.In4, signals.In5, signals.In6}
+	folds := []bool{round.p1.folded, round.p2.folded, round.p3.folded, round.p4.folded, round.p5.folded, round.p6.folded}
 	order := []int{}
-	dealer := rpc.StringToInt(Display.Dealer)
+	dealer := rpc.StringToInt(round.display.dealer)
 
 	for i := range ins {
 		if (ins[i] && !folds[i]) || i == dealer-1 {
@@ -1179,7 +1179,7 @@ func slowPlay(future float64) (bool, bool) {
 		skip = false
 	}
 
-	if future < Odds.Bot.Risk[2] && lastPosition(Round.ID) {
+	if future < Odds.Bot.Risk[2] && lastPosition(round.ID) {
 		if Odds.Bot.Aggr > 3 {
 			return false, false
 		}
@@ -1227,7 +1227,7 @@ func aggressive(sure bool) (bet bool) {
 
 // Random switch working with Odds.Bot.Aggr will trigger bluffing situations
 func bluff() (bet bool) {
-	if lastPosition(Round.ID) {
+	if lastPosition(round.ID) {
 		i := rand.Intn(9-1) + 1
 		switch Odds.Bot.Aggr {
 		case 5:
@@ -1266,10 +1266,10 @@ func bluff() (bet bool) {
 
 // Find pot odds of situation
 func potOdds(odds, straight_outs, flush_outs float64) (po float64, better bool) {
-	if Signal.PlacedBet {
-		po = float64(Round.Raised) / float64(Round.Pot) * 100
+	if signals.placedBet {
+		po = float64(round.Raised) / float64(round.Pot) * 100
 	} else {
-		po = float64(Round.Wager) / float64(Round.Pot) * 100
+		po = float64(round.Wager) / float64(round.Pot) * 100
 	}
 
 	if po != 0 {
@@ -1304,11 +1304,11 @@ func BetLogic(odds, future float64, live bool) {
 	}
 
 	curr := "Dero"
-	if Round.Asset {
+	if round.asset {
 		curr = "Tokens"
 	}
 
-	oddsLog("[BetLogic]", fmt.Sprintln("Wager is", fmt.Sprintf("%.2f", float64(Round.Wager)/100000), curr))
+	oddsLog("[BetLogic]", fmt.Sprintln("Wager is", fmt.Sprintf("%.2f", float64(round.Wager)/100000), curr))
 	oddsLog("[BetLogic]", fmt.Sprintln("Odds Calc", fmt.Sprintf("%.2f", odds)+"%"))
 	oddsLog("[BetLogic]", fmt.Sprintln("Luck", fmt.Sprintf("%.2f", Odds.Bot.Luck)+"%", fmt.Sprintf("%.2f", c)+"%"))
 
@@ -1332,12 +1332,12 @@ func BetLogic(odds, future float64, live bool) {
 	oddsLog("[BetLogic]", fmt.Sprintln("Bet2", fmt.Sprintf("%.2f", Odds.Bot.Bet[1]+b)+"x"))
 	oddsLog("[BetLogic]", fmt.Sprintln("Bet3", fmt.Sprintf("%.2f", Odds.Bot.Bet[2]+b)+"x"))
 
-	if Round.Wager == 0 {
+	if round.Wager == 0 {
 		var amt float64
 		var bet bool
 		slow, min := slowPlay(future)
 		if !slow || sure {
-			if odds < (Odds.Bot.Risk[0]+a) && Round.Flop && aggressive(false) && !min {
+			if odds < (Odds.Bot.Risk[0]+a) && round.flop && aggressive(false) && !min {
 				amt = (float64(MinBet()) / 100000) * (Odds.Bot.Bet[2] + b)
 				oddsLog("[BetLogic]", fmt.Sprintln("Bet High", fmt.Sprintf("%.1f", amt), curr))
 				bet = true
@@ -1371,10 +1371,10 @@ func BetLogic(odds, future float64, live bool) {
 			}
 		}
 
-	} else if Round.Wager > 0 {
+	} else if round.Wager > 0 {
 		var bet bool
 		if odds < 1 {
-			if Round.Wager <= uint64(Odds.Bot.Max)*100000 {
+			if round.Wager <= uint64(Odds.Bot.Max)*100000 {
 				if canRaise() && aggressive(false) {
 					bet = raiseBet((Odds.Bot.Aggr*2)*1.5, live)
 				} else {
@@ -1382,7 +1382,7 @@ func BetLogic(odds, future float64, live bool) {
 				}
 			}
 		} else if odds < Odds.Bot.Risk[0]+a {
-			if Round.Wager <= MinBet()*uint64(Odds.Bot.Bet[2]+b)*uint64(Odds.Bot.Aggr) {
+			if round.Wager <= MinBet()*uint64(Odds.Bot.Bet[2]+b)*uint64(Odds.Bot.Aggr) {
 				if canRaise() && aggressive(false) {
 					bet = raiseBet(Odds.Bot.Aggr*2, live)
 				} else {
@@ -1390,29 +1390,29 @@ func BetLogic(odds, future float64, live bool) {
 				}
 			}
 		} else if odds < Odds.Bot.Risk[1]+a {
-			if Round.Wager <= MinBet()*uint64(Odds.Bot.Bet[1]+b)*uint64(Odds.Bot.Aggr) {
+			if round.Wager <= MinBet()*uint64(Odds.Bot.Bet[1]+b)*uint64(Odds.Bot.Aggr) {
 				bet = callBet((Odds.Bot.Bet[1]+b)*Odds.Bot.Aggr, live)
 			}
 		} else if odds < Odds.Bot.Risk[2]+a {
-			if Round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b)*uint64(Odds.Bot.Aggr) {
+			if round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b)*uint64(Odds.Bot.Aggr) {
 				bet = callBet((Odds.Bot.Bet[0]+b)*Odds.Bot.Aggr, live)
 			}
-		} else if !Round.Flop && odds < 50+Odds.Bot.Aggr*12 {
-			if Round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b)*uint64(Odds.Bot.Aggr) {
+		} else if !round.flop && odds < 50+Odds.Bot.Aggr*12 {
+			if round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b)*uint64(Odds.Bot.Aggr) {
 				bet = callBet((Odds.Bot.Bet[0]+b)*Odds.Bot.Aggr, live)
 				oddsLog("[BetLogic]", fmt.Sprintln("No Pushover", fmt.Sprintf("%.2f", 50+Odds.Bot.Aggr*12)+"%"))
 			}
 		} else if l == 3 {
 			if Odds.Bot.Aggr > 3 && future < odds {
-				if Round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b)*2 {
+				if round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b)*2 {
 					bet = callBet((Odds.Bot.Bet[0]+b)*2, live)
 				}
 			} else if Odds.Bot.Aggr == 3 && odds < 50 && future < odds {
-				if Round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b)*2 {
+				if round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b)*2 {
 					bet = callBet((Odds.Bot.Bet[0]+b)*2, live)
 				}
 			} else if Odds.Bot.Aggr < 3 && odds < 40 && future < odds {
-				if Round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b) {
+				if round.Wager <= MinBet()*uint64(Odds.Bot.Bet[0]+b) {
 					bet = callBet((Odds.Bot.Bet[0] + b), live)
 				}
 			}
@@ -1439,7 +1439,7 @@ func oddsLog(f, str string) {
 
 // Check if current Holdero table is active
 func GameIsActive() bool {
-	return Round.Players > 1
+	return round.Players > 1
 }
 
 // Set config to stored values
@@ -1460,18 +1460,18 @@ func SetBotConfig(opt Bot_config) {
 
 // Save config of current values
 func SaveBotConfig(i int, opt Bot_config) {
-	Stats.Bots[i].Risk[2] = opt.Risk[2]
-	Stats.Bots[i].Risk[1] = opt.Risk[1]
-	Stats.Bots[i].Risk[0] = opt.Risk[0]
-	Stats.Bots[i].Bet[2] = opt.Bet[2]
-	Stats.Bots[i].Bet[1] = opt.Bet[1]
-	Stats.Bots[i].Bet[0] = opt.Bet[0]
-	Stats.Bots[i].Luck = opt.Luck
-	Stats.Bots[i].Slow = opt.Slow
-	Stats.Bots[i].Aggr = opt.Aggr
-	Stats.Bots[i].Max = opt.Max
-	Stats.Bots[i].Random[0] = opt.Random[0]
-	Stats.Bots[i].Random[1] = opt.Random[1]
+	stats.Bots[i].Risk[2] = opt.Risk[2]
+	stats.Bots[i].Risk[1] = opt.Risk[1]
+	stats.Bots[i].Risk[0] = opt.Risk[0]
+	stats.Bots[i].Bet[2] = opt.Bet[2]
+	stats.Bots[i].Bet[1] = opt.Bet[1]
+	stats.Bots[i].Bet[0] = opt.Bet[0]
+	stats.Bots[i].Luck = opt.Luck
+	stats.Bots[i].Slow = opt.Slow
+	stats.Bots[i].Aggr = opt.Aggr
+	stats.Bots[i].Max = opt.Max
+	stats.Bots[i].Random[0] = opt.Random[0]
+	stats.Bots[i].Random[1] = opt.Random[1]
 }
 
 // Write Holdero stats to file
@@ -1496,63 +1496,63 @@ func WriteHolderoStats(config Player_stats) bool {
 
 // Update win or loss of Holdero stats
 func updateStatsWins(amt uint64, player string, fold bool) {
-	if Odds.Enabled && !Signal.Odds {
-		if "Player"+Display.PlayerId == player {
-			Stats.Player.Win++
-			Stats.Player.Earnings = Stats.Player.Earnings + float64(amt)/100000
+	if Odds.Enabled && !signals.odds {
+		if "Player"+round.display.playerId == player {
+			stats.Player.Win++
+			stats.Player.Earnings = stats.Player.Earnings + float64(amt)/100000
 			if Odds.Bot.Name != "" && Odds.IsRunning() {
-				for i := range Stats.Bots {
-					if Odds.Bot.Name == Stats.Bots[i].Name {
-						Stats.Bots[i].Stats.Win++
-						Stats.Bots[i].Stats.Earnings = Stats.Bots[i].Stats.Earnings + float64(amt)/100000
+				for i := range stats.Bots {
+					if Odds.Bot.Name == stats.Bots[i].Name {
+						stats.Bots[i].Stats.Win++
+						stats.Bots[i].Stats.Earnings = stats.Bots[i].Stats.Earnings + float64(amt)/100000
 						SaveBotConfig(i, Odds.Bot)
 					}
 				}
 			}
 		} else {
 			if !fold {
-				Stats.Player.Lost++
+				stats.Player.Lost++
 			} else {
-				Stats.Player.Fold++
+				stats.Player.Fold++
 			}
-			for i := range Stats.Bots {
-				if Odds.Bot.Name == Stats.Bots[i].Name {
+			for i := range stats.Bots {
+				if Odds.Bot.Name == stats.Bots[i].Name {
 					if !fold {
-						Stats.Bots[i].Stats.Lost++
+						stats.Bots[i].Stats.Lost++
 					} else {
-						Stats.Bots[i].Stats.Fold++
+						stats.Bots[i].Stats.Fold++
 					}
 					SaveBotConfig(i, Odds.Bot)
 				}
 			}
 		}
 
-		WriteHolderoStats(Stats)
-		Signal.Odds = true
+		WriteHolderoStats(stats)
+		signals.odds = true
 	}
 }
 
 // Update wager of Holdero stats
 func updateStatsWager(amt float64) {
 	if Odds.Enabled {
-		Stats.Player.Wagered = Stats.Player.Wagered + amt
+		stats.Player.Wagered = stats.Player.Wagered + amt
 		if Odds.Bot.Name != "" && Odds.IsRunning() {
-			for i := range Stats.Bots {
-				if Odds.Bot.Name == Stats.Bots[i].Name {
-					Stats.Bots[i].Stats.Wagered = Stats.Bots[i].Stats.Wagered + amt
+			for i := range stats.Bots {
+				if Odds.Bot.Name == stats.Bots[i].Name {
+					stats.Bots[i].Stats.Wagered = stats.Bots[i].Stats.Wagered + amt
 					SaveBotConfig(i, Odds.Bot)
 
 				}
 			}
 		}
 
-		WriteHolderoStats(Stats)
+		WriteHolderoStats(stats)
 	}
 }
 
 // Update Holdero stats when push
 func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
-	if Odds.Enabled && !Signal.Odds {
+	if Odds.Enabled && !signals.odds {
 		fold := false
 		ways := float64(0)
 		winners := [6]string{"Zero", "Zero", "Zero", "Zero", "Zero", "Zero"}
@@ -1561,7 +1561,7 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			ways++
 			winners[0] = "Player1"
 		} else {
-			if Round.ID == 1 {
+			if round.ID == 1 {
 				fold = true
 			}
 		}
@@ -1570,7 +1570,7 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			ways++
 			winners[1] = "Player2"
 		} else {
-			if Round.ID == 2 {
+			if round.ID == 2 {
 				fold = true
 			}
 		}
@@ -1579,7 +1579,7 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			ways++
 			winners[2] = "Player3"
 		} else {
-			if Round.ID == 3 {
+			if round.ID == 3 {
 				fold = true
 			}
 		}
@@ -1588,7 +1588,7 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			ways++
 			winners[3] = "Player4"
 		} else {
-			if Round.ID == 4 {
+			if round.ID == 4 {
 				fold = true
 			}
 		}
@@ -1597,7 +1597,7 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			ways++
 			winners[4] = "Player5"
 		} else {
-			if Round.ID == 5 {
+			if round.ID == 5 {
 				fold = true
 			}
 		}
@@ -1606,53 +1606,53 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			ways++
 			winners[5] = "Player6"
 		} else {
-			if Round.ID == 6 {
+			if round.ID == 6 {
 				fold = true
 			}
 		}
 
 		var in bool
 		for i := range winners {
-			if "Player"+Display.PlayerId == winners[i] {
+			if "Player"+round.display.playerId == winners[i] {
 				in = true
 			}
 		}
 
 		if in {
-			Stats.Player.Push++
-			Stats.Player.Earnings = Stats.Player.Earnings + float64(amt)/100000/ways
+			stats.Player.Push++
+			stats.Player.Earnings = stats.Player.Earnings + float64(amt)/100000/ways
 			if Odds.Bot.Name != "" && Odds.IsRunning() {
-				for i := range Stats.Bots {
-					if Odds.Bot.Name == Stats.Bots[i].Name {
-						Stats.Bots[i].Stats.Push++
-						Stats.Bots[i].Stats.Earnings = Stats.Bots[i].Stats.Earnings + float64(amt)/100000/ways
+				for i := range stats.Bots {
+					if Odds.Bot.Name == stats.Bots[i].Name {
+						stats.Bots[i].Stats.Push++
+						stats.Bots[i].Stats.Earnings = stats.Bots[i].Stats.Earnings + float64(amt)/100000/ways
 						SaveBotConfig(i, Odds.Bot)
 					}
 				}
 			}
 
-			WriteHolderoStats(Stats)
+			WriteHolderoStats(stats)
 		} else {
 			if !fold {
-				Stats.Player.Lost++
+				stats.Player.Lost++
 			} else {
-				Stats.Player.Fold++
+				stats.Player.Fold++
 			}
 
-			for i := range Stats.Bots {
-				if Odds.Bot.Name == Stats.Bots[i].Name {
+			for i := range stats.Bots {
+				if Odds.Bot.Name == stats.Bots[i].Name {
 					if !fold {
-						Stats.Bots[i].Stats.Lost++
+						stats.Bots[i].Stats.Lost++
 					} else {
-						Stats.Bots[i].Stats.Fold++
+						stats.Bots[i].Stats.Fold++
 					}
 					SaveBotConfig(i, Odds.Bot)
 				}
 			}
 
-			WriteHolderoStats(Stats)
+			WriteHolderoStats(stats)
 
 		}
-		Signal.Odds = true
+		signals.odds = true
 	}
 }

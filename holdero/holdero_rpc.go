@@ -22,70 +22,62 @@ const (
 )
 
 type displayStrings struct {
-	Seats    string
-	Pot      string
-	Blinds   string
-	Ante     string
-	Dealer   string
-	PlayerId string
-	Readout  string
-	B_Button string
-	C_Button string
-	Res      string
+	seats       string
+	pot         string
+	blinds      string
+	ante        string
+	dealer      string
+	playerId    string
+	readout     string
+	betButton   string
+	checkButton string
+	results     string
+}
+
+type player struct {
+	name   string
+	url    string
+	folded bool
 }
 
 type holderoValues struct {
-	Version   int
-	Contract  string
-	ID        int
-	Players   int
-	Turn      int
-	Last      int64
-	Pot       uint64
-	BB        uint64
-	SB        uint64
-	Ante      uint64
-	Wager     uint64
-	Raised    uint64
-	Flop1     int
-	Flop2     int
-	Flop3     int
-	TurnCard  int
-	RiverCard int
-	SC_seed   string
-	Winner    string
-	Flop      bool
-	LocalEnd  bool
-	F1        bool
-	F2        bool
-	F3        bool
-	F4        bool
-	F5        bool
-	F6        bool
-	Asset     bool
-	Printed   bool
-	Notified  bool
-	Tourney   bool
-	AssetID   string
-	Face      string
-	Back      string
-	F_url     string
-	B_url     string
-	P1_name   string
-	P2_name   string
-	P3_name   string
-	P4_name   string
-	P5_name   string
-	P6_name   string
-	P1_url    string
-	P2_url    string
-	P3_url    string
-	P4_url    string
-	P5_url    string
-	P6_url    string
-	Bettor    string
-	Raiser    string
-	Cards     struct {
+	Version  int
+	Contract string
+	ID       int
+	Players  int
+	Turn     int
+	Last     int64
+	Pot      uint64
+	BB       uint64
+	SB       uint64
+	Ante     uint64
+	Wager    uint64
+	Raised   uint64
+	seed     string
+	winner   string
+	flop     bool
+	localEnd bool
+	asset    bool
+	printed  bool
+	notified bool
+	tourney  bool
+	assetID  string
+	display  displayStrings
+	p1       player
+	p2       player
+	p3       player
+	p4       player
+	p5       player
+	p6       player
+	bettor   string
+	raiser   string
+	cards    struct {
+		CardSpecs
+		flop1  int
+		flop2  int
+		flop3  int
+		turn   int
+		river  int
 		Local1 string
 		Local2 string
 		P1C1   string
@@ -108,27 +100,28 @@ type holderoValues struct {
 		Key5 string
 		Key6 string
 	}
-	Winning_hand  []int
-	First_try     bool
-	Card_delay    bool
-	Local_trigger bool
-	Flop_trigger  bool
-	Turn_trigger  bool
-	River_trigger bool
+	winningHand []int
+	first       bool
+	delay       bool
+	trigger     struct {
+		local bool
+		flop  bool
+		turn  bool
+		river bool
+	}
 }
 
-var Display displayStrings
-var Round holderoValues
+var round holderoValues
 
 // Get Holdero SC data
 func FetchHolderoSC() {
-	if rpc.Daemon.IsConnected() && Signal.Contract {
+	if rpc.Daemon.IsConnected() && signals.contract {
 		rpcClientD, ctx, cancel := rpc.SetDaemonClient(rpc.Daemon.Rpc)
 		defer cancel()
 
 		var result *dero.GetSC_Result
 		params := dero.GetSC_Params{
-			SCID:      Round.Contract,
+			SCID:      round.Contract,
 			Code:      false,
 			Variables: true,
 		}
@@ -143,7 +136,7 @@ func FetchHolderoSC() {
 		V_jv := result.VariableStringKeys["V:"]
 
 		if V_jv != nil {
-			Round.Version = rpc.IntType(V_jv)
+			round.Version = rpc.IntType(V_jv)
 		}
 
 		if Seats_jv != nil && rpc.IntType(Seats_jv) > 0 {
@@ -212,60 +205,60 @@ func FetchHolderoSC() {
 			Last_jv := result.VariableStringKeys["Last"]
 
 			if Last_jv != nil {
-				Round.Last = int64(rpc.Float64Type(Last_jv))
+				round.Last = int64(rpc.Float64Type(Last_jv))
 			} else {
-				Round.Last = 0
+				round.Last = 0
 			}
 
 			if Tourney_jv == nil {
-				Round.Tourney = false
+				round.tourney = false
 				if Chips_jv != nil {
 					if rpc.HexToString(Chips_jv) == "ASSET" {
-						Round.Asset = true
+						round.asset = true
 						if _, ok := result.VariableStringKeys["dReams"].(string); ok {
 							Pot_jv = result.Balances[rpc.DreamsSCID]
-							Round.AssetID = rpc.DreamsSCID
+							round.assetID = rpc.DreamsSCID
 						} else if _, ok = result.VariableStringKeys["HGC"].(string); ok {
 							Pot_jv = result.Balances[rpc.HgcSCID]
-							Round.AssetID = rpc.HgcSCID
+							round.assetID = rpc.HgcSCID
 						}
 					} else {
-						Round.Asset = false
-						Round.AssetID = ""
+						round.asset = false
+						round.assetID = ""
 						Pot_jv = result.Balances["0000000000000000000000000000000000000000000000000000000000000000"]
 					}
 				} else {
-					Round.Asset = false
-					Round.AssetID = ""
+					round.asset = false
+					round.assetID = ""
 					Pot_jv = result.Balances["0000000000000000000000000000000000000000000000000000000000000000"]
 				}
 			} else {
-				Round.Tourney = true
+				round.tourney = true
 				if Chips_jv != nil {
 					if rpc.HexToString(Chips_jv) == "ASSET" {
-						Round.Asset = true
+						round.asset = true
 						Pot_jv = result.Balances[TourneySCID]
 					} else {
-						Round.Asset = false
-						Round.AssetID = ""
+						round.asset = false
+						round.assetID = ""
 						Pot_jv = result.Balances["0000000000000000000000000000000000000000000000000000000000000000"]
 					}
 				} else {
-					Round.Asset = false
-					Round.AssetID = ""
+					round.asset = false
+					round.assetID = ""
 					Pot_jv = result.Balances["0000000000000000000000000000000000000000000000000000000000000000"]
 				}
 			}
 
-			Round.Ante = rpc.Uint64Type(Ante_jv)
-			Round.BB = rpc.Uint64Type(BigBlind_jv)
-			Round.SB = rpc.Uint64Type(SmallBlind_jv)
-			Round.Pot = Pot_jv
+			round.Ante = rpc.Uint64Type(Ante_jv)
+			round.BB = rpc.Uint64Type(BigBlind_jv)
+			round.SB = rpc.Uint64Type(SmallBlind_jv)
+			round.Pot = Pot_jv
 
 			hasFolded(P1F_jv, P2F_jv, P3F_jv, P4F_jv, P5F_jv, P6F_jv)
 			allFolded(P1F_jv, P2F_jv, P3F_jv, P4F_jv, P5F_jv, P6F_jv, Seats_jv)
 
-			if !Round.LocalEnd {
+			if !round.localEnd {
 				getCommCardValues(Flop1_jv, Flop2_jv, Flop3_jv, TurnCard_jv, RiverCard_jv)
 				getPlayerCardValues(P1C1_jv, P1C2_jv, P2C1_jv, P2C2_jv, P3C1_jv, P3C2_jv, P4C1_jv, P4C2_jv, P5C1_jv, P5C2_jv, P6C1_jv, P6C2_jv)
 			}
@@ -276,77 +269,77 @@ func FetchHolderoSC() {
 			}
 
 			if P1Out_jv != nil {
-				Signal.Out1 = true
+				signals.Out1 = true
 			} else {
-				Signal.Out1 = false
+				signals.Out1 = false
 			}
 
 			tableOpen(Seats_jv, Full_jv, TwoId_jv, ThreeId_jv, FourId_jv, FiveId_jv, SixId_jv)
 
 			if FlopBool_jv != nil {
-				Round.Flop = true
+				round.flop = true
 				rpc.Wallet.KeyLock = false
 			} else {
-				Round.Flop = false
+				round.flop = false
 			}
 
-			Display.PlayerId = checkPlayerId(getAvatar(1, OneId_jv), getAvatar(2, TwoId_jv), getAvatar(3, ThreeId_jv), getAvatar(4, FourId_jv), getAvatar(5, FiveId_jv), getAvatar(6, SixId_jv))
+			round.display.playerId = checkPlayerId(getAvatar(1, OneId_jv), getAvatar(2, TwoId_jv), getAvatar(3, ThreeId_jv), getAvatar(4, FourId_jv), getAvatar(5, FiveId_jv), getAvatar(6, SixId_jv))
 
 			if Wager_jv != nil {
-				if Round.Bettor == "" {
-					Round.Bettor = findBettor(Turn_jv)
+				if round.bettor == "" {
+					round.bettor = findBettor(Turn_jv)
 				}
-				Round.Wager = rpc.Uint64Type(Wager_jv)
-				Display.B_Button = "Call/Raise"
-				Display.C_Button = "Fold"
+				round.Wager = rpc.Uint64Type(Wager_jv)
+				round.display.betButton = "Call/Raise"
+				round.display.checkButton = "Fold"
 			} else {
-				Round.Bettor = ""
-				Round.Wager = 0
+				round.bettor = ""
+				round.Wager = 0
 			}
 
 			if Raised_jv != nil {
-				if Round.Raiser == "" {
-					Round.Raiser = findBettor(Turn_jv)
+				if round.raiser == "" {
+					round.raiser = findBettor(Turn_jv)
 				}
-				Round.Raised = rpc.Uint64Type(Raised_jv)
-				Display.B_Button = "Call"
-				Display.C_Button = "Fold"
+				round.Raised = rpc.Uint64Type(Raised_jv)
+				round.display.betButton = "Call"
+				round.display.checkButton = "Fold"
 			} else {
-				Round.Raiser = ""
-				Round.Raised = 0
+				round.raiser = ""
+				round.Raised = 0
 			}
 
-			if Round.ID == rpc.IntType(Turn_jv)+1 {
-				Signal.My_turn = true
-			} else if Round.ID == 1 && Turn_jv == Seats_jv {
-				Signal.My_turn = true
+			if round.ID == rpc.IntType(Turn_jv)+1 {
+				signals.myTurn = true
+			} else if round.ID == 1 && Turn_jv == Seats_jv {
+				signals.myTurn = true
 			} else {
-				Signal.My_turn = false
+				signals.myTurn = false
 			}
 
-			Display.Pot = rpc.FromAtomic(Pot_jv, 5)
-			Display.Seats = fmt.Sprint(Seats_jv)
-			Display.Ante = rpc.FromAtomic(Ante_jv, 5)
-			Display.Blinds = blindString(BigBlind_jv, SmallBlind_jv)
-			Display.Dealer = rpc.AddOne(Dealer_jv)
+			round.display.pot = rpc.FromAtomic(Pot_jv, 5)
+			round.display.seats = fmt.Sprint(Seats_jv)
+			round.display.ante = rpc.FromAtomic(Ante_jv, 5)
+			round.display.blinds = blindString(BigBlind_jv, SmallBlind_jv)
+			round.display.dealer = rpc.AddOne(Dealer_jv)
 
-			Round.SC_seed = fmt.Sprint(Seed_jv)
+			round.seed = fmt.Sprint(Seed_jv)
 
 			if face, ok := Face_jv.(string); ok {
 				if face != "nil" {
 					var c = &CardSpecs{}
 					if err := json.Unmarshal([]byte(rpc.HexToString(face)), c); err == nil {
-						Round.Face = c.Faces.Name
-						Round.Back = c.Backs.Name
-						Round.F_url = c.Faces.Url
-						Round.B_url = c.Backs.Url
+						round.cards.Faces.Name = c.Faces.Name
+						round.cards.Backs.Name = c.Backs.Name
+						round.cards.Faces.Url = c.Faces.Url
+						round.cards.Faces.Url = c.Backs.Url
 					}
 				}
 			} else {
-				Round.Face = ""
-				Round.Back = ""
-				Round.F_url = ""
-				Round.B_url = ""
+				round.cards.Faces.Name = ""
+				round.cards.Backs.Name = ""
+				round.cards.Faces.Url = ""
+				round.cards.Backs.Url = ""
 			}
 
 			// // Unused at moment
@@ -357,43 +350,43 @@ func FetchHolderoSC() {
 			// 	}
 			// }
 
-			if RevealBool_jv != nil && !Signal.Reveal && !Round.LocalEnd {
-				if rpc.AddOne(Turn_jv) == Display.PlayerId {
-					Signal.Clicked = true
-					Signal.CHeight = rpc.Wallet.Height
-					Signal.Reveal = true
+			if RevealBool_jv != nil && !signals.reveal && !round.localEnd {
+				if rpc.AddOne(Turn_jv) == round.display.playerId {
+					signals.clicked = true
+					signals.height = rpc.Wallet.Height
+					signals.reveal = true
 					go RevealKey(rpc.Wallet.ClientKey)
 				}
 			}
 
 			if Turn_jv != Seats_jv {
-				Display.Readout = turnReadout(Turn_jv)
+				round.display.readout = turnReadout(Turn_jv)
 				if turn, ok := Turn_jv.(float64); ok {
-					Round.Turn = int(turn) + 1
+					round.Turn = int(turn) + 1
 				}
 			} else {
-				Round.Turn = 1
-				Display.Readout = turnReadout(float64(0))
+				round.Turn = 1
+				round.display.readout = turnReadout(float64(0))
 			}
 
 			if End_jv != nil {
-				Round.Cards.Key1 = fmt.Sprint(Key1_jv)
-				Round.Cards.Key2 = fmt.Sprint(Key2_jv)
-				Round.Cards.Key3 = fmt.Sprint(Key3_jv)
-				Round.Cards.Key4 = fmt.Sprint(Key4_jv)
-				Round.Cards.Key5 = fmt.Sprint(Key5_jv)
-				Round.Cards.Key6 = fmt.Sprint(Key6_jv)
-				Signal.End = true
+				round.cards.Key1 = fmt.Sprint(Key1_jv)
+				round.cards.Key2 = fmt.Sprint(Key2_jv)
+				round.cards.Key3 = fmt.Sprint(Key3_jv)
+				round.cards.Key4 = fmt.Sprint(Key4_jv)
+				round.cards.Key5 = fmt.Sprint(Key5_jv)
+				round.cards.Key6 = fmt.Sprint(Key6_jv)
+				signals.end = true
 
 			}
 
-			if Round.Version >= 110 && Round.ID == 1 && Times.Kick > 0 && !Signal.My_turn && Round.Pot > 0 && !Round.LocalEnd && !Signal.End {
-				if Round.Last != 0 {
+			if round.Version >= 110 && round.ID == 1 && signals.times.kick > 0 && !signals.myTurn && round.Pot > 0 && !round.localEnd && !signals.end {
+				if round.Last != 0 {
 					now := time.Now().Unix()
-					if now > Round.Last+int64(Times.Kick)+18 {
-						if rpc.Wallet.Height > Times.Kick_block+3 {
+					if now > round.Last+int64(signals.times.kick)+18 {
+						if rpc.Wallet.Height > signals.times.block+3 {
 							TimeOut()
-							Times.Kick_block = rpc.Wallet.Height
+							signals.times.block = rpc.Wallet.Height
 						}
 					}
 				}
@@ -435,10 +428,10 @@ func SitDown(name, av string) {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.HighLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.HighLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -458,7 +451,7 @@ func Leave() {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
-	checkoutId := rpc.StringToInt(Display.PlayerId)
+	checkoutId := rpc.StringToInt(round.display.playerId)
 	singleNameClear(checkoutId)
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "PlayerLeave"}
 	arg2 := dero.Argument{Name: "id", DataType: "U", Value: checkoutId}
@@ -472,10 +465,10 @@ func Leave() {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -516,9 +509,9 @@ func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) {
 	arg6 := dero.Argument{Name: "address", DataType: "S", Value: hx}
 	txid := dero.Transfer_Result{}
 
-	if Round.Version < 110 {
+	if round.Version < 110 {
 		args = dero.Arguments{arg1, arg2, arg3, arg4, arg5, arg6}
-	} else if Round.Version == 110 {
+	} else if round.Version == 110 {
 		arg7 := dero.Argument{Name: "chips", DataType: "S", Value: chips}
 		args = dero.Arguments{arg1, arg2, arg3, arg4, arg5, arg6, arg7}
 	}
@@ -530,10 +523,10 @@ func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.HighLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.HighLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -564,23 +557,23 @@ func DealHand() (tx string) {
 
 	var amount uint64
 
-	if Round.Pot == 0 {
-		amount = Round.Ante + Round.SB
-	} else if Round.Pot == Round.SB || Round.Pot == Round.Ante+Round.SB {
-		amount = Round.Ante + Round.BB
+	if round.Pot == 0 {
+		amount = round.Ante + round.SB
+	} else if round.Pot == round.SB || round.Pot == round.Ante+round.SB {
+		amount = round.Ante + round.BB
 	} else {
-		amount = Round.Ante
+		amount = round.Ante
 	}
 
 	t := []dero.Transfer{}
-	if Round.Asset {
+	if round.asset {
 		t1 := dero.Transfer{
 			Destination: "dero1qyr8yjnu6cl2c5yqkls0hmxe6rry77kn24nmc5fje6hm9jltyvdd5qq4hn5pn",
 			Amount:      500,
 			Burn:        0,
 		}
 
-		if Round.Tourney {
+		if round.tourney {
 			t2 := dero.Transfer{
 				SCID:        crypto.HashHexToHash(TourneySCID),
 				Destination: "dero1qyr8yjnu6cl2c5yqkls0hmxe6rry77kn24nmc5fje6hm9jltyvdd5qq4hn5pn",
@@ -588,7 +581,7 @@ func DealHand() (tx string) {
 			}
 			t = append(t, t1, t2)
 		} else {
-			t2 := rpc.GetAssetSCIDforTransfer(amount, Round.AssetID)
+			t2 := rpc.GetAssetSCIDforTransfer(amount, round.assetID)
 			if t2.Destination == "" {
 				logger.Errorln("[DealHand] Error getting asset SCID for transfer")
 				return
@@ -604,10 +597,10 @@ func DealHand() (tx string) {
 		t = append(t, t1)
 	}
 
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -618,7 +611,7 @@ func DealHand() (tx string) {
 		return
 	}
 
-	Display.Res = ""
+	round.display.results = ""
 	logger.Println("[Holdero] Deal TX:", txid)
 	updateStatsWager(float64(amount) / 100000)
 	rpc.AddLog("Deal TX: " + txid.TXID)
@@ -636,15 +629,15 @@ func Bet(amt string) (tx string) {
 	txid := dero.Transfer_Result{}
 
 	var t1 dero.Transfer
-	if Round.Asset {
-		if Round.Tourney {
+	if round.asset {
+		if round.tourney {
 			t1 = dero.Transfer{
 				SCID:        crypto.HashHexToHash(TourneySCID),
 				Destination: "dero1qyr8yjnu6cl2c5yqkls0hmxe6rry77kn24nmc5fje6hm9jltyvdd5qq4hn5pn",
 				Burn:        rpc.ToAtomic(amt, 1),
 			}
 		} else {
-			t1 = rpc.GetAssetSCIDforTransfer(rpc.ToAtomic(amt, 1), Round.AssetID)
+			t1 = rpc.GetAssetSCIDforTransfer(rpc.ToAtomic(amt, 1), round.assetID)
 			if t1.Destination == "" {
 				logger.Errorln("[Bet] Error getting asset SCID for transfer")
 				return
@@ -659,10 +652,10 @@ func Bet(amt string) (tx string) {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -677,8 +670,8 @@ func Bet(amt string) (tx string) {
 		updateStatsWager(f)
 	}
 
-	Display.Res = ""
-	Signal.PlacedBet = true
+	round.display.results = ""
+	signals.placedBet = true
 	logger.Println("[Holdero] Bet TX:", txid)
 	rpc.AddLog("Bet TX: " + txid.TXID)
 
@@ -695,21 +688,21 @@ func Check() (tx string) {
 	txid := dero.Transfer_Result{}
 
 	var t1 dero.Transfer
-	if !Round.Asset {
+	if !round.asset {
 		t1 = dero.Transfer{
 			Destination: "dero1qyr8yjnu6cl2c5yqkls0hmxe6rry77kn24nmc5fje6hm9jltyvdd5qq4hn5pn",
 			Amount:      0,
 			Burn:        0,
 		}
 	} else {
-		if Round.Tourney {
+		if round.tourney {
 			t1 = dero.Transfer{
 				SCID:        crypto.HashHexToHash(TourneySCID),
 				Destination: "dero1qyr8yjnu6cl2c5yqkls0hmxe6rry77kn24nmc5fje6hm9jltyvdd5qq4hn5pn",
 				Burn:        0,
 			}
 		} else {
-			t1 = rpc.GetAssetSCIDforTransfer(0, Round.AssetID)
+			t1 = rpc.GetAssetSCIDforTransfer(0, round.assetID)
 			if t1.Destination == "" {
 				logger.Errorln("[Check] Error getting asset SCID for transfer")
 				return
@@ -718,10 +711,10 @@ func Check() (tx string) {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -732,7 +725,7 @@ func Check() (tx string) {
 		return
 	}
 
-	Display.Res = ""
+	round.display.results = ""
 	logger.Println("[Holdero] Check/Fold TX:", txid)
 	rpc.AddLog("Check/Fold TX: " + txid.TXID)
 
@@ -757,10 +750,10 @@ func PayOut(w string) string {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -837,10 +830,10 @@ func PayoutSplit(r ranker, f1, f2, f3, f4, f5, f6 bool) string {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -875,10 +868,10 @@ func RevealKey(key string) {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -889,7 +882,7 @@ func RevealKey(key string) {
 		return
 	}
 
-	Display.Res = ""
+	round.display.results = ""
 	logger.Println("[Holdero] Reveal TX:", txid)
 	rpc.AddLog("Reveal TX: " + txid.TXID)
 }
@@ -911,10 +904,10 @@ func CleanTable(amt uint64) {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -945,10 +938,10 @@ func TimeOut() {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -979,10 +972,10 @@ func ForceStat() {
 	}
 
 	t := []dero.Transfer{t1}
-	fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+	fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 	params := &dero.Transfer_Params{
 		Transfers: t,
-		SC_ID:     Round.Contract,
+		SC_ID:     round.Contract,
 		SC_RPC:    args,
 		Ringsize:  2,
 		Fees:      fee,
@@ -1026,10 +1019,10 @@ func SharedDeckUrl(face, faceUrl, back, backUrl string) {
 		}
 
 		t := []dero.Transfer{t1}
-		fee := rpc.GasEstimate(Round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
+		fee := rpc.GasEstimate(round.Contract, "[Holdero]", args, t, rpc.LowLimitFee)
 		params := &dero.Transfer_Params{
 			Transfers: t,
-			SC_ID:     Round.Contract,
+			SC_ID:     round.Contract,
 			SC_RPC:    args,
 			Ringsize:  2,
 			Fees:      fee,
@@ -1175,7 +1168,7 @@ func uploadHolderoContract(pub int) {
 		txid := dero.Transfer_Result{}
 
 		params := &dero.Transfer_Params{
-			Transfers: []dero.Transfer{*OwnerT3(Poker.table_owner)},
+			Transfers: []dero.Transfer{*OwnerT3(table.owner.valid)},
 			SC_Code:   code,
 			SC_Value:  0,
 			SC_RPC:    args,
