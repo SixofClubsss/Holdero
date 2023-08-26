@@ -388,6 +388,16 @@ func holderoFavorites() fyne.CanvasObject {
 	return cont
 }
 
+// Returns table.Favorites.SCIDs
+func GetFavoriteTables() []string {
+	return table.Favorites.SCIDs
+}
+
+// Set table.Favorites.SCIDs
+func SetFavoriteTables(fav []string) {
+	table.Favorites.SCIDs = fav
+}
+
 // Owned Holdero tables object
 func myTables() fyne.CanvasObject {
 	table.Owned.List = widget.NewList(
