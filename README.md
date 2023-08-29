@@ -4,7 +4,7 @@ On chain Texas Hold'em style poker.
 Written in Go and using [Fyne Toolkit](https://fyne.io/), Holdero is built on Dero's private L1. Powered by [Gnomon](https://github.com/civilware/Gnomon) and [dReams](https://github.com/dReam-dApps/dReams), Holdero is a casual way to play poker with friends and community members. Holdero tables are each individually owned and operated. Cards and betting are handled on chain and account balances remain private while playing. 
 
 
-![goMod](https://img.shields.io/github/go-mod/go-version/SixofClubsss/Holdero.svg)![goReport](https://goreportcard.com/badge/github.com/SixofClubsss/Holdero)[![GoDoc reference example](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/SixofClubsss/Holdero)
+![goMod](https://img.shields.io/github/go-mod/go-version/SixofClubsss/Holdero.svg)![goReport](https://goreportcard.com/badge/github.com/SixofClubsss/Holdero)[![goDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/SixofClubsss/Holdero)
 
 Holdero dApp with full features is available for download from [dReams](https://dreamdapps.io).
 
