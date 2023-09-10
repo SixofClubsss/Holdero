@@ -264,7 +264,7 @@ func getAvatar(p int, id interface{}) string {
 		round.p4.url = player.Avatar
 	case 5:
 		round.p5.name = player.Name
-		round.p5.name = player.Avatar
+		round.p5.url = player.Avatar
 	case 6:
 		round.p6.name = player.Name
 		round.p6.url = player.Avatar
