@@ -413,11 +413,11 @@ func downloadPopUp(p float64, i int) { /// pop up for loading progress
 		Shared.window.Resize(fyne.NewSize(300, 30))
 		Shared.window.SetFixedSize(true)
 		Shared.window.SetIcon(nil)
-		content := container.NewMax(downloadProgress(p))
+		content := container.NewStack(downloadProgress(p))
 		Shared.window.SetContent(content)
 		Shared.window.Show()
 	} else {
-		content := container.NewMax(downloadProgress(p))
+		content := container.NewStack(downloadProgress(p))
 		Shared.window.SetContent(content)
 	}
 }

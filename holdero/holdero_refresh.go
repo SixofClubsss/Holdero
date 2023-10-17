@@ -103,7 +103,7 @@ func fetch(d *dreams.AppObject) {
 			FetchHolderoSC()
 
 			table.stats.Container = *container.NewVBox(
-				container.NewMax(tableIcon(bundle.ResourceAvatarFramePng)),
+				container.NewStack(tableIcon(bundle.ResourceAvatarFramePng)),
 				table.stats.name,
 				table.stats.desc,
 				table.stats.owner,

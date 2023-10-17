@@ -328,5 +328,5 @@ func DreamsConfirm(c, amt float64, obj *fyne.Container, reset fyne.CanvasObject)
 		obj.Objects[0].Refresh()
 	}()
 
-	return container.NewMax(content)
+	return container.NewStack(content)
 }

@@ -335,16 +335,16 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 	table.owner.owners_left = container.NewHBox(
 		container.NewVBox(widget.NewForm(left_form...), layout.NewSpacer(),
-			container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, set_button))),
+			container.NewHBox(layout.NewSpacer(), container.NewStack(button_spacer, set_button))),
 		container.NewVBox(widget.NewForm(mid_form...), layout.NewSpacer(),
-			container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, force))))
+			container.NewHBox(layout.NewSpacer(), container.NewStack(button_spacer, force))))
 
 	mid := container.NewVBox(table.owner.owners_mid, layout.NewSpacer(),
-		container.NewHBox(layout.NewSpacer(), container.NewMax(button_spacer, table.tournament)))
+		container.NewHBox(layout.NewSpacer(), container.NewStack(button_spacer, table.tournament)))
 
-	right := container.NewMax(container.NewAdaptiveGrid(2, layout.NewSpacer(), layout.NewSpacer()),
+	right := container.NewStack(container.NewAdaptiveGrid(2, layout.NewSpacer(), layout.NewSpacer()),
 		container.NewVBox(layout.NewSpacer(),
-			container.NewHBox(help_spacer, container.NewMax(button_spacer, help_button))))
+			container.NewHBox(help_spacer, container.NewStack(button_spacer, help_button))))
 
 	table.owner.owners_left.Hide()
 	button_spacer.SetMinSize(ante_entry.Size())
@@ -362,7 +362,7 @@ func tableIcon(r fyne.Resource) fyne.CanvasObject {
 
 	border := container.NewBorder(layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), &table.stats.image)
 
-	return container.NewHBox(container.NewMax(border, frame), layout.NewSpacer())
+	return container.NewHBox(container.NewStack(border, frame), layout.NewSpacer())
 }
 
 // Holdero table stats display objects
@@ -394,7 +394,7 @@ func displayTableStats() fyne.CanvasObject {
 	table.stats.blinds.Hide()
 
 	table.stats.Container = *container.NewVBox(
-		container.NewMax(tableIcon(nil)),
+		container.NewStack(tableIcon(nil)),
 		layout.NewSpacer(),
 		table.stats.name,
 		table.stats.desc,
@@ -405,7 +405,7 @@ func displayTableStats() fyne.CanvasObject {
 		table.stats.last,
 		table.stats.seats)
 
-	return container.NewMax(&table.stats.Container)
+	return container.NewStack(&table.stats.Container)
 }
 
 // Confirmation for Holdero contract installs
@@ -522,5 +522,5 @@ Public table that uses HGC or DERO`
 		obj[1].Refresh()
 	}()
 
-	return container.NewMax(content)
+	return container.NewStack(content)
 }

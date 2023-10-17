@@ -41,7 +41,7 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *containe
 		table.unlock,
 		table.new)
 
-	owner_buttons := container.NewAdaptiveGrid(2, container.NewMax(layout.NewSpacer()), unlock_cont)
+	owner_buttons := container.NewAdaptiveGrid(2, container.NewStack(layout.NewSpacer()), unlock_cont)
 	owned_tab := container.NewBorder(nil, owner_buttons, nil, nil, myTables())
 
 	tabs = container.NewAppTabs(
@@ -82,7 +82,7 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *containe
 		}
 	}
 
-	max := container.NewMax(bundle.Alpha120, tabs)
+	max := container.NewStack(bundle.Alpha120, tabs)
 
 	table.unlock.OnTapped = func() {
 		max.Objects[1] = holderoMenuConfirm(1, max.Objects, tabs)
@@ -94,7 +94,7 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *containe
 		max.Objects[1].Refresh()
 	}
 
-	menu_bottom := container.NewVBox(layout.NewSpacer(), container.NewHBox(container.NewMax(ownersBox(d))))
+	menu_bottom := container.NewVBox(layout.NewSpacer(), container.NewHBox(container.NewStack(ownersBox(d))))
 
 	contract_cont := container.NewHScroll(holderoContractEntry())
 	contract_cont.SetMinSize(fyne.NewSize(640, 35.1875))

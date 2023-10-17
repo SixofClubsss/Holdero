@@ -279,7 +279,7 @@ func tableListings(tab *container.AppTabs) fyne.CanvasObject {
 			return len(table.Public.SCIDs)
 		},
 		func() fyne.CanvasObject {
-			return container.NewHBox(container.NewMax(canvas.NewImageFromImage(nil)), widget.NewLabel(""))
+			return container.NewHBox(container.NewStack(canvas.NewImageFromImage(nil)), widget.NewLabel(""))
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			o.(*fyne.Container).Objects[1].(*widget.Label).SetText(table.Public.SCIDs[i])
@@ -1022,7 +1022,7 @@ func TimeOutWarning() *fyne.Container {
 	msg := canvas.NewText("Make your move, or you will be Timed Out", color.RGBA{240, 0, 0, 240})
 	msg.TextSize = 15
 
-	table.warning = container.NewMax(rect, msg)
+	table.warning = container.NewStack(rect, msg)
 
 	table.warning.Hide()
 
@@ -1478,7 +1478,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 		top_box)
 
 	odds_box := container.NewVBox(layout.NewSpacer(), odds_button)
-	max := container.NewMax(scroll, odds_box)
+	max := container.NewStack(scroll, odds_box)
 
 	stats_label := widget.NewLabel("")
 
@@ -1533,7 +1533,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	}
 
 	bm.SetContent(
-		container.New(layout.NewMaxLayout(),
+		container.NewStack(
 			rast,
 			bundle.Alpha180,
 			tabs))
