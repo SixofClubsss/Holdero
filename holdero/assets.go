@@ -73,6 +73,16 @@ func FaceSelect() fyne.Widget {
 	return Settings.faces.Select
 }
 
+func getCardBacks(s string, url string) {
+	Settings.backs.URL = url
+	dir := dreams.GetDir()
+	back := dir + "/cards/backs/" + s + ".png"
+	if !dreams.FileExists(back, "Holdero") {
+		logger.Println("[Holdero] Downloading " + Settings.backs.URL)
+		downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
+	}
+}
+
 // Holdero card back selection object for all games
 //   - Sets shared back url on selected
 //   - If back is not present locally, it is downloaded
@@ -109,12 +119,23 @@ func BackSelect() fyne.Widget {
 					downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
 				}
 			} else if check == "High-Strangeness" {
-				Settings.backs.URL = "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back/HS_Back.png"
-				dir := dreams.GetDir()
-				back := dir + "/cards/backs/" + s + ".png"
-				if !dreams.FileExists(back, "Holdero") {
-					logger.Println("[Holdero] Downloading " + Settings.backs.URL)
-					downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
+				num := strings.Trim(s, "Hih-Stranges")
+				switch num {
+				case "1":
+					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back/HS_Back.png"
+					getCardBacks(s, url)
+				case "2":
+					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back2/HS_Back2.png"
+					getCardBacks(s, url)
+				case "3":
+					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back3/HS_Back3.png"
+					getCardBacks(s, url)
+				case "4":
+					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back4/HS_Back4.png"
+					getCardBacks(s, url)
+				case "5":
+					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back5/HS_Back5.png"
+					getCardBacks(s, url)
 				}
 			} else {
 				Settings.backs.URL = ""
