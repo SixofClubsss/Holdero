@@ -20,6 +20,17 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// Downloads card deck if it does not exists locally
+func getCardDeck(url string) {
+	Settings.faces.URL = url
+	dir := dreams.GetDir()
+	face := dir + "/cards/" + Settings.faces.Name + "/card1.png"
+	if !dreams.FileExists(face, "Holdero") {
+		logger.Println("[Holdero] Downloading " + Settings.faces.URL)
+		go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
+	}
+}
+
 // Holdero card face selection object
 //   - Sets shared face url on selected
 //   - If deck is not present locally, it is downloaded
@@ -39,29 +50,14 @@ func FaceSelect() fyne.Widget {
 
 		check := strings.Trim(s, "0123456789")
 		if check == "AZYPC" {
-			Settings.faces.URL = "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".zip?raw=true"
-			dir := dreams.GetDir()
-			face := dir + "/cards/" + Settings.faces.Name + "/card1.png"
-			if !dreams.FileExists(face, "Holdero") {
-				logger.Println("[Holdero] Downloading " + Settings.faces.URL)
-				go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
-			}
+			url := "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".zip?raw=true"
+			getCardDeck(url)
 		} else if check == "SIXPC" {
-			Settings.faces.URL = "https://raw.githubusercontent.com/SixofClubsss/" + s + "/main/" + s + ".zip?raw=true"
-			dir := dreams.GetDir()
-			face := dir + "/cards/" + Settings.faces.Name + "/card1.png"
-			if !dreams.FileExists(face, "Holdero") {
-				logger.Println("[Holdero] Downloading " + Settings.faces.URL)
-				go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
-			}
-		} else if check == "High-Strangeness" {
-			Settings.faces.URL = "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/HS_Deck/HS_Deck.zip?raw=true"
-			dir := dreams.GetDir()
-			face := dir + "/cards/" + Settings.faces.Name + "/card1.png"
-			if !dreams.FileExists(face, "Holdero") {
-				logger.Println("[Holdero] Downloading " + Settings.faces.URL)
-				go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
-			}
+			url := "https://raw.githubusercontent.com/SixofClubsss/" + s + "/main/" + s + ".zip?raw=true"
+			getCardDeck(url)
+		} else if check == "HS_Deck" {
+			url := "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/" + s + "/" + s + ".zip?raw=true"
+			getCardDeck(url)
 		} else {
 			Settings.faces.URL = ""
 		}
@@ -73,7 +69,8 @@ func FaceSelect() fyne.Widget {
 	return Settings.faces.Select
 }
 
-func getCardBacks(s string, url string) {
+// Downloads card back if it does not exists locally
+func getCardBack(s, url string) {
 	Settings.backs.URL = url
 	dir := dreams.GetDir()
 	back := dir + "/cards/backs/" + s + ".png"
@@ -103,40 +100,14 @@ func BackSelect() fyne.Widget {
 		go func() {
 			check := strings.Trim(s, "0123456789")
 			if check == "AZYPCB" {
-				Settings.backs.URL = "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".png"
-				dir := dreams.GetDir()
-				file := dir + "/cards/backs/" + s + ".png"
-				if !dreams.FileExists(file, "Holdero") {
-					logger.Println("[Holdero] Downloading " + Settings.backs.URL)
-					downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
-				}
+				url := "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".png"
+				getCardBack(s, url)
 			} else if check == "SIXPCB" {
-				Settings.backs.URL = "https://raw.githubusercontent.com/SixofClubsss/" + s + "/main/" + s + ".png"
-				dir := dreams.GetDir()
-				back := dir + "/cards/backs/" + s + ".png"
-				if !dreams.FileExists(back, "Holdero") {
-					logger.Println("[Holdero] Downloading " + Settings.backs.URL)
-					downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
-				}
-			} else if check == "High-Strangeness" {
-				num := strings.Trim(s, "Hih-Stranges")
-				switch num {
-				case "1":
-					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back/HS_Back.png"
-					getCardBacks(s, url)
-				case "2":
-					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back2/HS_Back2.png"
-					getCardBacks(s, url)
-				case "3":
-					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back3/HS_Back3.png"
-					getCardBacks(s, url)
-				case "4":
-					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back4/HS_Back4.png"
-					getCardBacks(s, url)
-				case "5":
-					url := "https://raw.githubusercontent.com/High-Strangeness/" + s + "/main/HS_Back5/HS_Back5.png"
-					getCardBacks(s, url)
-				}
+				url := "https://raw.githubusercontent.com/SixofClubsss/" + s + "/main/" + s + ".png"
+				getCardBack(s, url)
+			} else if check == "HS_Back" {
+				url := "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/" + s + "/" + s + ".png"
+				getCardBack(s, url)
 			} else {
 				Settings.backs.URL = ""
 			}
