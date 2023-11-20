@@ -175,7 +175,11 @@ func (s *settings) AddFaces(add, check string) {
 }
 
 func (s *settings) CurrentFaces() []string {
-	return Settings.faces.Select.Options
+	return s.faces.Select.Options
+}
+
+func (s *settings) CurrentBacks() []string {
+	return s.backs.Select.Options
 }
 
 func (s *settings) AddBacks(add, check string) {
