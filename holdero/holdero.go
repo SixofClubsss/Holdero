@@ -266,6 +266,7 @@ func setHolderoControls(str string) (item string) {
 	if len(split) >= 3 {
 		trimmed := strings.Trim(split[2], " ")
 		if len(trimmed) == 64 {
+			potIsEmpty(0)
 			item = str
 			table.entry.SetText(trimmed)
 			go getTableStats(trimmed, true)
@@ -441,24 +442,20 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p1.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In1 {
 		if round.p1.url != "" {
 			avatar = &shared.avatar.p1
-			if round.Turn == 1 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
 		} else {
 			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 1 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+		}
+
+		if round.Turn == 1 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
 		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
@@ -499,24 +496,20 @@ func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p2.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In2 {
 		if round.p2.url != "" {
 			avatar = &shared.avatar.p2
-			if round.Turn == 2 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
 		} else {
 			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 2 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+		}
+
+		if round.Turn == 2 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
 		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
@@ -549,24 +542,20 @@ func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p3.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In3 {
 		if round.p3.url != "" {
 			avatar = &shared.avatar.p3
-			if round.Turn == 3 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
 		} else {
 			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 3 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+		}
+
+		if round.Turn == 3 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
 		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
@@ -599,24 +588,20 @@ func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p4.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In4 {
 		if round.p4.url != "" {
 			avatar = &shared.avatar.p4
-			if round.Turn == 4 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
 		} else {
 			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 4 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+		}
+
+		if round.Turn == 4 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
 		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
@@ -649,24 +634,20 @@ func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p5.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In5 {
 		if round.p5.url != "" {
 			avatar = &shared.avatar.p5
-			if round.Turn == 5 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
 		} else {
 			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 5 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+		}
+
+		if round.Turn == 5 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
 		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
@@ -699,24 +680,20 @@ func Player6_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p6.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In6 {
 		if round.p6.url != "" {
 			avatar = &shared.avatar.p6
-			if round.Turn == 6 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
 		} else {
 			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 6 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+		}
+
+		if round.Turn == 6 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
 		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})

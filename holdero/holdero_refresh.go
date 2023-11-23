@@ -131,7 +131,6 @@ func fetch(d *dreams.AppObject) {
 					round.first = false
 					delay = 0
 					round.delay = false
-					go refreshHolderoPlayers()
 				}
 
 				if round.delay {
@@ -354,8 +353,9 @@ func waitLabel() {
 
 // Refresh all Holdero gui objects
 func holderoRefresh(d *dreams.AppObject, offset int) {
-	go ShowAvatar(d.OnTab("Holdero"))
-	go refreshHolderoCards(round.cards.Local1, round.cards.Local2, d)
+	ShowAvatar(d.OnTab("Holdero"))
+	refreshHolderoCards(round.cards.Local1, round.cards.Local2, d)
+	refreshHolderoPlayers()
 	if !signals.clicked {
 		if round.ID == 0 && rpc.Wallet.IsConnected() {
 			if signals.sit {
@@ -428,37 +428,30 @@ func holderoRefresh(d *dreams.AppObject, offset int) {
 			go getTableStats(round.Contract, false)
 		}
 	}
-
-	go func() {
-		refreshHolderoPlayers()
-		H.DApp.Refresh()
-	}()
 }
 
 // Refresh Holdero player names and avatars
 func refreshHolderoPlayers() {
 	H.Back.Objects[0] = HolderoTable(ResourcePokerTablePng)
-	H.Back.Objects[0].Refresh()
+	// H.Back.Objects[0].Refresh()
 
 	H.Back.Objects[1] = Player1_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[1].Refresh()
+	// H.Back.Objects[1].Refresh()
 
 	H.Back.Objects[2] = Player2_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[2].Refresh()
+	// H.Back.Objects[2].Refresh()
 
 	H.Back.Objects[3] = Player3_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[3].Refresh()
+	// H.Back.Objects[3].Refresh()
 
 	H.Back.Objects[4] = Player4_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[4].Refresh()
+	// H.Back.Objects[4].Refresh()
 
 	H.Back.Objects[5] = Player5_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[5].Refresh()
+	// H.Back.Objects[5].Refresh()
 
 	H.Back.Objects[6] = Player6_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[6].Refresh()
-
-	H.Back.Refresh()
+	// H.Back.Objects[6].Refresh()
 }
 
 // Reveal key notification and display

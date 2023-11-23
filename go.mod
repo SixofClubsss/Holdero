@@ -60,6 +60,7 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/superoo7/go-gecko v1.0.0 // indirect
+	github.com/templexxx/cpu v0.1.0 // indirect
 	github.com/tevino/abool v1.2.0 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect

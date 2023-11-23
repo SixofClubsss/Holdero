@@ -90,9 +90,11 @@ func ShowAvatar(tab bool) {
 		var err error
 		if round.p1.url != "" {
 			if !shared.loaded.p1 {
-				if shared.avatar.p1, err = dreams.DownloadFile(round.p1.url, "P1"); err == nil {
-					shared.loaded.p1 = true
-				}
+				go func() {
+					if shared.avatar.p1, err = dreams.DownloadFile(round.p1.url, "P1"); err == nil {
+						shared.loaded.p1 = true
+					}
+				}()
 			}
 		} else {
 			shared.loaded.p1 = false
@@ -100,9 +102,11 @@ func ShowAvatar(tab bool) {
 
 		if round.p2.url != "" {
 			if !shared.loaded.p2 {
-				if shared.avatar.p2, err = dreams.DownloadFile(round.p2.url, "P2"); err == nil {
-					shared.loaded.p2 = true
-				}
+				go func() {
+					if shared.avatar.p2, err = dreams.DownloadFile(round.p2.url, "P2"); err == nil {
+						shared.loaded.p2 = true
+					}
+				}()
 			}
 		} else {
 			shared.loaded.p2 = false
@@ -110,9 +114,11 @@ func ShowAvatar(tab bool) {
 
 		if round.p3.url != "" {
 			if !shared.loaded.p3 {
-				if shared.avatar.p3, err = dreams.DownloadFile(round.p3.url, "P3"); err == nil {
-					shared.loaded.p3 = true
-				}
+				go func() {
+					if shared.avatar.p3, err = dreams.DownloadFile(round.p3.url, "P3"); err == nil {
+						shared.loaded.p3 = true
+					}
+				}()
 			}
 		} else {
 			shared.loaded.p3 = false
@@ -120,9 +126,11 @@ func ShowAvatar(tab bool) {
 
 		if round.p4.url != "" {
 			if !shared.loaded.p4 {
-				if shared.avatar.p4, err = dreams.DownloadFile(round.p4.url, "P4"); err == nil {
-					shared.loaded.p4 = true
-				}
+				go func() {
+					if shared.avatar.p4, err = dreams.DownloadFile(round.p4.url, "P4"); err == nil {
+						shared.loaded.p4 = true
+					}
+				}()
 			}
 		} else {
 			shared.loaded.p4 = false
@@ -130,9 +138,11 @@ func ShowAvatar(tab bool) {
 
 		if round.p5.name != "" {
 			if !shared.loaded.p5 {
-				if shared.avatar.p5, err = dreams.DownloadFile(round.p5.name, "P5"); err == nil {
-					shared.loaded.p5 = true
-				}
+				go func() {
+					if shared.avatar.p5, err = dreams.DownloadFile(round.p5.name, "P5"); err == nil {
+						shared.loaded.p5 = true
+					}
+				}()
 			}
 		} else {
 			shared.loaded.p5 = false
@@ -140,9 +150,11 @@ func ShowAvatar(tab bool) {
 
 		if round.p6.url != "" {
 			if !shared.loaded.p6 {
-				if shared.avatar.p6, err = dreams.DownloadFile(round.p6.url, "P6"); err == nil {
-					shared.loaded.p6 = true
-				}
+				go func() {
+					if shared.avatar.p6, err = dreams.DownloadFile(round.p6.url, "P6"); err == nil {
+						shared.loaded.p6 = true
+					}
+				}()
 			}
 		} else {
 			shared.loaded.p6 = false

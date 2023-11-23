@@ -49,7 +49,7 @@ func StartApp() {
 		Background: container.NewStack(&dreams.Theme.Img),
 	}
 	d.SetChannels(1)
-	d.OnTab("Holdero")
+	d.SetTab("Holdero")
 
 	closeFunc := func() {
 		save := dreams.SaveData{
@@ -134,6 +134,7 @@ func StartApp() {
 	tabs := container.NewAppTabs(
 		container.NewTabItem(app_tag, LayoutAllItems(&d)),
 		container.NewTabItem("Assets", menu.PlaceAssets(app_tag, asset_selects, ResourcePokerBotIconPng, d.Window)),
+		container.NewTabItem("Swap", PlaceSwap()),
 		container.NewTabItem("Log", rpc.SessionLog()))
 
 	tabs.SetTabLocation(container.TabLocationBottom)
@@ -169,7 +170,12 @@ func StartApp() {
 						}
 					}
 
-					// TODO names and assets
+					menu.Assets.Balances.Refresh()
+					if rpc.Wallet.IsConnected() {
+						menu.Assets.Swap.Show()
+					} else {
+						menu.Assets.Swap.Hide()
+					}
 
 					if menu.Gnomes.Indexer.LastIndexedHeight >= menu.Gnomes.Indexer.ChainHeight-3 {
 						menu.Gnomes.Synced(true)
