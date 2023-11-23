@@ -432,7 +432,6 @@ func myTables() fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	var out fyne.CanvasObject
 	if signals.In1 {
@@ -447,9 +446,18 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 
 	if a != nil && signals.In1 {
 		if round.p1.url != "" {
-			avatar = &shared.avatar.p1
+			if !shared.loaded.p1 {
+				shared.loaded.p1 = true
+				if img, err := dreams.DownloadFile(round.p1.url, "P1"); err == nil {
+					shared.avatar.p1 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 1 avatar:", err)
+					shared.avatar.p1 = canvas.NewImageFromResource(a)
+				}
+			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
+			shared.loaded.p1 = false
+			shared.avatar.p1 = canvas.NewImageFromResource(a)
 		}
 
 		if round.Turn == 1 {
@@ -458,8 +466,8 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p1 = canvas.NewImageFromImage(nil)
+		frame = canvas.NewImageFromImage(nil)
 	}
 
 	if signals.Out1 {
@@ -473,13 +481,13 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(242, 20))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(359, 50))
+	shared.avatar.p1.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p1.Move(fyne.NewPos(359, 50))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(357, 48))
 
-	return container.NewWithoutLayout(name, out, avatar, frame)
+	return container.NewWithoutLayout(name, out, shared.avatar.p1, frame)
 }
 
 // Player 2 name and avatar objects
@@ -487,7 +495,6 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In2 {
 		if round.Turn == 2 {
@@ -501,9 +508,18 @@ func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 
 	if a != nil && signals.In2 {
 		if round.p2.url != "" {
-			avatar = &shared.avatar.p2
+			if !shared.loaded.p2 {
+				shared.loaded.p2 = true
+				if img, err := dreams.DownloadFile(round.p2.url, "P2"); err == nil {
+					shared.avatar.p2 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 2 avatar:", err)
+					shared.avatar.p2 = canvas.NewImageFromResource(a)
+				}
+			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
+			shared.loaded.p2 = false
+			shared.avatar.p2 = canvas.NewImageFromResource(a)
 		}
 
 		if round.Turn == 2 {
@@ -512,20 +528,20 @@ func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p2 = canvas.NewImageFromImage(nil)
+		frame = canvas.NewImageFromImage(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(667, 20))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(782, 50))
+	shared.avatar.p2.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p2.Move(fyne.NewPos(782, 50))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(780, 48))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p2, frame)
 }
 
 // Player 3 name and avatar objects
@@ -533,7 +549,6 @@ func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In3 {
 		if round.Turn == 3 {
@@ -547,9 +562,18 @@ func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 
 	if a != nil && signals.In3 {
 		if round.p3.url != "" {
-			avatar = &shared.avatar.p3
+			if !shared.loaded.p3 {
+				shared.loaded.p3 = true
+				if img, err := dreams.DownloadFile(round.p3.url, "P3"); err == nil {
+					shared.avatar.p3 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 3 avatar:", err)
+					shared.avatar.p3 = canvas.NewImageFromResource(a)
+				}
+			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
+			shared.loaded.p3 = false
+			shared.avatar.p3 = canvas.NewImageFromResource(a)
 		}
 
 		if round.Turn == 3 {
@@ -558,20 +582,20 @@ func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p3 = canvas.NewImageFromImage(nil)
+		frame = canvas.NewImageFromImage(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(889, 300))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(987, 327))
+	shared.avatar.p3.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p3.Move(fyne.NewPos(987, 327))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(985, 325))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p3, frame)
 }
 
 // Player 4 name and avatar objects
@@ -579,7 +603,6 @@ func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In4 {
 		if round.Turn == 4 {
@@ -593,9 +616,18 @@ func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 
 	if a != nil && signals.In4 {
 		if round.p4.url != "" {
-			avatar = &shared.avatar.p4
+			if !shared.loaded.p4 {
+				shared.loaded.p4 = true
+				if img, err := dreams.DownloadFile(round.p4.url, "P4"); err == nil {
+					shared.avatar.p4 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 4 avatar:", err)
+					shared.avatar.p4 = canvas.NewImageFromResource(a)
+				}
+			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
+			shared.loaded.p4 = false
+			shared.avatar.p4 = canvas.NewImageFromResource(a)
 		}
 
 		if round.Turn == 4 {
@@ -604,20 +636,20 @@ func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p4 = canvas.NewImageFromImage(nil)
+		frame = canvas.NewImageFromImage(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(688, 555))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(686, 480))
+	shared.avatar.p4.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p4.Move(fyne.NewPos(686, 480))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(684, 478))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p4, frame)
 }
 
 // Player 5 name and avatar objects
@@ -625,7 +657,6 @@ func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In5 {
 		if round.Turn == 5 {
@@ -639,9 +670,18 @@ func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 
 	if a != nil && signals.In5 {
 		if round.p5.url != "" {
-			avatar = &shared.avatar.p5
+			if !shared.loaded.p5 {
+				shared.loaded.p5 = true
+				if img, err := dreams.DownloadFile(round.p5.url, "P5"); err == nil {
+					shared.avatar.p5 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 5 avatar:", err)
+					shared.avatar.p5 = canvas.NewImageFromResource(a)
+				}
+			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
+			shared.loaded.p5 = false
+			shared.avatar.p5 = canvas.NewImageFromResource(a)
 		}
 
 		if round.Turn == 5 {
@@ -650,20 +690,20 @@ func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p5 = canvas.NewImageFromResource(nil)
+		frame = canvas.NewImageFromResource(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(258, 555))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(257, 480))
+	shared.avatar.p5.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p5.Move(fyne.NewPos(257, 480))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(255, 478))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p5, frame)
 }
 
 // Player 6 name and avatar objects
@@ -671,7 +711,6 @@ func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player6_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In6 {
 		if round.Turn == 6 {
@@ -685,9 +724,18 @@ func Player6_label(a, f, t fyne.Resource) fyne.CanvasObject {
 
 	if a != nil && signals.In6 {
 		if round.p6.url != "" {
-			avatar = &shared.avatar.p6
+			if !shared.loaded.p6 {
+				shared.loaded.p6 = true
+				if img, err := dreams.DownloadFile(round.p6.url, "P6"); err == nil {
+					shared.avatar.p6 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 6 avatar:", err)
+					shared.avatar.p6 = canvas.NewImageFromResource(a)
+				}
+			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
+			shared.loaded.p6 = false
+			shared.avatar.p6 = canvas.NewImageFromResource(a)
 		}
 
 		if round.Turn == 6 {
@@ -696,20 +744,20 @@ func Player6_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p6 = canvas.NewImageFromResource(nil)
+		frame = canvas.NewImageFromResource(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 27))
 	name.Move(fyne.NewPos(56, 267))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(55, 193))
+	shared.avatar.p6.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p6.Move(fyne.NewPos(55, 193))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(53, 191))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p6, frame)
 }
 
 // Set Holdero table image resource

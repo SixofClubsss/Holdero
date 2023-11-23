@@ -9,19 +9,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	dreams "github.com/dReam-dApps/dReams"
-
 	"fyne.io/fyne/v2/canvas"
 )
 
 type sharedCards struct {
 	avatar struct {
-		p1 canvas.Image
-		p2 canvas.Image
-		p3 canvas.Image
-		p4 canvas.Image
-		p5 canvas.Image
-		p6 canvas.Image
+		p1 *canvas.Image
+		p2 *canvas.Image
+		p3 *canvas.Image
+		p4 *canvas.Image
+		p5 *canvas.Image
+		p6 *canvas.Image
 	}
 	loaded struct {
 		p1 bool
@@ -67,12 +65,12 @@ func clearShared() {
 	shared.loaded.p4 = false
 	shared.loaded.p5 = false
 	shared.loaded.p6 = false
-	shared.avatar.p1 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p2 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p3 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p4 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p5 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p6 = *canvas.NewImageFromImage(nil)
+	shared.avatar.p1 = canvas.NewImageFromImage(nil)
+	shared.avatar.p2 = canvas.NewImageFromImage(nil)
+	shared.avatar.p3 = canvas.NewImageFromImage(nil)
+	shared.avatar.p4 = canvas.NewImageFromImage(nil)
+	shared.avatar.p5 = canvas.NewImageFromImage(nil)
+	shared.avatar.p6 = canvas.NewImageFromImage(nil)
 }
 
 // Gets shared card urls from connected table
@@ -80,85 +78,6 @@ func GetUrls(face, back string) {
 	if round.ID != 1 {
 		Settings.faces.URL = face
 		Settings.backs.URL = back
-	}
-}
-
-// Single shot control for displaying shared player avatars
-//   - If tab is not selected, we don't check
-func ShowAvatar(tab bool) {
-	if tab {
-		var err error
-		if round.p1.url != "" {
-			if !shared.loaded.p1 {
-				go func() {
-					if shared.avatar.p1, err = dreams.DownloadFile(round.p1.url, "P1"); err == nil {
-						shared.loaded.p1 = true
-					}
-				}()
-			}
-		} else {
-			shared.loaded.p1 = false
-		}
-
-		if round.p2.url != "" {
-			if !shared.loaded.p2 {
-				go func() {
-					if shared.avatar.p2, err = dreams.DownloadFile(round.p2.url, "P2"); err == nil {
-						shared.loaded.p2 = true
-					}
-				}()
-			}
-		} else {
-			shared.loaded.p2 = false
-		}
-
-		if round.p3.url != "" {
-			if !shared.loaded.p3 {
-				go func() {
-					if shared.avatar.p3, err = dreams.DownloadFile(round.p3.url, "P3"); err == nil {
-						shared.loaded.p3 = true
-					}
-				}()
-			}
-		} else {
-			shared.loaded.p3 = false
-		}
-
-		if round.p4.url != "" {
-			if !shared.loaded.p4 {
-				go func() {
-					if shared.avatar.p4, err = dreams.DownloadFile(round.p4.url, "P4"); err == nil {
-						shared.loaded.p4 = true
-					}
-				}()
-			}
-		} else {
-			shared.loaded.p4 = false
-		}
-
-		if round.p5.name != "" {
-			if !shared.loaded.p5 {
-				go func() {
-					if shared.avatar.p5, err = dreams.DownloadFile(round.p5.name, "P5"); err == nil {
-						shared.loaded.p5 = true
-					}
-				}()
-			}
-		} else {
-			shared.loaded.p5 = false
-		}
-
-		if round.p6.url != "" {
-			if !shared.loaded.p6 {
-				go func() {
-					if shared.avatar.p6, err = dreams.DownloadFile(round.p6.url, "P6"); err == nil {
-						shared.loaded.p6 = true
-					}
-				}()
-			}
-		} else {
-			shared.loaded.p6 = false
-		}
 	}
 }
 
