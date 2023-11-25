@@ -1166,7 +1166,7 @@ func compareAll(r *ranker) (end_res string) {
 
 	if !round.printed {
 		round.printed = true
-		rpc.AddLog(end_res)
+		rpc.PrintLog("[Holdero] %s", end_res)
 	}
 
 	return end_res

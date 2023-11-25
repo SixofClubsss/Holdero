@@ -844,7 +844,7 @@ func allFolded(p1, p2, p3, p4, p5, p6, s interface{}) {
 		if GameIsActive() && round.Pot > 0 {
 			if !signals.log {
 				signals.log = true
-				rpc.AddLog(round.display.results)
+				rpc.PrintLog("[Holdero] %s", round.display.results)
 			}
 
 			updateStatsWins(round.Pot, who, true)

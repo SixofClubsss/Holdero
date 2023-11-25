@@ -37,8 +37,7 @@ func GenerateKey() string {
 	str := hex.EncodeToString(shasum[:])
 	rpc.Wallet.KeyLock = true
 	EncryptFile([]byte(str), "config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
-	logger.Println("[Holdero] Round Key: ", str)
-	rpc.AddLog("Round Key: " + str)
+	rpc.PrintLog("[Holdero] Round Key: %s", str)
 
 	return str
 }
