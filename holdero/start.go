@@ -103,10 +103,7 @@ func StartApp() {
 	connect_box.Button.OnTapped = func() {
 		rpc.GetAddress(app_tag)
 		rpc.Ping()
-		if len(rpc.Wallet.Address) > 13 {
-			menu.Control.Names.Options = []string{rpc.Wallet.Address[0:12]}
-			menu.Control.Names.Refresh()
-		}
+		OnConnected()
 		if rpc.Daemon.IsConnected() && !menu.Gnomes.IsInitialized() && !menu.Gnomes.Start {
 			filter := []string{
 				GetHolderoCode(0),
