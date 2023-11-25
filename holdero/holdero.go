@@ -249,7 +249,7 @@ func holderoContractEntry() fyne.Widget {
 				Settings.check.SetChecked(false)
 				table.tournament.Hide()
 			}
-			FetchHolderoSC()
+			fetchHolderoSC()
 			wait = false
 		}
 	}
@@ -891,7 +891,9 @@ func BetAmount() fyne.CanvasObject {
 			} else {
 
 				if round.Wager > 0 {
+					table.check.SetText("Fold")
 					if round.Raised > 0 {
+						table.bet.SetText("Call")
 						if signals.placedBet {
 							table.betEntry.SetText(strconv.FormatFloat(float64(round.Raised)/100000, 'f', int(table.betEntry.Decimal), 64))
 						} else {
@@ -905,6 +907,11 @@ func BetAmount() fyne.CanvasObject {
 							}
 						}
 					} else {
+						if f > float64(round.Wager)/100000 {
+							table.bet.SetText("Raise")
+						} else {
+							table.bet.SetText("Call")
+						}
 
 						if f < float64(round.Wager)/100000 {
 							table.betEntry.SetText(strconv.FormatFloat(float64(round.Wager)/100000, 'f', int(table.betEntry.Decimal), 64))
@@ -920,7 +927,8 @@ func BetAmount() fyne.CanvasObject {
 						}
 					}
 				} else {
-
+					table.bet.SetText("Bet")
+					table.check.SetText("Check")
 					if rpc.Daemon.IsConnected() {
 						float := f * 100000
 						if uint64(float)%10000 == 0 {
@@ -1017,7 +1025,7 @@ func AutoOptions(d *dreams.AppObject) fyne.CanvasObject {
 			dialog.NewInformation("Not connected", "You are not connected to a Holdero SC", d.Window).Show()
 			return
 		}
-		FetchHolderoSC()
+		fetchHolderoSC()
 	})
 
 	cf := widget.NewCheck("Auto Check/Fold", func(b bool) {

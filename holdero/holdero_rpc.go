@@ -22,16 +22,14 @@ const (
 )
 
 type displayStrings struct {
-	seats       string
-	pot         string
-	blinds      string
-	ante        string
-	dealer      string
-	playerId    string
-	readout     string
-	betButton   string
-	checkButton string
-	results     string
+	seats    string
+	pot      string
+	blinds   string
+	ante     string
+	dealer   string
+	playerId string
+	readout  string
+	results  string
 }
 
 type player struct {
@@ -114,7 +112,7 @@ type holderoValues struct {
 var round holderoValues
 
 // Get Holdero SC data
-func FetchHolderoSC() {
+func fetchHolderoSC() {
 	if rpc.Daemon.IsConnected() && signals.contract {
 		rpcClientD, ctx, cancel := rpc.SetDaemonClient(rpc.Daemon.Rpc)
 		defer cancel()
@@ -127,7 +125,7 @@ func FetchHolderoSC() {
 		}
 
 		if err := rpcClientD.CallFor(ctx, &result, "DERO.GetSC", params); err != nil {
-			logger.Errorln("[FetchHolderoSC]", err)
+			logger.Errorln("[fetchHolderoSC]", err)
 			return
 		}
 
@@ -290,8 +288,6 @@ func FetchHolderoSC() {
 					round.bettor = findBettor(Turn_jv)
 				}
 				round.Wager = rpc.Uint64Type(Wager_jv)
-				round.display.betButton = "Call/Raise"
-				round.display.checkButton = "Fold"
 			} else {
 				round.bettor = ""
 				round.Wager = 0
@@ -302,8 +298,6 @@ func FetchHolderoSC() {
 					round.raiser = findBettor(Turn_jv)
 				}
 				round.Raised = rpc.Uint64Type(Raised_jv)
-				round.display.betButton = "Call"
-				round.display.checkButton = "Fold"
 			} else {
 				round.raiser = ""
 				round.Raised = 0
@@ -340,6 +334,11 @@ func FetchHolderoSC() {
 				round.cards.Backs.Name = ""
 				round.cards.Faces.Url = ""
 				round.cards.Backs.Url = ""
+			}
+
+			if round.ID != 1 {
+				Settings.faces.URL = round.cards.Faces.Url
+				Settings.backs.URL = round.cards.Backs.Url
 			}
 
 			// // Unused at moment
@@ -544,7 +543,7 @@ func DealHand() (tx string) {
 	defer cancel()
 
 	if !rpc.Wallet.KeyLock {
-		rpc.Wallet.ClientKey = GenerateKey()
+		rpc.Wallet.ClientKey = generateKey()
 	}
 
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "DealHand"}

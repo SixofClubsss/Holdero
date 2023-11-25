@@ -146,6 +146,7 @@ func StartApp() {
 			case <-ticker.C: // do on interval
 				rpc.Ping()
 				rpc.EchoWallet(app_tag)
+				rpc.GetWalletHeight(app_tag)
 				rpc.GetDreamsBalances(rpc.SCIDs)
 
 				connect_box.RefreshBalance()

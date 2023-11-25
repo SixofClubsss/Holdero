@@ -66,7 +66,7 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *containe
 		if ti.Text == "View Table" {
 			go func() {
 				if len(round.Contract) == 64 {
-					FetchHolderoSC()
+					fetchHolderoSC()
 					tables_menu = false
 					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content = change_screen
 					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content.Refresh()

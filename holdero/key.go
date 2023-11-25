@@ -15,12 +15,12 @@ import (
 )
 
 // Gets local cards with local key
-func Card(hash string) int {
+func findCard(hash string) int {
 	for i := 1; i < 53; i++ {
 		finder := strconv.Itoa(i)
 		add := rpc.Wallet.ClientKey + finder + round.seed
-		card := sha256.Sum256([]byte(add))
-		str := hex.EncodeToString(card[:])
+		sha := sha256.Sum256([]byte(add))
+		str := hex.EncodeToString(sha[:])
 
 		if str == hash {
 			return i
@@ -31,7 +31,7 @@ func Card(hash string) int {
 }
 
 // Generate a new Holdero key
-func GenerateKey() string {
+func generateKey() string {
 	random, _ := rand.Prime(rand.Reader, 128)
 	shasum := sha256.Sum256([]byte(random.String()))
 	str := hex.EncodeToString(shasum[:])

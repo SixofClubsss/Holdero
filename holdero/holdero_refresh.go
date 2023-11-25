@@ -16,24 +16,30 @@ import (
 
 var tables_menu bool
 
-// Sets bet amount and current bet readout
+// Sets bet entry amount, bet button text and current bet readout
 func ifBet(w, r uint64) {
 	if w > 0 && r > 0 && !signals.placedBet {
 		float := float64(w) / 100000
 		wager := strconv.FormatFloat(float, 'f', 1, 64)
 		table.betEntry.SetText(wager)
+		table.check.SetText("Fold")
+		table.bet.SetText("Call")
 		round.display.results = round.raiser + " Raised, " + wager + " to Call "
 	} else if w > 0 && !signals.placedBet {
 		float := float64(w) / 100000
 		wager := strconv.FormatFloat(float, 'f', 1, 64)
 		table.betEntry.SetText(wager)
+		table.check.SetText("Fold")
+		table.bet.SetText("Call")
 		round.display.results = round.bettor + " Bet " + wager
 	} else if r > 0 && signals.placedBet {
 		float := float64(r) / 100000
 		raised := strconv.FormatFloat(float, 'f', 1, 64)
 		table.betEntry.SetText(raised)
+		table.check.SetText("Fold")
+		table.bet.SetText("Call")
 		round.display.results = round.raiser + " Raised, " + raised + " to Call"
-	} else if w == 0 && !signals.bet {
+	} else if w == 0 {
 		var float float64
 		if round.Ante == 0 {
 			float = float64(round.BB) / 100000
@@ -42,6 +48,8 @@ func ifBet(w, r uint64) {
 		}
 		this := strconv.FormatFloat(float, 'f', 1, 64)
 		table.betEntry.SetText(this)
+		table.check.SetText("Check")
+		table.bet.SetText("Bet")
 		if !signals.reveal {
 			round.display.results = "Check or Bet"
 			table.betEntry.Enable()
@@ -53,9 +61,22 @@ func ifBet(w, r uint64) {
 	table.betEntry.Refresh()
 }
 
-// Single shot triggering ifBet() on players turn
+// Single shot when players turn, calls ifBet() and sets called and placedBet signals
 func singleShot(turn, trigger bool) bool {
 	if turn && !trigger {
+		if round.Wager == 0 {
+			if round.flop {
+				signals.called = true
+			} else {
+				signals.called = false
+			}
+
+			if signals.called {
+				signals.placedBet = false
+				signals.called = false
+			}
+		}
+
 		ifBet(round.Wager, round.Raised)
 		return true
 	}
@@ -100,7 +121,7 @@ func fetch(d *dreams.AppObject) {
 				signals.sit = true
 			}
 
-			FetchHolderoSC()
+			fetchHolderoSC()
 
 			table.stats.Container = *container.NewVBox(
 				container.NewStack(tableIcon(bundle.ResourceAvatarFramePng)),
@@ -142,8 +163,6 @@ func fetch(d *dreams.AppObject) {
 					}
 				} else {
 					setHolderoLabel()
-					GetUrls(round.cards.Faces.Url, round.cards.Backs.Url)
-					Called(round.flop, round.Wager)
 					trigger = singleShot(signals.myTurn, trigger)
 					holderoRefresh(d, offset)
 					// Auto check
@@ -386,8 +405,6 @@ func holderoRefresh(d *dreams.AppObject, offset int) {
 				table.deal.Show()
 			}
 
-			table.check.SetText(round.display.checkButton)
-			table.bet.SetText(round.display.betButton)
 			if signals.bet {
 				table.check.Hide()
 				table.bet.Hide()

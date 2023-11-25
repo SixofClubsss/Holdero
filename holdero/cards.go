@@ -416,7 +416,7 @@ func P6_b(c int) fyne.CanvasObject {
 func Is_In(hash string, who int, end bool) int {
 	if hash != "" {
 		if end {
-			return KeyCard(hash, who)
+			return keyCard(hash, who)
 		} else {
 			return 0
 		}
@@ -603,10 +603,10 @@ func refreshHolderoCards(l1, l2 string, d *dreams.AppObject) {
 	if d.OS() == "darwin" {
 		align = 10
 	}
-	card.layout.Objects[0] = Hole_1(Card(l1), size.Width+align, size.Height)
+	card.layout.Objects[0] = Hole_1(findCard(l1), size.Width+align, size.Height)
 	card.layout.Objects[0].Refresh()
 
-	card.layout.Objects[1] = Hole_2(Card(l2), size.Width+align, size.Height)
+	card.layout.Objects[1] = Hole_2(findCard(l2), size.Width+align, size.Height)
 	card.layout.Objects[1].Refresh()
 
 	card.layout.Objects[2] = P1_a(Is_In(round.cards.P1C1, 1, signals.end))

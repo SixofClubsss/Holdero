@@ -56,7 +56,7 @@ type ranker struct {
 }
 
 // Gets other player cards and decrypt with their keys after reveal
-func KeyCard(hash string, who int) int {
+func keyCard(hash string, who int) int {
 	var keyCheck string
 	switch who {
 	case 1:
@@ -112,12 +112,12 @@ func getHands(totalHands int) {
 	r.p6Rank = 100
 	r.p6HighPair = 0
 
-	r.p1HandRaw = [2]int{KeyCard(round.cards.P1C1, 1), KeyCard(round.cards.P1C2, 1)}
-	r.p2HandRaw = [2]int{KeyCard(round.cards.P2C1, 2), KeyCard(round.cards.P2C2, 2)}
-	r.p3HandRaw = [2]int{KeyCard(round.cards.P3C1, 3), KeyCard(round.cards.P3C2, 3)}
-	r.p4HandRaw = [2]int{KeyCard(round.cards.P4C1, 4), KeyCard(round.cards.P4C2, 4)}
-	r.p5HandRaw = [2]int{KeyCard(round.cards.P5C1, 5), KeyCard(round.cards.P5C2, 5)}
-	r.p6HandRaw = [2]int{KeyCard(round.cards.P6C1, 6), KeyCard(round.cards.P6C2, 6)}
+	r.p1HandRaw = [2]int{keyCard(round.cards.P1C1, 1), keyCard(round.cards.P1C2, 1)}
+	r.p2HandRaw = [2]int{keyCard(round.cards.P2C1, 2), keyCard(round.cards.P2C2, 2)}
+	r.p3HandRaw = [2]int{keyCard(round.cards.P3C1, 3), keyCard(round.cards.P3C2, 3)}
+	r.p4HandRaw = [2]int{keyCard(round.cards.P4C1, 4), keyCard(round.cards.P4C2, 4)}
+	r.p5HandRaw = [2]int{keyCard(round.cards.P5C1, 5), keyCard(round.cards.P5C2, 5)}
+	r.p6HandRaw = [2]int{keyCard(round.cards.P6C1, 6), keyCard(round.cards.P6C2, 6)}
 
 	switch totalHands {
 	case 2:

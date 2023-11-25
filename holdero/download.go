@@ -73,14 +73,6 @@ func clearShared() {
 	shared.avatar.p6 = canvas.NewImageFromImage(nil)
 }
 
-// Gets shared card urls from connected table
-func GetUrls(face, back string) {
-	if round.ID != 1 {
-		Settings.faces.URL = face
-		Settings.backs.URL = back
-	}
-}
-
 // Code for storing card deck in memory
 /*
 func downloadMemoryDeck(url string) {
