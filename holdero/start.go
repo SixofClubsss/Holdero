@@ -15,6 +15,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	"github.com/blang/semver/v4"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
@@ -24,6 +25,8 @@ import (
 )
 
 const app_tag = "Holdero"
+
+var version = semver.MustParse("0.3.0-dev")
 
 // Start Holdero dApp
 func StartApp() {
@@ -132,7 +135,7 @@ func StartApp() {
 		container.NewTabItem(app_tag, LayoutAllItems(&d)),
 		container.NewTabItem("Assets", menu.PlaceAssets(app_tag, asset_selects, ResourcePokerBotIconPng, d.Window)),
 		container.NewTabItem("Swap", PlaceSwap()),
-		container.NewTabItem("Log", rpc.SessionLog(app_tag)))
+		container.NewTabItem("Log", rpc.SessionLog(app_tag, version)))
 
 	tabs.SetTabLocation(container.TabLocationBottom)
 
