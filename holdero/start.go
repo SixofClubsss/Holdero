@@ -28,6 +28,11 @@ const app_tag = "Holdero"
 
 var version = semver.MustParse("0.3.0-dev")
 
+// Check holdero package version
+func Version() semver.Version {
+	return version
+}
+
 // Start Holdero dApp
 func StartApp() {
 	n := runtime.NumCPU()
