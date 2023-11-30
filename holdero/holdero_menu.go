@@ -27,7 +27,7 @@ func HolderoIndicator() (ind menu.DreamsIndicator) {
 	blue := color.RGBA{31, 150, 200, 210}
 	alpha := &color.RGBA{0, 0, 0, 0}
 
-	ind.Img = canvas.NewImageFromResource(ResourcePokerBotIconPng)
+	ind.Img = canvas.NewImageFromResource(ResourceHolderoCirclePng)
 	ind.Img.SetMinSize(fyne.NewSize(30, 30))
 	ind.Rect = canvas.NewRectangle(alpha)
 	ind.Rect.SetMinSize(fyne.NewSize(36, 36))
