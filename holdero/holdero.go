@@ -24,7 +24,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
@@ -46,20 +45,7 @@ type holderoObjects struct {
 	tournament *widget.Button
 	betEntry   *dwidget.DeroAmts
 	warning    *fyne.Container
-	stats      struct {
-		fyne.Container
-		name    *canvas.Text
-		desc    *canvas.Text
-		owner   *canvas.Text
-		chips   *canvas.Text
-		blinds  *canvas.Text
-		version *canvas.Text
-		last    *canvas.Text
-		seats   *canvas.Text
-		open    *canvas.Text
-		image   canvas.Image
-	}
-	owner struct {
+	owner      struct {
 		valid       bool
 		blinds      uint64
 		ante        uint64
@@ -68,6 +54,20 @@ type holderoObjects struct {
 		owners_left *fyne.Container
 		owners_mid  *fyne.Container
 	}
+}
+
+type tableInfo struct {
+	name    string
+	desc    string
+	scid    string
+	owner   string
+	chips   string
+	blinds  string
+	version string
+	last    string
+	seats   string
+	rating  uint64
+	image   *canvas.Image
 }
 
 type settings struct {
@@ -89,6 +89,9 @@ type settings struct {
 	shared  *widget.RadioGroup
 }
 
+var publicTables []tableInfo
+var ownedTables []tableInfo
+var favoriteTables []tableInfo
 var table holderoObjects
 var Settings settings
 var logger = structures.Logger.WithFields(logrus.Fields{})
@@ -207,161 +210,134 @@ func initValues() {
 	autoBetDefault()
 }
 
-// Holdero SCID entry
-//   - Bound to rpc.Round.Contract
-//   - Entry text set on list selection
-//   - Changes clear table and check if current entry is valid table
-func holderoContractEntry() fyne.Widget {
-	var wait bool
-	table.entry = widget.NewSelectEntry(nil)
-	options := []string{""}
-	table.entry.SetOptions(options)
-	table.entry.PlaceHolder = "Holdero Contract Address: "
-	table.entry.OnCursorChanged = func() {
-		if rpc.Daemon.IsConnected() && !wait {
-			wait = true
-			text := table.entry.Text
-			go clearShared()
-			if len(text) == 64 {
-				if checkTableOwner(text) {
-					disableOwnerControls(false)
-					if checkTableVersion(text) >= 110 {
-						table.owner.chips.Show()
-						table.owner.timeout.Show()
-						table.owner.owners_mid.Show()
-					} else {
-						table.owner.chips.Hide()
-						table.owner.chips.SetSelected("DERO")
-						table.owner.timeout.Hide()
-						table.owner.owners_mid.Hide()
-					}
-				} else {
-					disableOwnerControls(true)
-				}
-
-				if rpc.Wallet.IsConnected() && checkHolderoContract(text) {
-					table.tournament.Show()
-				} else {
-					table.tournament.Hide()
-				}
-			} else {
-				signals.contract = false
-				Settings.check.SetChecked(false)
-				table.tournament.Hide()
-			}
-			fetchHolderoSC()
-			wait = false
-		}
-	}
-
-	this := binding.BindString(&round.Contract)
-	table.entry.Bind(this)
-
-	return table.entry
-}
-
-// Routine when Holdero SCID is clicked
-func setHolderoControls(str string) (item string) {
-	split := strings.Split(str, "   ")
-	if len(split) >= 3 {
-		trimmed := strings.Trim(split[2], " ")
-		if len(trimmed) == 64 {
-			potIsEmpty(0)
-			item = str
-			table.entry.SetText(trimmed)
-			go getTableStats(trimmed, true)
-			signals.times.block = rpc.Wallet.Height
-		}
+// Sets contract entry text when list item pressed, returns item for use in list funcs
+func setHolderoEntryText(t tableInfo) (item tableInfo) {
+	if len(t.scid) == 64 {
+		potIsEmpty(0)
+		item = t
+		table.entry.SetText(t.scid)
+		signals.times.block = rpc.Wallet.Height
 	}
 
 	return
 }
 
-// Public Holdero table listings object
-func tableListings(tab *container.AppTabs) fyne.CanvasObject {
+// List item with table info and icon
+func listItem() fyne.CanvasObject {
+	spacer := canvas.NewImageFromImage(nil)
+	spacer.SetMinSize(fyne.NewSize(70, 70))
+	return container.NewStack(container.NewBorder(
+		nil,
+		nil,
+		container.NewStack(container.NewCenter(spacer), canvas.NewImageFromImage(nil)),
+		nil,
+		container.NewBorder(
+			nil,
+			container.NewHBox(canvas.NewImageFromImage(nil), widget.NewLabel("")),
+			container.NewStack(canvas.NewImageFromImage(nil), canvas.NewImageFromImage(nil)),
+			nil,
+			widget.NewLabel(""))))
+}
+
+// Update func for listItem
+func updateListItem(i widget.ListItemID, o fyne.CanvasObject, t []tableInfo) {
+	if i > len(t)-1 {
+		return
+	}
+
+	header := fmt.Sprintf("%s   %s   %s", t[i].name, t[i].desc, t[i].scid)
+	if o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*widget.Label).Text != header {
+
+		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*widget.Label).SetText(header)
+		if t[i].chips != "" {
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Label).SetText(fmt.Sprintf("%s   %s   %s   Last move: %s   v%s", t[i].seats, t[i].chips, t[i].blinds, t[i].last, t[i].version))
+		}
+
+		badge := canvas.NewImageFromResource(menu.DisplayRating(menu.Control.Contract_rating[t[i].scid]))
+		badge.SetMinSize(fyne.NewSize(35, 35))
+		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0] = badge
+
+		if t[i].image != nil {
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = t[i].image
+		} else {
+			unknown := canvas.NewImageFromResource(ResourceUnknownAvatarPng)
+			unknown.SetMinSize(fyne.NewSize(66, 66))
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = unknown
+		}
+
+		frame := canvas.NewImageFromResource(bundle.ResourceAvatarFramePng)
+		frame.SetMinSize(fyne.NewSize(70, 70))
+		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1] = frame
+		o.Refresh()
+	}
+}
+
+// Public Holdero table list object
+func publicList(d *dreams.AppObject) fyne.CanvasObject {
 	table.Public.List = widget.NewList(
 		func() int {
-			return len(table.Public.SCIDs)
+			return len(publicTables)
 		},
-		func() fyne.CanvasObject {
-			return container.NewHBox(container.NewStack(canvas.NewImageFromImage(nil)), widget.NewLabel(""))
-		},
+		listItem,
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*fyne.Container).Objects[1].(*widget.Label).SetText(table.Public.SCIDs[i])
-			if table.Public.SCIDs[i][0:2] != "  " {
-				var key string
-				split := strings.Split(table.Public.SCIDs[i], "   ")
-				if len(split) >= 3 {
-					trimmed := strings.Trim(split[2], " ")
-					if len(trimmed) == 64 {
-						key = trimmed
-					}
-				}
-
-				badge := canvas.NewImageFromResource(menu.DisplayRating(menu.Control.Contract_rating[key]))
-				badge.SetMinSize(fyne.NewSize(35, 35))
-				o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = badge
-			}
+			updateListItem(i, o, publicTables)
 		})
 
-	var item string
+	var item tableInfo
 
 	table.Public.List.OnSelected = func(id widget.ListItemID) {
-		if id != 0 && menu.Connected() {
-			go func() {
-				item = setHolderoControls(table.Public.SCIDs[id])
-				table.Favorites.List.UnselectAll()
-				table.Owned.List.UnselectAll()
-			}()
+		if menu.Connected() {
+			item = setHolderoEntryText(publicTables[id])
+			table.Favorites.List.UnselectAll()
+			table.Owned.List.UnselectAll()
 		}
 	}
 
 	save_favorite := widget.NewButton("Favorite", func() {
-		table.Favorites.SCIDs = append(table.Favorites.SCIDs, item)
-		sort.Strings(table.Favorites.SCIDs)
+		for _, sc := range table.Favorites.SCIDs {
+			if item.scid == sc {
+				return
+			}
+		}
+		favoriteTables = append(favoriteTables, item)
+		table.Favorites.SCIDs = append(table.Favorites.SCIDs, item.scid)
 	})
 
 	rate_contract := widget.NewButton("Rate", func() {
 		if len(round.Contract) == 64 {
 			if !checkTableOwner(round.Contract) {
-				reset := tab.Selected().Content
-				tab.Selected().Content = menu.RateConfirm(round.Contract, tab, reset)
-				tab.Selected().Content.Refresh()
-
+				menu.RateConfirm(round.Contract, d)
 			} else {
-				logger.Warnln("[Holdero] You own this contract")
+				dialog.NewInformation("Can't rate", "You are the owner of this SCID", d.Window).Show()
+				logger.Warnln("[Holdero] Can't rate, you own this contract")
 			}
 		}
 	})
 
-	tables_cont := container.NewBorder(
+	return container.NewBorder(
 		nil,
 		container.NewBorder(nil, nil, save_favorite, rate_contract, layout.NewSpacer()),
 		nil,
 		nil,
 		table.Public.List)
-
-	return tables_cont
 }
 
-// Favorite Holdero tables object
-func holderoFavorites() fyne.CanvasObject {
+// Favorite Holdero tables list object
+func favoritesList() fyne.CanvasObject {
 	table.Favorites.List = widget.NewList(
 		func() int {
-			return len(table.Favorites.SCIDs)
+			return len(favoriteTables)
 		},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("")
-		},
+		listItem,
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(table.Favorites.SCIDs[i])
+			updateListItem(i, o, favoriteTables)
 		})
 
-	var item string
+	var item tableInfo
 
 	table.Favorites.List.OnSelected = func(id widget.ListItemID) {
 		if menu.Connected() {
-			item = setHolderoControls(table.Favorites.SCIDs[id])
+			item = setHolderoEntryText(favoriteTables[id])
 			table.Public.List.UnselectAll()
 			table.Owned.List.UnselectAll()
 		}
@@ -370,27 +346,25 @@ func holderoFavorites() fyne.CanvasObject {
 	remove := widget.NewButton("Remove", func() {
 		if len(table.Favorites.SCIDs) > 0 {
 			table.Favorites.List.UnselectAll()
-			for i := range table.Favorites.SCIDs {
-				if table.Favorites.SCIDs[i] == item {
-					copy(table.Favorites.SCIDs[i:], table.Favorites.SCIDs[i+1:])
-					table.Favorites.SCIDs[len(table.Favorites.SCIDs)-1] = ""
-					table.Favorites.SCIDs = table.Favorites.SCIDs[:len(table.Favorites.SCIDs)-1]
+			table.Favorites.RemoveSCID(item.scid)
+			for i := range favoriteTables {
+				if favoriteTables[i].scid == item.scid {
+					copy(favoriteTables[i:], favoriteTables[i+1:])
+					favoriteTables[len(favoriteTables)-1] = tableInfo{}
+					favoriteTables = favoriteTables[:len(favoriteTables)-1]
 					break
 				}
 			}
 		}
 		table.Favorites.List.Refresh()
-		sort.Strings(table.Favorites.SCIDs)
 	})
 
-	cont := container.NewBorder(
+	return container.NewBorder(
 		nil,
 		container.NewBorder(nil, nil, nil, remove, layout.NewSpacer()),
 		nil,
 		nil,
 		table.Favorites.List)
-
-	return cont
 }
 
 // Returns table.Favorites.SCIDs
@@ -403,28 +377,31 @@ func SetFavoriteTables(fav []string) {
 	table.Favorites.SCIDs = fav
 }
 
-// Owned Holdero tables object
-func myTables() fyne.CanvasObject {
+// Owned Holdero tables list object
+func ownedList(d *dreams.AppObject) fyne.CanvasObject {
 	table.Owned.List = widget.NewList(
 		func() int {
-			return len(table.Owned.SCIDs)
+			return len(ownedTables)
 		},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("")
-		},
+		listItem,
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(table.Owned.SCIDs[i])
+			updateListItem(i, o, ownedTables)
 		})
 
 	table.Owned.List.OnSelected = func(id widget.ListItemID) {
 		if menu.Connected() {
-			setHolderoControls(table.Owned.SCIDs[id])
+			setHolderoEntryText(ownedTables[id])
 			table.Public.List.UnselectAll()
 			table.Favorites.List.UnselectAll()
 		}
 	}
 
-	return table.Owned.List
+	return container.NewBorder(
+		nil,
+		nil,
+		nil,
+		ownersBox(d),
+		table.Owned.List)
 }
 
 // Table owner name and avatar objects

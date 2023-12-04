@@ -8,7 +8,6 @@ import (
 	"time"
 
 	dreams "github.com/dReam-dApps/dReams"
-	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
@@ -51,7 +50,7 @@ func HolderoIndicator() (ind menu.DreamsIndicator) {
 	return
 }
 
-// Holdero owner control objects, left section
+// Holdero owner control objects inside owners tab
 func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	players := []string{"2 Players", "3 Players", "4 Players", "5 Players", "6 Players"}
 	player_select := widget.NewSelect(players, nil)
@@ -253,21 +252,22 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		}, d.Window).Show()
 	})
 
-	left_form := []*widget.FormItem{}
-	left_form = append(left_form, widget.NewFormItem("Seats", player_select))
-	left_form = append(left_form, widget.NewFormItem("Chips", table.owner.chips))
-	left_form = append(left_form, widget.NewFormItem("Blinds", blinds_entry))
-	left_form = append(left_form, widget.NewFormItem("Ante", ante_entry))
-
-	button_spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
 	spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
 	spacer.SetMinSize(table.owner.chips.Size())
 
-	mid_form := []*widget.FormItem{}
-	mid_form = append(mid_form, widget.NewFormItem("Clean Amount", clean_entry))
-	mid_form = append(mid_form, widget.NewFormItem("", clean_button))
-	mid_form = append(mid_form, widget.NewFormItem("", spacer))
-	mid_form = append(mid_form, widget.NewFormItem("", close))
+	first_form := []*widget.FormItem{}
+	first_form = append(first_form, widget.NewFormItem("Seats", player_select))
+	first_form = append(first_form, widget.NewFormItem("Chips", table.owner.chips))
+	first_form = append(first_form, widget.NewFormItem("Blinds", blinds_entry))
+	first_form = append(first_form, widget.NewFormItem("Ante", ante_entry))
+	first_form = append(first_form, widget.NewFormItem("", set_button))
+	first_form = append(first_form, widget.NewFormItem("", force))
+	first_form = append(first_form, widget.NewFormItem("", close))
+	first_form = append(first_form, widget.NewFormItem("", spacer))
+
+	first_form = append(first_form, widget.NewFormItem("Clean Amount", clean_entry))
+	first_form = append(first_form, widget.NewFormItem("", clean_button))
+	first_form = append(first_form, widget.NewFormItem("", spacer))
 
 	k_times := []string{"Off", "2m", "5m"}
 	auto_remove := widget.NewSelect(k_times, func(s string) {
@@ -315,114 +315,56 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 	table.tournament.Hide()
 
-	right_form := []*widget.FormItem{}
-	right_form = append(right_form, widget.NewFormItem("Auto Kick", auto_remove))
-	right_form = append(right_form, widget.NewFormItem("Payout Delay", delay))
-	right_form = append(right_form, widget.NewFormItem("", spacer))
-	right_form = append(right_form, widget.NewFormItem("", layout.NewSpacer()))
-	right_form = append(right_form, widget.NewFormItem("", table.owner.timeout))
+	second_form := []*widget.FormItem{}
+	second_form = append(second_form, widget.NewFormItem("Auto Kick", auto_remove))
+	second_form = append(second_form, widget.NewFormItem("", table.owner.timeout))
+	second_form = append(second_form, widget.NewFormItem("", spacer))
+	second_form = append(second_form, widget.NewFormItem("Payout Delay  ", delay))
 
-	table.owner.owners_mid = container.NewVBox(widget.NewForm(right_form...))
-	table.owner.owners_mid.Hide()
+	table.owner.owners_mid = container.NewVBox(widget.NewForm(second_form...))
 
-	instructions := "Connect to your wallet and daemon\n\nClick on a table in the list to connect to it\n\nClick on 'View Table' to play\n\nYou can create and view your tables in the 'Owned' tab\n\nTo start a game on a table you own:\n---\nSelect number of seats at the table (6 max)\n\nSelect DERO or ASSET as chips\n\nSelect blinds and any required ante (can be 0)\n\nClick 'Set Table' to open your table for others to join\n\nClick 'Force Start' if you'd like to start the table before all the seats are filled\n\nWhen done playing, click 'Close Table' to close it\n\n'Clean Table' is your reset button, it shuffles the deck and move the turn to the next player,\nif clean amount is above 0 it will withdraw that amount (in atomic units) from the table\n\nAuto kick time default is off, and payout default is 30 seconds\n\nVisit dreamdapps.io for more docs"
-	help_button := widget.NewButton("How to Play", func() {
-		dialog.NewInformation("How to Play", instructions, d.Window).Show()
+	instructions := "To start a game on a table you own:\n---\nSelect number of seats at the table (6 max)\n\nSelect DERO or ASSET as chips\n\nSelect blinds and any required ante (can be 0)\n\nClick 'Set Table' to open your table for others to join\n\nClick 'Force Start' if you'd like to start the table before all the seats are filled\n\nWhen done playing, click 'Close Table' to close it\n\n'Clean Table' is your reset button, it shuffles the deck and move the turn to the next player,\nif clean amount is above 0 it will withdraw that amount (in atomic units) from the table\n\nAuto kick time default is off, and payout default is 30 seconds\n\nVisit dreamdapps.io for more docs"
+	help_button := widget.NewButton("Help", func() {
+		dialog.NewInformation("Owners Manual", instructions, d.Window).Show()
 	})
+	first_form = append(first_form, widget.NewFormItem("", table.tournament))
+	first_form = append(first_form, widget.NewFormItem("", help_button))
+	first_form = append(first_form, widget.NewFormItem("", layout.NewSpacer()))
+
+	table.unlock = widget.NewButton("Unlock Holdero Contract", nil)
+	table.unlock.Hide()
+
+	table.new = widget.NewButton("New Holdero Table", nil)
+	table.new.Hide()
+
+	third_form := []*widget.FormItem{}
+	third_form = append(third_form, widget.NewFormItem("", spacer))
+	third_form = append(third_form, widget.NewFormItem("", container.NewVBox(table.unlock, table.new)))
+
+	table.owner.owners_left = container.NewVBox(widget.NewForm(first_form...))
+	table.owner.owners_left.Hide()
 
 	help_spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
 	help_spacer.SetMinSize(fyne.NewSize(180, 0))
 
-	table.owner.owners_left = container.NewHBox(
-		container.NewVBox(widget.NewForm(left_form...), layout.NewSpacer(),
-			container.NewHBox(layout.NewSpacer(), container.NewStack(button_spacer, set_button))),
-		container.NewVBox(widget.NewForm(mid_form...), layout.NewSpacer(),
-			container.NewHBox(layout.NewSpacer(), container.NewStack(button_spacer, force))))
-
-	mid := container.NewVBox(table.owner.owners_mid, layout.NewSpacer(),
-		container.NewHBox(layout.NewSpacer(), container.NewStack(button_spacer, table.tournament)))
-
-	right := container.NewStack(container.NewAdaptiveGrid(2, layout.NewSpacer(), layout.NewSpacer()),
-		container.NewVBox(layout.NewSpacer(),
-			container.NewHBox(help_spacer, container.NewStack(button_spacer, help_button))))
-
-	table.owner.owners_left.Hide()
-	button_spacer.SetMinSize(ante_entry.Size())
-	spacer.SetMinSize(table.owner.chips.Size())
-
-	return container.NewHBox(table.owner.owners_left, mid, right)
+	return container.NewVScroll(container.NewVBox(table.owner.owners_left, table.owner.owners_mid, layout.NewSpacer(), container.NewVBox(widget.NewForm(third_form...))))
 }
 
-// Holdero table icon image with frame
-func tableIcon(r fyne.Resource) fyne.CanvasObject {
-	table.stats.image.SetMinSize(fyne.NewSize(90, 90))
-
-	frame := canvas.NewImageFromResource(r)
-	frame.SetMinSize(fyne.NewSize(100, 100))
-
-	border := container.NewBorder(layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), layout.NewSpacer(), &table.stats.image)
-
-	return container.NewHBox(container.NewStack(border, frame), layout.NewSpacer())
-}
-
-// Holdero table stats display objects
-func displayTableStats() fyne.CanvasObject {
-	table.stats.name = canvas.NewText(" Name: ", bundle.TextColor)
-	table.stats.desc = canvas.NewText(" Description: ", bundle.TextColor)
-	table.stats.owner = canvas.NewText(" Owner: ", bundle.TextColor)
-	table.stats.chips = canvas.NewText(" Playing with: ", bundle.TextColor)
-	table.stats.blinds = canvas.NewText(" Blinds: ", bundle.TextColor)
-	table.stats.version = canvas.NewText(" Table Version: ", bundle.TextColor)
-	table.stats.last = canvas.NewText(" Last Move: ", bundle.TextColor)
-	table.stats.seats = canvas.NewText(" Table Closed ", bundle.TextColor)
-
-	table.stats.name.TextSize = 18
-	table.stats.desc.TextSize = 18
-	table.stats.owner.TextSize = 18
-	table.stats.chips.TextSize = 18
-	table.stats.blinds.TextSize = 18
-	table.stats.version.TextSize = 18
-	table.stats.last.TextSize = 18
-	table.stats.seats.TextSize = 18
-
-	table.stats.name.Hide()
-	table.stats.desc.Hide()
-	table.stats.version.Hide()
-	table.stats.last.Hide()
-	table.stats.owner.Hide()
-	table.stats.chips.Hide()
-	table.stats.blinds.Hide()
-
-	table.stats.Container = *container.NewVBox(
-		container.NewStack(tableIcon(nil)),
-		layout.NewSpacer(),
-		table.stats.name,
-		table.stats.desc,
-		table.stats.owner,
-		table.stats.chips,
-		table.stats.blinds,
-		table.stats.version,
-		table.stats.last,
-		table.stats.seats)
-
-	return container.NewStack(&table.stats.Container)
-}
-
-// Confirmation for Holdero contract installs
-func holderoMenuConfirm(c int, obj []fyne.CanvasObject, tabs *container.AppTabs) fyne.CanvasObject {
+func holderoMenuConfirm(c int, d *dreams.AppObject) {
 	gas_fee := 0.3
 	unlock_fee := float64(rpc.UnlockFee) / 100000
-	var text string
+	var text, title string
 	switch c {
 	case 1:
 		table.unlock.Hide()
+		title = "Holdero Unlock"
 		text = `You are about to unlock and install your first Holdero Table
 		
 To help support the project, there is a ` + fmt.Sprintf("%.5f", unlock_fee) + ` DERO donation attached to preform this action
 
 Unlocking a Holdero table gives you unlimited access to table uploads and all base level owner features
 
-Total transaction will be ` + fmt.Sprintf("%0.5f", unlock_fee+gas_fee) + ` DERO (0.30000 gas fee for contract install)
+Including gas fee, transaction total will be ` + fmt.Sprintf("%0.5f", unlock_fee+gas_fee) + ` DERO
 
 
 Select a public or private table
@@ -439,6 +381,7 @@ HGC holders can choose to install a HGC table
 Public table that uses HGC or DERO`
 	case 2:
 		table.new.Hide()
+		title = "Holdero Install"
 		text = `You are about to install a new Holdero table
 
 Gas fee to install new table is 0.30000 DERO
@@ -463,6 +406,8 @@ Public table that uses HGC or DERO`
 	label.Alignment = fyne.TextAlignCenter
 
 	var choice *widget.Select
+	var confirm *dialog.CustomDialog
+
 	confirm_button := widget.NewButton("Confirm", func() {
 		if choice.SelectedIndex() < 3 && choice.SelectedIndex() >= 0 {
 			uploadHolderoContract(choice.SelectedIndex())
@@ -472,8 +417,8 @@ Public table that uses HGC or DERO`
 			table.new.Show()
 		}
 
-		obj[1] = tabs
-		obj[1].Refresh()
+		confirm.Hide()
+		confirm = nil
 	})
 
 	options := []string{"Public", "Private"}
@@ -499,8 +444,8 @@ Public table that uses HGC or DERO`
 
 		}
 
-		obj[1] = tabs
-		obj[1].Refresh()
+		confirm.Hide()
+		confirm = nil
 	})
 
 	confirm_button.Hide()
@@ -509,18 +454,22 @@ Public table that uses HGC or DERO`
 	right := container.NewVBox(cancel_button)
 	buttons := container.NewAdaptiveGrid(2, left, right)
 	actions := container.NewVBox(choice, buttons)
-	info_box := container.NewVBox(layout.NewSpacer(), label, layout.NewSpacer())
 
-	content := container.NewBorder(nil, actions, nil, nil, info_box)
+	spacer := canvas.NewRectangle(color.Transparent)
+	spacer.SetMinSize(fyne.NewSize(360, 100))
+
+	confirm = dialog.NewCustom(title, "", container.NewStack(spacer, label), d.Window)
+	confirm.SetButtons([]fyne.CanvasObject{actions})
+	confirm.Show()
 
 	go func() {
 		for rpc.IsReady() {
 			time.Sleep(time.Second)
 		}
 
-		obj[1] = tabs
-		obj[1].Refresh()
+		if confirm != nil {
+			confirm.Hide()
+			confirm = nil
+		}
 	}()
-
-	return container.NewStack(content)
 }

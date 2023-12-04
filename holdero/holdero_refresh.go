@@ -10,11 +10,10 @@ import (
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
-
-var tables_menu bool
 
 // Sets bet entry amount, bet button text and current bet readout
 func ifBet(w, r uint64) {
@@ -89,7 +88,7 @@ func singleShot(turn, trigger bool) bool {
 }
 
 // Main Holdero process
-func fetch(d *dreams.AppObject) {
+func fetch(d *dreams.AppObject, cont *fyne.Container) {
 	initValues()
 	time.Sleep(3 * time.Second)
 	var autoCF, autoD, autoB, trigger bool
@@ -107,9 +106,12 @@ func fetch(d *dreams.AppObject) {
 			}
 
 			if !Settings.synced && menu.GnomonScan(d.IsConfiguring()) {
+				reset := cont.Objects[1]
+				cont.Objects[1] = syncScreen()
 				logger.Println("[Holdero] Syncing")
 				createTableList()
 				Settings.synced = true
+				cont.Objects[1] = reset
 				H.Actions.Show()
 			}
 
@@ -122,18 +124,6 @@ func fetch(d *dreams.AppObject) {
 			}
 
 			fetchHolderoSC()
-
-			table.stats.Container = *container.NewVBox(
-				container.NewStack(tableIcon(bundle.ResourceAvatarFramePng)),
-				table.stats.name,
-				table.stats.desc,
-				table.stats.owner,
-				table.stats.chips,
-				table.stats.blinds,
-				table.stats.version,
-				table.stats.last,
-				table.stats.seats)
-			table.stats.Container.Refresh()
 
 			if (round.Turn == round.ID && rpc.Wallet.Height > signals.height+4) ||
 				(round.Turn != round.ID && round.ID >= 1) || (!signals.myTurn && round.ID >= 1) {
@@ -302,8 +292,9 @@ func disableActions() {
 	table.entry.SetText("")
 	clearShared()
 	disableOwnerControls(true)
-	table.Public.SCIDs = []string{}
-	table.Owned.SCIDs = []string{}
+	publicTables = []tableInfo{}
+	ownedTables = []tableInfo{}
+	favoriteTables = []tableInfo{}
 	table.unlock.Hide()
 	table.new.Hide()
 	table.tournament.Hide()
@@ -438,12 +429,6 @@ func holderoRefresh(d *dreams.AppObject, offset int) {
 			}
 		}
 	}
-
-	if tables_menu {
-		if offset%3 == 0 {
-			go getTableStats(round.Contract, false)
-		}
-	}
 }
 
 // Refresh Holdero player names and avatars
@@ -497,4 +482,15 @@ func revealingKey(d *dreams.AppObject) {
 			}
 		}
 	}
+}
+
+// Splash screen for when tables lists syncing
+func syncScreen() *fyne.Container {
+	text := canvas.NewText("Syncing tables...", bundle.TextColor)
+	text.TextSize = 21
+
+	img := canvas.NewImageFromResource(ResourceHolderoCirclePng)
+	img.SetMinSize(fyne.NewSize(150, 150))
+
+	return container.NewStack(container.NewCenter(container.NewBorder(nil, text, nil, nil, img)), widget.NewProgressBarInfinite())
 }

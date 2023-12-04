@@ -39,6 +39,7 @@ func StartApp() {
 	runtime.GOMAXPROCS(n)
 	menu.InitLogrusLog(logrus.InfoLevel)
 	config := menu.ReadDreamsConfig(app_tag)
+	SetFavoriteTables(config.Tables)
 
 	// Initialize Fyne app and window
 	a := app.NewWithID(fmt.Sprintf("%s Desktop Client", app_tag))
@@ -63,6 +64,7 @@ func StartApp() {
 		save := dreams.SaveData{
 			Skin:   config.Skin,
 			DBtype: menu.Gnomes.DBType,
+			Tables: GetFavoriteTables(),
 		}
 
 		if rpc.Daemon.Rpc == "" {
