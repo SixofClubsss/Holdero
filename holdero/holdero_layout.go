@@ -185,6 +185,7 @@ func LayoutAllItems(d *dreams.AppObject) *fyne.Container {
 	var holdero_objs *fyne.Container
 	var contract_objs *fyne.Container
 	contract_change_screen := widget.NewButton("Tables", nil)
+	contract_change_screen.Importance = widget.HighImportance
 	contract_change_screen.OnTapped = func() {
 		go func() {
 			d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content = contract_objs

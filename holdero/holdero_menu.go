@@ -332,9 +332,11 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	first_form = append(first_form, widget.NewFormItem("", layout.NewSpacer()))
 
 	table.unlock = widget.NewButton("Unlock Holdero Contract", nil)
+	table.unlock.Importance = widget.HighImportance
 	table.unlock.Hide()
 
 	table.new = widget.NewButton("New Holdero Table", nil)
+	table.new.Importance = widget.HighImportance
 	table.new.Hide()
 
 	third_form := []*widget.FormItem{}
@@ -408,7 +410,7 @@ Public table that uses HGC or DERO`
 	var choice *widget.Select
 	var confirm *dialog.CustomDialog
 
-	confirm_button := widget.NewButton("Confirm", func() {
+	confirm_button := widget.NewButtonWithIcon("Confirm", dreams.FyneIcon("confirm"), func() {
 		if choice.SelectedIndex() < 3 && choice.SelectedIndex() >= 0 {
 			uploadHolderoContract(choice.SelectedIndex())
 		}
@@ -420,6 +422,7 @@ Public table that uses HGC or DERO`
 		confirm.Hide()
 		confirm = nil
 	})
+	confirm_button.Importance = widget.HighImportance
 
 	options := []string{"Public", "Private"}
 	if hgc := rpc.TokenBalance(rpc.HgcSCID); hgc > 0 {
@@ -434,7 +437,7 @@ Public table that uses HGC or DERO`
 		}
 	})
 
-	cancel_button := widget.NewButton("Cancel", func() {
+	cancel_button := widget.NewButtonWithIcon("Cancel", dreams.FyneIcon("cancel"), func() {
 		switch c {
 		case 1:
 			table.unlock.Show()
@@ -456,7 +459,7 @@ Public table that uses HGC or DERO`
 	actions := container.NewVBox(choice, buttons)
 
 	spacer := canvas.NewRectangle(color.Transparent)
-	spacer.SetMinSize(fyne.NewSize(360, 100))
+	spacer.SetMinSize(fyne.NewSize(420, 100))
 
 	confirm = dialog.NewCustom(title, "", container.NewStack(spacer, label), d.Window)
 	confirm.SetButtons([]fyne.CanvasObject{actions})

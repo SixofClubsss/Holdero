@@ -141,7 +141,7 @@ func StartApp() {
 	tabs := container.NewAppTabs(
 		container.NewTabItem(app_tag, LayoutAllItems(&d)),
 		container.NewTabItem("Assets", menu.PlaceAssets(app_tag, asset_selects, ResourceHolderoCirclePng, d.Window)),
-		container.NewTabItem("Swap", PlaceSwap()),
+		container.NewTabItem("Swap", PlaceSwap(&d)),
 		container.NewTabItem("Log", rpc.SessionLog(app_tag, version)))
 
 	tabs.SetTabLocation(container.TabLocationBottom)

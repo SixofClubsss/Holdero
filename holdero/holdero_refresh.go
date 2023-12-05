@@ -6,6 +6,7 @@ import (
 
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
+	"github.com/dReam-dApps/dReams/dwidget"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 
@@ -486,11 +487,17 @@ func revealingKey(d *dreams.AppObject) {
 
 // Splash screen for when tables lists syncing
 func syncScreen() *fyne.Container {
-	text := canvas.NewText("Syncing tables...", bundle.TextColor)
+	text := canvas.NewText("Syncing...", bundle.TextColor)
+	text.Alignment = fyne.TextAlignCenter
 	text.TextSize = 21
 
 	img := canvas.NewImageFromResource(ResourceHolderoCirclePng)
 	img.SetMinSize(fyne.NewSize(150, 150))
 
-	return container.NewStack(container.NewCenter(container.NewBorder(nil, text, nil, nil, img)), widget.NewProgressBarInfinite())
+	return container.NewBorder(
+		dwidget.LabelColor(container.NewVBox(widget.NewLabel(""))),
+		nil,
+		nil,
+		nil,
+		container.NewCenter(container.NewBorder(nil, text, nil, nil, img)), widget.NewProgressBarInfinite())
 }

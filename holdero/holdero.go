@@ -302,6 +302,7 @@ func publicList(d *dreams.AppObject) fyne.CanvasObject {
 		favoriteTables = append(favoriteTables, item)
 		table.Favorites.SCIDs = append(table.Favorites.SCIDs, item.scid)
 	})
+	save_favorite.Importance = widget.LowImportance
 
 	rate_contract := widget.NewButton("Rate", func() {
 		if len(round.Contract) == 64 {
@@ -313,6 +314,7 @@ func publicList(d *dreams.AppObject) fyne.CanvasObject {
 			}
 		}
 	})
+	rate_contract.Importance = widget.LowImportance
 
 	return container.NewBorder(
 		nil,
@@ -358,6 +360,7 @@ func favoritesList() fyne.CanvasObject {
 		}
 		table.Favorites.List.Refresh()
 	})
+	remove.Importance = widget.LowImportance
 
 	return container.NewBorder(
 		nil,

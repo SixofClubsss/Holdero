@@ -15,8 +15,7 @@ import (
 	dero "github.com/deroproject/derohe/rpc"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -265,8 +264,7 @@ func SharedDecks() fyne.Widget {
 // Confirmation for dReams-Dero swap pairs
 //   - c defines swap for Dero or dReams
 //   - amt of Dero in atomic units
-//   - Pass main window obj to reset to
-func DreamsConfirm(c, amt float64, obj *fyne.Container, reset fyne.CanvasObject) fyne.CanvasObject {
+func DreamsConfirm(c, amt float64, d *dreams.AppObject) {
 	var text string
 	dero := (amt / 100000) / 333
 	ratio := math.Pow(10, float64(5))
@@ -279,46 +277,41 @@ func DreamsConfirm(c, amt float64, obj *fyne.Container, reset fyne.CanvasObject)
 		text = fmt.Sprintf("You are about to swap %.5f dReams for %s Dero", amt/100000, a)
 	}
 
-	done := false
-	label := widget.NewLabel(text)
-	label.Wrapping = fyne.TextWrapWord
-	label.Alignment = fyne.TextAlignCenter
+	done := make(chan struct{})
+	confirm := dialog.NewConfirm("Swap", text, func(b bool) {
+		if b {
+			switch c {
+			case 1:
+				rpc.GetdReams(uint64(x * 100000))
+			case 2:
+				rpc.TradedReams(uint64(amt))
+			default:
 
-	confirm_button := widget.NewButton("Confirm", func() {
-		switch c {
-		case 1:
-			rpc.GetdReams(uint64(x * 100000))
-		case 2:
-			rpc.TradedReams(uint64(amt))
-		default:
-
-		}
-
-		done = true
-		obj.Objects[0] = reset
-		obj.Objects[0].Refresh()
-	})
-
-	cancel_button := widget.NewButton("Cancel", func() {
-		done = true
-		obj.Objects[0] = reset
-		obj.Objects[0].Refresh()
-	})
-
-	buttons := container.NewAdaptiveGrid(2, confirm_button, cancel_button)
-	content := container.NewVBox(layout.NewSpacer(), label, layout.NewSpacer(), buttons)
-
-	go func() {
-		for rpc.IsReady() {
-			time.Sleep(time.Second)
-			if done {
-				return
 			}
 		}
+		done <- struct{}{}
+	}, d.Window)
+	confirm.Show()
 
-		obj.Objects[0] = reset
-		obj.Objects[0].Refresh()
+	go func() {
+		for {
+			select {
+			case <-done:
+				if confirm != nil {
+					confirm.Hide()
+					confirm = nil
+				}
+				return
+			default:
+				if !rpc.IsReady() {
+					if confirm != nil {
+						confirm.Hide()
+						confirm = nil
+					}
+					return
+				}
+				time.Sleep(time.Second)
+			}
+		}
 	}()
-
-	return container.NewStack(content)
 }

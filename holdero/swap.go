@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
 	"github.com/dReam-dApps/dReams/menu"
@@ -16,7 +17,7 @@ import (
 )
 
 // Balance and swap container from dReams repo
-func PlaceSwap() *container.Split {
+func PlaceSwap(d *dreams.AppObject) *container.Split {
 	pair_opts := []string{"DERO-dReams", "dReams-DERO"}
 	select_pair := widget.NewSelect(pair_opts, nil)
 	select_pair.PlaceHolder = "Pairs"
@@ -47,7 +48,6 @@ func PlaceSwap() *container.Split {
 	var swap_boxes *fyne.Container
 
 	max := container.NewStack()
-	swap_tabs := container.NewAppTabs()
 
 	swap_button := widget.NewButton("Swap", nil)
 	swap_button.OnTapped = func() {
@@ -56,16 +56,14 @@ func PlaceSwap() *container.Split {
 			f, err := strconv.ParseFloat(swap_entry.Text, 64)
 			if err == nil && swap_entry.Validate() == nil {
 				if amt := (f * 333) * 100000; amt > 0 {
-					max.Objects[0] = DreamsConfirm(1, amt, max, swap_tabs)
-					max.Refresh()
+					DreamsConfirm(1, amt, d)
 				}
 			}
 		case "dReams-DERO":
 			f, err := strconv.ParseFloat(swap_entry.Text, 64)
 			if err == nil && swap_entry.Validate() == nil {
 				if amt := f * 100000; amt > 0 {
-					max.Objects[0] = DreamsConfirm(2, amt, max, swap_tabs)
-					max.Refresh()
+					DreamsConfirm(2, amt, d)
 				}
 			}
 		}
@@ -87,7 +85,7 @@ func PlaceSwap() *container.Split {
 		menu.Assets.Swap.Refresh()
 	}
 
-	swap_tabs = container.NewAppTabs(container.NewTabItem("Swap", container.NewCenter(menu.Assets.Swap)))
+	swap_tabs := container.NewAppTabs(container.NewTabItem("Swap", container.NewCenter(menu.Assets.Swap)))
 	max.Add(swap_tabs)
 
 	full := container.NewHSplit(container.NewStack(bundle.NewAlpha120(), balance_tabs), max)
