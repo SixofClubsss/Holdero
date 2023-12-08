@@ -123,12 +123,12 @@ func OnConnected() {
 	table.entry.Refresh()
 	if len(rpc.Wallet.Address) == 66 {
 		CheckExistingKey()
-		menu.Control.Names.ClearSelected()
-		menu.Control.Names.Options = []string{}
-		menu.Control.Names.Refresh()
-		menu.Control.Names.Options = append(menu.Control.Names.Options, rpc.Wallet.Address[0:12])
-		if menu.Control.Names.Options != nil {
-			menu.Control.Names.SetSelectedIndex(0)
+		menu.Assets.Names.ClearSelected()
+		menu.Assets.Names.Options = []string{}
+		menu.Assets.Names.Refresh()
+		menu.Assets.Names.Options = append(menu.Assets.Names.Options, rpc.Wallet.Address[0:12])
+		if menu.Assets.Names.Options != nil {
+			menu.Assets.Names.SetSelectedIndex(0)
 		}
 	}
 }
@@ -254,7 +254,7 @@ func updateListItem(i widget.ListItemID, o fyne.CanvasObject, t []tableInfo) {
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Label).SetText(fmt.Sprintf("%s   %s   %s   Last move: %s   v%s", t[i].seats, t[i].chips, t[i].blinds, t[i].last, t[i].version))
 		}
 
-		badge := canvas.NewImageFromResource(menu.DisplayRating(menu.Control.Contract_rating[t[i].scid]))
+		badge := canvas.NewImageFromResource(menu.DisplayRating(menu.Control.Ratings[t[i].scid]))
 		badge.SetMinSize(fyne.NewSize(35, 35))
 		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0] = badge
 

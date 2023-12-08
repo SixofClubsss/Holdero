@@ -76,7 +76,7 @@ func StartApp() {
 		}
 
 		menu.WriteDreamsConfig(save)
-		menu.CloseAppSignal(true)
+		menu.SetClose(true)
 		gnomon.Stop(app_tag)
 		d.StopProcess()
 		w.Close()
@@ -95,7 +95,7 @@ func StartApp() {
 
 	// Initialize vars
 	rpc.InitBalances()
-	menu.Control.Contract_rating = make(map[string]uint64)
+	menu.Control.Ratings = make(map[string]uint64)
 	gnomon.SetDBStorageType("boltdb")
 	gnomon.SetFastsync(true)
 
@@ -110,6 +110,7 @@ func StartApp() {
 	form = append(form, widget.NewFormItem("Card Deck", FaceSelect(menu.Assets.SCIDs)))
 	form = append(form, widget.NewFormItem("Card Back", BackSelect(menu.Assets.SCIDs)))
 	form = append(form, widget.NewFormItem("Sharing", SharedDecks()))
+	form = append(form, widget.NewFormItem("", layout.NewSpacer()))
 	form = append(form, widget.NewFormItem("", container.NewVBox(line)))
 
 	profile_spacer := canvas.NewRectangle(color.Transparent)
@@ -210,8 +211,8 @@ func StartApp() {
 
 			case <-d.Closing(): // exit
 				logger.Printf("[%s] Closing...", app_tag)
-				if gnomes.Icon_ind != nil {
-					gnomes.Icon_ind.Stop()
+				if gnomes.Indicator.Icon != nil {
+					gnomes.Indicator.Icon.Stop()
 				}
 				ticker.Stop()
 				d.CloseAllDapps()

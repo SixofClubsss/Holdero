@@ -112,7 +112,7 @@ func createTableList() {
 
 					if restrict != nil && rating != nil {
 						menu.Control.Lock()
-						menu.Control.Contract_rating[scid] = rating[0]
+						menu.Control.Ratings[scid] = rating[0]
 						menu.Control.Unlock()
 						info.rating = rating[0]
 						if rating[0] <= restrict[0] {
