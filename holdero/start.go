@@ -2,6 +2,7 @@ package holdero
 
 import (
 	"fmt"
+	"image/color"
 	"os"
 	"os/signal"
 	"runtime"
@@ -13,6 +14,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/widget"
 	"github.com/blang/semver/v4"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
@@ -97,17 +99,23 @@ func StartApp() {
 	gnomon.SetDBStorageType("boltdb")
 	gnomon.SetFastsync(true)
 
-	// TODO
-	// Initialize asset widgets
-	//names := menu.NameEntry()
-	// asset_selects := []fyne.Widget{
-	// 	names.(*fyne.Container).Objects[1].(*widget.Select),
-	// 	FaceSelect(),
-	// 	BackSelect(),
-	// 	dreams.ThemeSelect(),
-	// 	AvatarSelect(menu.Assets.SCIDs),
-	// 	SharedDecks(),
-	// }
+	// Initialize profile widgets
+	line := canvas.NewLine(bundle.TextColor)
+	form := []*widget.FormItem{}
+	form = append(form, widget.NewFormItem("Name", menu.NameEntry()))
+	form = append(form, widget.NewFormItem("", layout.NewSpacer()))
+	form = append(form, widget.NewFormItem("", container.NewVBox(line)))
+	form = append(form, widget.NewFormItem("Avatar", AvatarSelect(menu.Assets.SCIDs)))
+	form = append(form, widget.NewFormItem("Theme", menu.ThemeSelect()))
+	form = append(form, widget.NewFormItem("Card Deck", FaceSelect(menu.Assets.SCIDs)))
+	form = append(form, widget.NewFormItem("Card Back", BackSelect(menu.Assets.SCIDs)))
+	form = append(form, widget.NewFormItem("Sharing", SharedDecks()))
+	form = append(form, widget.NewFormItem("", container.NewVBox(line)))
+
+	profile_spacer := canvas.NewRectangle(color.Transparent)
+	profile_spacer.SetMinSize(fyne.NewSize(450, 0))
+
+	profile := container.NewCenter(container.NewBorder(profile_spacer, nil, nil, nil, widget.NewForm(form...)))
 
 	// Create dwidget connection box with controls
 	connect_box := dwidget.NewHorizontalEntries(app_tag, 1)
@@ -141,7 +149,7 @@ func StartApp() {
 	// Layout tabs
 	tabs := container.NewAppTabs(
 		container.NewTabItem(app_tag, LayoutAllItems(&d)),
-		container.NewTabItem("Assets", menu.PlaceAssets(app_tag, layout.NewSpacer(), nil, ResourceHolderoCirclePng, &d)),
+		container.NewTabItem("Assets", menu.PlaceAssets(app_tag, profile, nil, ResourceHolderoCirclePng, &d)),
 		container.NewTabItem("Swap", PlaceSwap(&d)),
 		container.NewTabItem("Log", rpc.SessionLog(app_tag, version)))
 
