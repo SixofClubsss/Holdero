@@ -7,14 +7,17 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"time"
 
 	dreams "github.com/dReam-dApps/dReams"
+	"github.com/dReam-dApps/dReams/bundle"
+	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 	dero "github.com/deroproject/derohe/rpc"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 )
@@ -33,9 +36,13 @@ func getCardDeck(url string) {
 // Holdero card face selection object
 //   - Sets shared face url on selected
 //   - If deck is not present locally, it is downloaded
-func FaceSelect() fyne.Widget {
+func FaceSelect(assets map[string]string) fyne.CanvasObject {
+	var max *fyne.Container
 	options := []string{"Light", "Dark"}
-	Settings.faces.Select = widget.NewSelect(options, func(s string) {
+	icon := menu.AssetIcon(ResourceCardsCirclePng.StaticContent, "", 60)
+	Settings.faces.Select = widget.NewSelect(options, nil)
+	Settings.faces.Select.SetSelectedIndex(0)
+	Settings.faces.Select.OnChanged = func(s string) {
 		switch Settings.faces.Select.SelectedIndex() {
 		case -1:
 			Settings.faces.Name = "light/"
@@ -51,21 +58,28 @@ func FaceSelect() fyne.Widget {
 		if check == "AZYPC" {
 			url := "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".zip?raw=true"
 			getCardDeck(url)
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("AZY-Playing card backs", s, gnomes.GetAssetUrl(1, assets[s]), 60)
 		} else if check == "SIXPC" {
 			url := "https://raw.githubusercontent.com/SixofClubsss/" + s + "/main/" + s + ".zip?raw=true"
 			getCardDeck(url)
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("AZY-Playing card backs", s, gnomes.GetAssetUrl(1, assets[s]), 60)
 		} else if check == "HS_Deck" {
 			url := "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/" + s + "/" + s + ".zip?raw=true"
 			getCardDeck(url)
+			hs_icon := "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/HighStrangeness-IC.jpg"
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("High Strangeness", "HighStrangeness1", hs_icon, 60)
 		} else {
 			Settings.faces.URL = ""
+			img := canvas.NewImageFromResource(ResourceCardsCirclePng)
+			img.SetMinSize(fyne.NewSize(60, 60))
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = img
 		}
-	})
+	}
 
-	Settings.faces.Select.SetSelectedIndex(0)
-	Settings.faces.Select.PlaceHolder = "Faces"
+	Settings.faces.Select.PlaceHolder = "Faces:"
+	max = container.NewBorder(nil, nil, icon, nil, container.NewVBox(Settings.faces.Select))
 
-	return Settings.faces.Select
+	return max
 }
 
 // Downloads card back if it does not exists locally
@@ -82,9 +96,13 @@ func getCardBack(s, url string) {
 // Holdero card back selection object for all games
 //   - Sets shared back url on selected
 //   - If back is not present locally, it is downloaded
-func BackSelect() fyne.Widget {
+func BackSelect(assets map[string]string) *fyne.Container {
+	var max *fyne.Container
 	options := []string{"Light", "Dark"}
-	Settings.backs.Select = widget.NewSelect(options, func(s string) {
+	icon := menu.AssetIcon(ResourceCardsCirclePng.StaticContent, "", 60)
+	Settings.backs.Select = widget.NewSelect(options, nil)
+	Settings.backs.Select.SetSelectedIndex(0)
+	Settings.backs.Select.OnChanged = func(s string) {
 		switch Settings.backs.Select.SelectedIndex() {
 		case -1:
 			Settings.backs.Name = "back1.png"
@@ -101,29 +119,40 @@ func BackSelect() fyne.Widget {
 			if check == "AZYPCB" {
 				url := "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".png"
 				getCardBack(s, url)
+				max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("AZY-Playing card backs", s, gnomes.GetAssetUrl(1, assets[s]), 60)
 			} else if check == "SIXPCB" {
 				url := "https://raw.githubusercontent.com/SixofClubsss/" + s + "/main/" + s + ".png"
 				getCardBack(s, url)
+				max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("SIXPCB", s, gnomes.GetAssetUrl(1, assets[s]), 60)
 			} else if check == "HS_Back" {
 				url := "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/" + s + "/" + s + ".png"
 				getCardBack(s, url)
+				hs_icon := "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/HighStrangeness-IC.jpg"
+				max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("High Strangeness", "HighStrangeness1", hs_icon, 60)
 			} else {
 				Settings.backs.URL = ""
+				img := canvas.NewImageFromResource(ResourceCardsCirclePng)
+				img.SetMinSize(fyne.NewSize(60, 60))
+				max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = img
 			}
 		}()
-	})
+	}
 
-	Settings.backs.Select.SetSelectedIndex(0)
-	Settings.backs.Select.PlaceHolder = "Backs"
+	Settings.backs.Select.PlaceHolder = "Backs:"
+	max = container.NewBorder(nil, nil, icon, nil, container.NewVBox(Settings.backs.Select))
 
-	return Settings.backs.Select
+	return max
 }
 
-// dReams app avatar selection object
+// Avatar selection object
 //   - Sets shared avatar url on selected
-func AvatarSelect(asset_map map[string]string) fyne.Widget {
+func AvatarSelect(assets map[string]string) fyne.CanvasObject {
+	var max *fyne.Container
 	options := []string{"None"}
-	Settings.avatars.Select = widget.NewSelect(options, func(s string) {
+	icon := menu.AssetIcon(bundle.ResourceFigure1CirclePng.StaticContent, "", 60)
+	Settings.avatars.Select = widget.NewSelect(options, nil)
+	Settings.avatars.Select.SetSelectedIndex(0)
+	Settings.avatars.Select.OnChanged = func(s string) {
 		switch Settings.avatars.Select.SelectedIndex() {
 		case -1:
 			Settings.avatar.name = "None"
@@ -135,39 +164,59 @@ func AvatarSelect(asset_map map[string]string) fyne.Widget {
 
 		check := strings.Trim(s, " #0123456789")
 		if check == "DBC" {
-			Settings.avatar.url = "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".PNG"
+			Settings.avatar.url = gnomes.GetAssetUrl(1, assets[s]) //"https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + ".PNG"
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("Death By Cupcake", s, Settings.avatar.url, 60)
 		} else if check == "HighStrangeness" {
-			Settings.avatar.url = "https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/" + s + "/" + s + ".jpg"
+			Settings.avatar.url = gnomes.GetAssetUrl(1, assets[s]) //"https://raw.githubusercontent.com/High-Strangeness/High-Strangeness/main/" + s + "/" + s + ".jpg"
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("High Strangeness", s, Settings.avatar.url, 60)
 		} else if check == "AZYDS" {
-			Settings.avatar.url = "https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + "-IC.png"
+			Settings.avatar.url = gnomes.GetAssetUrl(1, assets[s]) //"https://raw.githubusercontent.com/Azylem/" + s + "/main/" + s + "-IC.png"
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("AZY-Deroscapes", s, Settings.avatar.url, 60)
 		} else if check == "SIXART" {
-			Settings.avatar.url = "https://raw.githubusercontent.com/SixofClubsss/SIXART/main/" + s + "/" + s + "-IC.png"
+			Settings.avatar.url = gnomes.GetAssetUrl(1, assets[s]) // "https://raw.githubusercontent.com/SixofClubsss/SIXART/main/" + s + "/" + s + "-IC.png"
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("SIXART", s, Settings.avatar.url, 60)
+		} else if check == "Desperado" {
+			Settings.avatar.url = gnomes.GetAssetUrl(1, assets[s])
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("Dero Desperados", s, Settings.avatar.url, 60)
+		} else if check == "Gun" {
+			Settings.avatar.url = gnomes.GetAssetUrl(1, assets[s])
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("Desperado Guns", s, Settings.avatar.url, 60)
 		} else if check == "Dero Seals" {
 			seal := strings.Trim(s, "Dero Sals#")
 			Settings.avatar.url = "https://ipfs.io/ipfs/QmP3HnzWpiaBA6ZE8c3dy5ExeG7hnYjSqkNfVbeVW5iEp6/low/" + seal + ".jpg"
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("Dero Seals", s, Settings.avatar.url, 60)
 		} else if check == "Dero Degen" {
 			degen := strings.Trim(s, "Dero gn#")
 			Settings.avatar.url = "https://ipfs.io/ipfs/QmZM6onfiS8yUHFwfVypYnc6t9ZrvmpT43F9HFTou6LJyg/" + degen + ".png"
-		} else if ValidAsset(asset_map[s]) {
-			if url := menu.GetAssetUrl(1, asset_map[s]); url != "" {
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("Dero Degens", s, Settings.avatar.url, 60)
+		} else if ValidAsset(assets[s]) {
+			if url := gnomes.GetAssetUrl(1, assets[s]); url != "" {
 				Settings.avatar.url = url
+				max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("", s, url, 60)
 				return
 			}
 
-			agent := getAgentNumber(asset_map[s])
+			agent := getAgentNumber(assets[s])
 			if agent >= 0 && agent < 172 {
 				Settings.avatar.url = "https://ipfs.io/ipfs/QmaRHXcQwbFdUAvwbjgpDtr5kwGiNpkCM2eDBzAbvhD7wh/low/" + strconv.Itoa(agent) + ".jpg"
 			} else if agent < 1200 {
 				Settings.avatar.url = "https://ipfs.io/ipfs/QmQQyKoE9qDnzybeDCXhyMhwQcPmLaVy3AyYAzzC2zMauW/low/" + strconv.Itoa(agent) + ".jpg"
+			} else {
+				return
 			}
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = menu.SwitchProfileIcon("Dero A-Team", s, Settings.avatar.url, 60)
 		} else if s == "None" {
 			Settings.avatar.url = ""
+			img := canvas.NewImageFromResource(bundle.ResourceFigure1CirclePng)
+			img.SetMinSize(fyne.NewSize(60, 60))
+			max.Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = img
 		}
-	})
+	}
 
-	Settings.avatars.Select.PlaceHolder = "Avatar"
+	Settings.avatars.Select.PlaceHolder = "Avatar:"
+	max = container.NewBorder(nil, nil, icon, nil, container.NewVBox(Settings.avatars.Select))
 
-	return Settings.avatars.Select
+	return max
 }
 
 // Confirm if asset map is valid
@@ -291,27 +340,6 @@ func DreamsConfirm(c, amt float64, d *dreams.AppObject) {
 		}
 		done <- struct{}{}
 	}, d.Window)
-	confirm.Show()
 
-	go func() {
-		for {
-			select {
-			case <-done:
-				if confirm != nil {
-					confirm.Hide()
-					confirm = nil
-				}
-				return
-			default:
-				if !rpc.IsReady() {
-					if confirm != nil {
-						confirm.Hide()
-						confirm = nil
-					}
-					return
-				}
-				time.Sleep(time.Second)
-			}
-		}
-	}()
+	go menu.ShowConfirmDialog(done, confirm)
 }

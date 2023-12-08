@@ -7,7 +7,7 @@ import (
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
-	"github.com/dReam-dApps/dReams/menu"
+	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2"
@@ -106,7 +106,7 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 				continue
 			}
 
-			if !Settings.synced && menu.GnomonScan(d.IsConfiguring()) {
+			if !Settings.synced && gnomes.GnomonScan(d.IsConfiguring()) {
 				reset := cont.Objects[1]
 				cont.Objects[1] = syncScreen()
 				logger.Println("[Holdero] Syncing")

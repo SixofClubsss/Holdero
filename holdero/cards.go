@@ -428,6 +428,11 @@ func Is_In(hash string, who int, end bool) int {
 // Returns a custom card face image
 //   - face defines which deck to look for
 func CustomCard(c int, face string) *canvas.Image {
+	if downloading {
+		logger.Debugln("[CustomCard] Waiting for download to complete")
+		return canvas.NewImageFromImage(nil)
+	}
+
 	dir := dreams.GetDir()
 	mid := "/cards/" + face + "/"
 	path := dir + mid + cardEnd(c)
@@ -442,6 +447,11 @@ func CustomCard(c int, face string) *canvas.Image {
 // Returns a custom card back image
 //   - back defines which back to look for
 func CustomBack(back string) *canvas.Image {
+	if downloading {
+		logger.Debugln("[CustomBack] Waiting for download to complete")
+		return canvas.NewImageFromImage(nil)
+	}
+
 	dir := dreams.GetDir()
 	post := "/cards/backs/" + back + ".png"
 	path := dir + post

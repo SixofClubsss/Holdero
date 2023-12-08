@@ -7,6 +7,7 @@ import (
 	"time"
 
 	dreams "github.com/dReam-dApps/dReams"
+	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 
@@ -15,7 +16,7 @@ import (
 
 // Check if wallet owns Holdero table
 func checkTableOwner(scid string) bool {
-	if len(scid) != 64 || !menu.Gnomes.IsReady() {
+	if len(scid) != 64 || !gnomon.IsReady() {
 		return false
 	}
 
@@ -24,7 +25,7 @@ func checkTableOwner(scid string) bool {
 		return false
 	}
 
-	owner, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "owner:")
+	owner, _ := gnomon.GetSCIDValuesByKey(scid, "owner:")
 	if owner != nil {
 		return owner[0] == rpc.Wallet.Address
 	}
@@ -34,13 +35,13 @@ func checkTableOwner(scid string) bool {
 
 // Check if Holdero table is a tournament table
 func checkHolderoContract(scid string) bool {
-	if len(scid) != 64 || !menu.Gnomes.IsReady() {
+	if len(scid) != 64 || !gnomon.IsReady() {
 		return false
 	}
 
-	_, deck := menu.Gnomes.GetSCIDValuesByKey(scid, "Deck Count:")
-	_, version := menu.Gnomes.GetSCIDValuesByKey(scid, "V:")
-	_, tourney := menu.Gnomes.GetSCIDValuesByKey(scid, "Tournament")
+	_, deck := gnomon.GetSCIDValuesByKey(scid, "Deck Count:")
+	_, version := gnomon.GetSCIDValuesByKey(scid, "V:")
+	_, tourney := gnomon.GetSCIDValuesByKey(scid, "Tournament")
 	if deck != nil && version != nil && version[0] >= 100 {
 		signals.contract = true
 	}
@@ -54,7 +55,7 @@ func checkHolderoContract(scid string) bool {
 
 // Check Holdero table version
 func checkTableVersion(scid string) uint64 {
-	_, v := menu.Gnomes.GetSCIDValuesByKey(scid, "V:")
+	_, v := gnomon.GetSCIDValuesByKey(scid, "V:")
 
 	if v != nil && v[0] >= 100 {
 		return v[0]
@@ -64,20 +65,20 @@ func checkTableVersion(scid string) uint64 {
 
 // Make list of public and owned tables
 func createTableList() {
-	if menu.Gnomes.IsReady() {
+	if gnomon.IsReady() {
 		var owner bool
 		var newPublic, newOwned, newFavorites []tableInfo
-		tables := menu.Gnomes.GetAllOwnersAndSCIDs()
+		tables := gnomon.GetAllOwnersAndSCIDs()
 		for scid := range tables {
-			if !menu.Gnomes.IsReady() {
+			if !gnomon.IsReady() {
 				break
 			}
 
-			if _, valid := menu.Gnomes.GetSCIDValuesByKey(scid, "Deck Count:"); valid != nil {
-				_, version := menu.Gnomes.GetSCIDValuesByKey(scid, "V:")
+			if _, valid := gnomon.GetSCIDValuesByKey(scid, "Deck Count:"); valid != nil {
+				_, version := gnomon.GetSCIDValuesByKey(scid, "V:")
 				if version != nil {
 					var info tableInfo
-					headers := menu.GetSCHeaders(scid)
+					headers := gnomes.GetSCHeaders(scid)
 					if headers != nil {
 						if headers[1] != "" {
 							info.desc = headers[1]
@@ -88,7 +89,7 @@ func createTableList() {
 						}
 
 						if len(headers[2]) > 6 {
-							if img, err := dreams.DownloadFile(headers[2], headers[0]); err == nil {
+							if img, err := dreams.DownloadCanvas(headers[2], headers[0]); err == nil {
 								img.SetMinSize(fyne.NewSize(66, 66))
 								info.image = &img
 							} else {
@@ -98,7 +99,7 @@ func createTableList() {
 						}
 					}
 
-					if _, last := menu.Gnomes.GetSCIDValuesByKey(scid, "Last"); last != nil {
+					if _, last := gnomon.GetSCIDValuesByKey(scid, "Last"); last != nil {
 						since := time.Since(time.Unix(int64(last[0]), 0))
 						info.last = since.Truncate(time.Second).String()
 					} else {
@@ -106,8 +107,8 @@ func createTableList() {
 					}
 
 					var hidden bool
-					_, restrict := menu.Gnomes.GetSCIDValuesByKey(rpc.RatingSCID, "restrict")
-					_, rating := menu.Gnomes.GetSCIDValuesByKey(rpc.RatingSCID, scid)
+					_, restrict := gnomon.GetSCIDValuesByKey(rpc.RatingSCID, "restrict")
+					_, rating := gnomon.GetSCIDValuesByKey(rpc.RatingSCID, scid)
 
 					if restrict != nil && rating != nil {
 						menu.Control.Lock()
@@ -125,39 +126,39 @@ func createTableList() {
 					info.scid = scid
 					info.version = strconv.Itoa(int(v))
 
-					if _, s := menu.Gnomes.GetSCIDValuesByKey(scid, "Seats at Table:"); s != nil {
+					if _, s := gnomon.GetSCIDValuesByKey(scid, "Seats at Table:"); s != nil {
 						if s[0] > 1 {
 							sit := 1
-							if p2, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player2 ID:"); p2 != nil {
+							if p2, _ := gnomon.GetSCIDValuesByKey(scid, "Player2 ID:"); p2 != nil {
 								sit++
 							}
 
-							if p3, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player3 ID:"); p3 != nil {
+							if p3, _ := gnomon.GetSCIDValuesByKey(scid, "Player3 ID:"); p3 != nil {
 								sit++
 							}
 
-							if p4, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player4 ID:"); p4 != nil {
+							if p4, _ := gnomon.GetSCIDValuesByKey(scid, "Player4 ID:"); p4 != nil {
 								sit++
 							}
 
-							if p5, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player5 ID:"); p5 != nil {
+							if p5, _ := gnomon.GetSCIDValuesByKey(scid, "Player5 ID:"); p5 != nil {
 								sit++
 							}
 
-							if p6, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Player6 ID:"); p6 != nil {
+							if p6, _ := gnomon.GetSCIDValuesByKey(scid, "Player6 ID:"); p6 != nil {
 								sit++
 							}
 
 							info.seats = "Seats: " + strconv.Itoa(int(s[0])-sit)
 						}
 
-						if owner, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "owner:"); owner != nil {
+						if owner, _ := gnomon.GetSCIDValuesByKey(scid, "owner:"); owner != nil {
 							info.owner = owner[0]
 						}
 
-						if chips, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "Chips"); chips != nil {
+						if chips, _ := gnomon.GetSCIDValuesByKey(scid, "Chips"); chips != nil {
 							if chips[0] == "ASSET" {
-								if c, _ := menu.Gnomes.GetSCIDValuesByKey(scid, "HGC"); c != nil {
+								if c, _ := gnomon.GetSCIDValuesByKey(scid, "HGC"); c != nil {
 									info.chips = "Playing with: HGC"
 								} else {
 									info.chips = "Playing with: dReams"
@@ -167,8 +168,8 @@ func createTableList() {
 							}
 						}
 
-						if _, bb := menu.Gnomes.GetSCIDValuesByKey(scid, "BB:"); bb != nil {
-							if _, sb := menu.Gnomes.GetSCIDValuesByKey(scid, "SB:"); bb != nil {
+						if _, bb := gnomon.GetSCIDValuesByKey(scid, "BB:"); bb != nil {
+							if _, sb := gnomon.GetSCIDValuesByKey(scid, "SB:"); bb != nil {
 								info.blinds = "Blinds: " + blindString(rpc.Float64Type(bb[0]), rpc.Float64Type(sb[0]))
 							}
 						}

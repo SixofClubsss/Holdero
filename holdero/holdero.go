@@ -17,6 +17,7 @@ import (
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
+	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 	"github.com/sirupsen/logrus"
@@ -145,7 +146,7 @@ func (s *settings) ClearAssets() {
 	s.avatars.Select.Options = []string{}
 }
 
-func (s *settings) SortCardAsset() {
+func (s *settings) SortCardAssets() {
 	sort.Strings(s.faces.Select.Options)
 	sort.Strings(s.backs.Select.Options)
 
@@ -286,7 +287,7 @@ func publicList(d *dreams.AppObject) fyne.CanvasObject {
 	var item tableInfo
 
 	table.Public.List.OnSelected = func(id widget.ListItemID) {
-		if menu.Connected() {
+		if gnomes.Connected() {
 			item = setHolderoEntryText(publicTables[id])
 			table.Favorites.List.UnselectAll()
 			table.Owned.List.UnselectAll()
@@ -338,7 +339,7 @@ func favoritesList() fyne.CanvasObject {
 	var item tableInfo
 
 	table.Favorites.List.OnSelected = func(id widget.ListItemID) {
-		if menu.Connected() {
+		if gnomes.Connected() {
 			item = setHolderoEntryText(favoriteTables[id])
 			table.Public.List.UnselectAll()
 			table.Owned.List.UnselectAll()
@@ -392,7 +393,7 @@ func ownedList(d *dreams.AppObject) fyne.CanvasObject {
 		})
 
 	table.Owned.List.OnSelected = func(id widget.ListItemID) {
-		if menu.Connected() {
+		if gnomes.Connected() {
 			setHolderoEntryText(ownedTables[id])
 			table.Public.List.UnselectAll()
 			table.Favorites.List.UnselectAll()
@@ -428,7 +429,7 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 		if round.p1.url != "" {
 			if !shared.loaded.p1 {
 				shared.loaded.p1 = true
-				if img, err := dreams.DownloadFile(round.p1.url, "P1"); err == nil {
+				if img, err := dreams.DownloadCanvas(round.p1.url, "P1"); err == nil {
 					shared.avatar.p1 = &img
 				} else {
 					logger.Errorln("[Holdero] Player 1 avatar:", err)
@@ -490,7 +491,7 @@ func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 		if round.p2.url != "" {
 			if !shared.loaded.p2 {
 				shared.loaded.p2 = true
-				if img, err := dreams.DownloadFile(round.p2.url, "P2"); err == nil {
+				if img, err := dreams.DownloadCanvas(round.p2.url, "P2"); err == nil {
 					shared.avatar.p2 = &img
 				} else {
 					logger.Errorln("[Holdero] Player 2 avatar:", err)
@@ -544,7 +545,7 @@ func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 		if round.p3.url != "" {
 			if !shared.loaded.p3 {
 				shared.loaded.p3 = true
-				if img, err := dreams.DownloadFile(round.p3.url, "P3"); err == nil {
+				if img, err := dreams.DownloadCanvas(round.p3.url, "P3"); err == nil {
 					shared.avatar.p3 = &img
 				} else {
 					logger.Errorln("[Holdero] Player 3 avatar:", err)
@@ -598,7 +599,7 @@ func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 		if round.p4.url != "" {
 			if !shared.loaded.p4 {
 				shared.loaded.p4 = true
-				if img, err := dreams.DownloadFile(round.p4.url, "P4"); err == nil {
+				if img, err := dreams.DownloadCanvas(round.p4.url, "P4"); err == nil {
 					shared.avatar.p4 = &img
 				} else {
 					logger.Errorln("[Holdero] Player 4 avatar:", err)
@@ -652,7 +653,7 @@ func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 		if round.p5.url != "" {
 			if !shared.loaded.p5 {
 				shared.loaded.p5 = true
-				if img, err := dreams.DownloadFile(round.p5.url, "P5"); err == nil {
+				if img, err := dreams.DownloadCanvas(round.p5.url, "P5"); err == nil {
 					shared.avatar.p5 = &img
 				} else {
 					logger.Errorln("[Holdero] Player 5 avatar:", err)
@@ -706,7 +707,7 @@ func Player6_label(a, f, t fyne.Resource) fyne.CanvasObject {
 		if round.p6.url != "" {
 			if !shared.loaded.p6 {
 				shared.loaded.p6 = true
-				if img, err := dreams.DownloadFile(round.p6.url, "P6"); err == nil {
+				if img, err := dreams.DownloadCanvas(round.p6.url, "P6"); err == nil {
 					shared.avatar.p6 = &img
 				} else {
 					logger.Errorln("[Holdero] Player 6 avatar:", err)
@@ -1536,7 +1537,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	var err error
 	var img image.Image
 	var rast *canvas.Raster
-	if img, _, err = image.Decode(bytes.NewReader(dreams.Theme.Img.Resource.Content())); err != nil {
+	if img, _, err = image.Decode(bytes.NewReader(menu.Theme.Img.Resource.Content())); err != nil {
 		if img, _, err = image.Decode(bytes.NewReader(bundle.ResourceBackgroundPng.Content())); err != nil {
 			logger.Warnf("[holderoTools] Fallback %s\n", err)
 			source := image.Rect(2, 2, 4, 4)

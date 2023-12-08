@@ -467,8 +467,15 @@ func SharedImage(c string) *canvas.Image {
 }
 */
 
+var downloading bool
+
 // Download a single uncompressed image image file to filepath
 func downloadFileLocal(filepath string, url string) (err error) {
+	downloading = true
+	defer func() {
+		downloading = false
+	}()
+
 	_, dir := os.Stat("cards")
 	if os.IsNotExist(dir) {
 		logger.Println("[Holdero] Creating Cards Dir")
@@ -519,6 +526,7 @@ func downloadFileLocal(filepath string, url string) (err error) {
 // Function to get and prepare deck assets for use in dReams
 //   - face will be download path
 func GetZipDeck(face, url string) {
+	downloading = true
 	downloadFileLocal("cards/"+face+".zip", url)
 	files, err := Unzip("cards/"+face+".zip", "cards/"+face)
 
@@ -527,6 +535,7 @@ func GetZipDeck(face, url string) {
 	}
 
 	logger.Println("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))
+	downloading = false
 }
 
 // Unzip a src file into destination

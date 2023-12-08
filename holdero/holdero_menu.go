@@ -409,6 +409,7 @@ Public table that uses HGC or DERO`
 
 	var choice *widget.Select
 	var confirm *dialog.CustomDialog
+	done := make(chan struct{})
 
 	confirm_button := widget.NewButtonWithIcon("Confirm", dreams.FyneIcon("confirm"), func() {
 		if choice.SelectedIndex() < 3 && choice.SelectedIndex() >= 0 {
@@ -421,6 +422,7 @@ Public table that uses HGC or DERO`
 
 		confirm.Hide()
 		confirm = nil
+		done <- struct{}{}
 	})
 	confirm_button.Importance = widget.HighImportance
 
@@ -449,6 +451,7 @@ Public table that uses HGC or DERO`
 
 		confirm.Hide()
 		confirm = nil
+		done <- struct{}{}
 	})
 
 	confirm_button.Hide()
@@ -463,16 +466,5 @@ Public table that uses HGC or DERO`
 
 	confirm = dialog.NewCustom(title, "", container.NewStack(spacer, label), d.Window)
 	confirm.SetButtons([]fyne.CanvasObject{actions})
-	confirm.Show()
-
-	go func() {
-		for rpc.IsReady() {
-			time.Sleep(time.Second)
-		}
-
-		if confirm != nil {
-			confirm.Hide()
-			confirm = nil
-		}
-	}()
+	go menu.ShowConfirmDialog(done, confirm)
 }

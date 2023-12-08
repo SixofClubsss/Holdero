@@ -42,7 +42,7 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 		})
 
 	balance_tabs := container.NewAppTabs(
-		container.NewTabItem("Balances", container.NewBorder(nil, menu.NameEntry(), nil, nil, menu.Assets.Balances)))
+		container.NewTabItem("Balances", container.NewStack(menu.Assets.Balances)))
 
 	var swap_entry *dwidget.DeroAmts
 	var swap_boxes *fyne.Container

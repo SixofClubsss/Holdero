@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -14,11 +13,11 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/widget"
 	"github.com/blang/semver/v4"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
+	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 	"github.com/sirupsen/logrus"
@@ -27,6 +26,7 @@ import (
 const app_tag = "Holdero"
 
 var version = semver.MustParse("0.3.0-dev")
+var gnomon = gnomes.NewGnomes()
 
 // Check holdero package version
 func Version() semver.Version {
@@ -37,7 +37,7 @@ func Version() semver.Version {
 func StartApp() {
 	n := runtime.NumCPU()
 	runtime.GOMAXPROCS(n)
-	menu.InitLogrusLog(logrus.InfoLevel)
+	gnomes.InitLogrusLog(logrus.InfoLevel)
 	config := menu.ReadDreamsConfig(app_tag)
 	SetFavoriteTables(config.Tables)
 
@@ -51,11 +51,11 @@ func StartApp() {
 	done := make(chan struct{})
 
 	// Initialize dReams AppObject and close func
-	dreams.Theme.Img = *canvas.NewImageFromResource(nil)
+	menu.Theme.Img = *canvas.NewImageFromResource(nil)
 	d := dreams.AppObject{
 		App:        a,
 		Window:     w,
-		Background: container.NewStack(&dreams.Theme.Img),
+		Background: container.NewStack(&menu.Theme.Img),
 	}
 	d.SetChannels(1)
 	d.SetTab("Holdero")
@@ -63,7 +63,7 @@ func StartApp() {
 	closeFunc := func() {
 		save := dreams.SaveData{
 			Skin:   config.Skin,
-			DBtype: menu.Gnomes.DBType,
+			DBtype: gnomon.DBStorageType(),
 			Tables: GetFavoriteTables(),
 		}
 
@@ -75,7 +75,7 @@ func StartApp() {
 
 		menu.WriteDreamsConfig(save)
 		menu.CloseAppSignal(true)
-		menu.Gnomes.Stop(app_tag)
+		gnomon.Stop(app_tag)
 		d.StopProcess()
 		w.Close()
 	}
@@ -94,19 +94,20 @@ func StartApp() {
 	// Initialize vars
 	rpc.InitBalances()
 	menu.Control.Contract_rating = make(map[string]uint64)
-	menu.Gnomes.DBType = "boltdb"
-	menu.Gnomes.Fast = true
+	gnomon.SetDBStorageType("boltdb")
+	gnomon.SetFastsync(true)
 
+	// TODO
 	// Initialize asset widgets
-	names := menu.NameEntry()
-	asset_selects := []fyne.Widget{
-		names.(*fyne.Container).Objects[1].(*widget.Select),
-		FaceSelect(),
-		BackSelect(),
-		dreams.ThemeSelect(),
-		AvatarSelect(menu.Assets.Asset_map),
-		SharedDecks(),
-	}
+	//names := menu.NameEntry()
+	// asset_selects := []fyne.Widget{
+	// 	names.(*fyne.Container).Objects[1].(*widget.Select),
+	// 	FaceSelect(),
+	// 	BackSelect(),
+	// 	dreams.ThemeSelect(),
+	// 	AvatarSelect(menu.Assets.SCIDs),
+	// 	SharedDecks(),
+	// }
 
 	// Create dwidget connection box with controls
 	connect_box := dwidget.NewHorizontalEntries(app_tag, 1)
@@ -114,22 +115,22 @@ func StartApp() {
 		rpc.GetAddress(app_tag)
 		rpc.Ping()
 		OnConnected()
-		if rpc.Daemon.IsConnected() && !menu.Gnomes.IsInitialized() && !menu.Gnomes.Start {
+		if rpc.Daemon.IsConnected() && !gnomon.IsInitialized() && !gnomon.IsStarting() {
 			filter := []string{
 				GetHolderoCode(0),
 				GetHolderoCode(2),
-				menu.NFA_SEARCH_FILTER,
+				gnomes.NFA_SEARCH_FILTER,
 				rpc.GetSCCode(rpc.GnomonSCID),
 				rpc.GetSCCode(rpc.RatingSCID),
 				rpc.GetSCCode(rpc.NameSCID)}
 
-			go menu.StartGnomon(app_tag, menu.Gnomes.DBType, filter, 0, 0, nil)
+			go gnomes.StartGnomon(app_tag, gnomon.DBStorageType(), filter, 0, 0, nil)
 		}
 	}
 
 	connect_box.Disconnect.OnChanged = func(b bool) {
 		if !b {
-			menu.Gnomes.Stop(app_tag)
+			gnomon.Stop(app_tag)
 		}
 	}
 
@@ -140,7 +141,7 @@ func StartApp() {
 	// Layout tabs
 	tabs := container.NewAppTabs(
 		container.NewTabItem(app_tag, LayoutAllItems(&d)),
-		container.NewTabItem("Assets", menu.PlaceAssets(app_tag, asset_selects, ResourceHolderoCirclePng, d.Window)),
+		container.NewTabItem("Assets", menu.PlaceAssets(app_tag, layout.NewSpacer(), nil, ResourceHolderoCirclePng, &d)),
 		container.NewTabItem("Swap", PlaceSwap(&d)),
 		container.NewTabItem("Log", rpc.SessionLog(app_tag, version)))
 
@@ -161,19 +162,17 @@ func StartApp() {
 
 				connect_box.RefreshBalance()
 				if !rpc.Startup {
-					menu.GnomonEndPoint()
+					gnomes.GnomonEndPoint()
 				}
 
-				if rpc.Daemon.IsConnected() && menu.Gnomes.IsInitialized() {
+				if rpc.Daemon.IsConnected() && gnomon.IsInitialized() {
 					connect_box.Disconnect.SetChecked(true)
-					if menu.Gnomes.IsRunning() {
+					if gnomon.IsRunning() {
 						menu.DisableIndexControls(false)
-						menu.Gnomes.IndexContains()
-						scids := " Indexed SCIDs: " + strconv.Itoa(int(menu.Gnomes.SCIDS))
-						menu.Assets.Gnomes_index.Text = scids
-						menu.Assets.Gnomes_index.Refresh()
-						if menu.Gnomes.HasIndex(2) {
-							menu.Gnomes.Checked(true)
+						gnomon.IndexContains()
+						menu.Info.RefreshIndexed()
+						if gnomon.HasIndex(2) {
+							gnomon.Checked(true)
 						}
 					}
 
@@ -184,11 +183,11 @@ func StartApp() {
 						menu.Assets.Swap.Hide()
 					}
 
-					if menu.Gnomes.Indexer.LastIndexedHeight >= menu.Gnomes.Indexer.ChainHeight-3 {
-						menu.Gnomes.Synced(true)
+					if gnomon.GetLastHeight() >= gnomon.GetChainHeight()-3 {
+						gnomon.Synced(true)
 					} else {
-						menu.Gnomes.Synced(false)
-						menu.Gnomes.Checked(false)
+						gnomon.Synced(false)
+						gnomon.Checked(false)
 					}
 				} else {
 					menu.DisableIndexControls(true)
@@ -203,8 +202,8 @@ func StartApp() {
 
 			case <-d.Closing(): // exit
 				logger.Printf("[%s] Closing...", app_tag)
-				if menu.Gnomes.Icon_ind != nil {
-					menu.Gnomes.Icon_ind.Stop()
+				if gnomes.Icon_ind != nil {
+					gnomes.Icon_ind.Stop()
 				}
 				ticker.Stop()
 				d.CloseAllDapps()
