@@ -440,32 +440,32 @@ func refreshHolderoPlayers(tab bool) {
 		H.Back.Objects[0].Refresh()
 
 		go func() {
-			H.Back.Objects[1] = Player1_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
+			H.Back.Objects[1] = Player1_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
 			H.Back.Objects[1].Refresh()
 		}()
 
 		go func() {
-			H.Back.Objects[2] = Player2_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
+			H.Back.Objects[2] = Player2_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
 			H.Back.Objects[2].Refresh()
 		}()
 
 		go func() {
-			H.Back.Objects[3] = Player3_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
+			H.Back.Objects[3] = Player3_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
 			H.Back.Objects[3].Refresh()
 		}()
 
 		go func() {
-			H.Back.Objects[4] = Player4_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
+			H.Back.Objects[4] = Player4_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
 			H.Back.Objects[4].Refresh()
 		}()
 
 		go func() {
-			H.Back.Objects[5] = Player5_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
+			H.Back.Objects[5] = Player5_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
 			H.Back.Objects[5].Refresh()
 		}()
 
 		go func() {
-			H.Back.Objects[6] = Player6_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
+			H.Back.Objects[6] = Player6_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
 			H.Back.Objects[6].Refresh()
 		}()
 	}

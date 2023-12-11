@@ -266,7 +266,7 @@ func updateListItem(i widget.ListItemID, o fyne.CanvasObject, t []tableInfo) {
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = unknown
 		}
 
-		frame := canvas.NewImageFromResource(bundle.ResourceAvatarFramePng)
+		frame := canvas.NewImageFromResource(bundle.ResourceFramePng)
 		frame.SetMinSize(fyne.NewSize(70, 70))
 		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1] = frame
 		o.Refresh()
