@@ -1,6 +1,7 @@
 package holdero
 
 import (
+	"image/color"
 	"strconv"
 	"time"
 
@@ -487,7 +488,7 @@ func revealingKey(d *dreams.AppObject) {
 
 // Splash screen for when tables lists syncing
 func syncScreen() *fyne.Container {
-	text := canvas.NewText("Syncing...", bundle.TextColor)
+	text := canvas.NewText("Syncing...", color.White)
 	text.Alignment = fyne.TextAlignCenter
 	text.TextSize = 21
 
@@ -499,5 +500,5 @@ func syncScreen() *fyne.Container {
 		nil,
 		nil,
 		nil,
-		container.NewCenter(container.NewBorder(nil, text, nil, nil, img)), widget.NewProgressBarInfinite())
+		container.NewCenter(img, text), widget.NewProgressBarInfinite())
 }

@@ -1538,7 +1538,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	var img image.Image
 	var rast *canvas.Raster
 	if img, _, err = image.Decode(bytes.NewReader(menu.Theme.Img.Resource.Content())); err != nil {
-		if img, _, err = image.Decode(bytes.NewReader(bundle.ResourceBackgroundPng.Content())); err != nil {
+		if img, _, err = image.Decode(bytes.NewReader(menu.DefaultThemeResource().StaticContent)); err != nil {
 			logger.Warnf("[holderoTools] Fallback %s\n", err)
 			source := image.Rect(2, 2, 4, 4)
 
