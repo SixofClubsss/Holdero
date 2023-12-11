@@ -47,13 +47,12 @@ type holderoObjects struct {
 	betEntry   *dwidget.DeroAmts
 	warning    *fyne.Container
 	owner      struct {
-		valid       bool
-		blinds      uint64
-		ante        uint64
-		chips       *widget.RadioGroup
-		timeout     *widget.Button
-		owners_left *fyne.Container
-		owners_mid  *fyne.Container
+		valid    bool
+		blinds   uint64
+		ante     uint64
+		chips    *widget.RadioGroup
+		settings *fyne.Container
+		times    *fyne.Container
 	}
 }
 
@@ -295,6 +294,10 @@ func publicList(d *dreams.AppObject) fyne.CanvasObject {
 	}
 
 	save_favorite := widget.NewButton("Favorite", func() {
+		if item.name == "" {
+			return
+		}
+
 		for _, sc := range table.Favorites.SCIDs {
 			if item.scid == sc {
 				return

@@ -203,7 +203,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		}, d.Window).Show()
 	})
 
-	table.owner.timeout = widget.NewButton("Timeout", func() {
+	timeout_button := widget.NewButton("Timeout", func() {
 		if round.display.seats == "" {
 			dialog.NewInformation("Timeout", "This table is closed", d.Window).Show()
 			return
@@ -216,7 +216,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		}, d.Window).Show()
 	})
 
-	force := widget.NewButton("Force Start", func() {
+	force_button := widget.NewButton("Force Start", func() {
 		if round.display.seats == "" {
 			dialog.NewInformation("Force Start", "This table is closed", d.Window).Show()
 			return
@@ -234,7 +234,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		}, d.Window).Show()
 	})
 
-	close := widget.NewButton("Close Table", func() {
+	close_button := widget.NewButton("Close Table", func() {
 		if round.Pot != 0 {
 			dialog.NewInformation("Close Table", "There is still funds to be paid out at this table", d.Window).Show()
 			return
@@ -255,19 +255,19 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
 	spacer.SetMinSize(table.owner.chips.Size())
 
-	first_form := []*widget.FormItem{}
-	first_form = append(first_form, widget.NewFormItem("Seats", player_select))
-	first_form = append(first_form, widget.NewFormItem("Chips", table.owner.chips))
-	first_form = append(first_form, widget.NewFormItem("Blinds", blinds_entry))
-	first_form = append(first_form, widget.NewFormItem("Ante", ante_entry))
-	first_form = append(first_form, widget.NewFormItem("", set_button))
-	first_form = append(first_form, widget.NewFormItem("", force))
-	first_form = append(first_form, widget.NewFormItem("", close))
-	first_form = append(first_form, widget.NewFormItem("", spacer))
+	settings_form := []*widget.FormItem{}
+	settings_form = append(settings_form, widget.NewFormItem("Seats", player_select))
+	settings_form = append(settings_form, widget.NewFormItem("Chips", table.owner.chips))
+	settings_form = append(settings_form, widget.NewFormItem("Blinds", blinds_entry))
+	settings_form = append(settings_form, widget.NewFormItem("Ante", ante_entry))
+	settings_form = append(settings_form, widget.NewFormItem("", set_button))
+	settings_form = append(settings_form, widget.NewFormItem("", force_button))
+	settings_form = append(settings_form, widget.NewFormItem("", close_button))
+	settings_form = append(settings_form, widget.NewFormItem("", spacer))
 
-	first_form = append(first_form, widget.NewFormItem("Clean Amount", clean_entry))
-	first_form = append(first_form, widget.NewFormItem("", clean_button))
-	first_form = append(first_form, widget.NewFormItem("", spacer))
+	settings_form = append(settings_form, widget.NewFormItem("Clean Amount", clean_entry))
+	settings_form = append(settings_form, widget.NewFormItem("", clean_button))
+	settings_form = append(settings_form, widget.NewFormItem("", spacer))
 
 	k_times := []string{"Off", "2m", "5m"}
 	auto_remove := widget.NewSelect(k_times, func(s string) {
@@ -284,8 +284,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	})
 	auto_remove.PlaceHolder = "Kick after:"
 
-	p_times := []string{"30s", "60s"}
-	delay := widget.NewSelect(p_times, func(s string) {
+	delay := widget.NewSelect([]string{"30s", "60s"}, func(s string) {
 		switch s {
 		case "30s":
 			signals.times.delay = 30
@@ -315,21 +314,22 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 	table.tournament.Hide()
 
-	second_form := []*widget.FormItem{}
-	second_form = append(second_form, widget.NewFormItem("Auto Kick", auto_remove))
-	second_form = append(second_form, widget.NewFormItem("", table.owner.timeout))
-	second_form = append(second_form, widget.NewFormItem("", spacer))
-	second_form = append(second_form, widget.NewFormItem("Payout Delay  ", delay))
+	times_form := []*widget.FormItem{}
+	times_form = append(times_form, widget.NewFormItem("Auto Kick", auto_remove))
+	times_form = append(times_form, widget.NewFormItem("", timeout_button))
+	times_form = append(times_form, widget.NewFormItem("", spacer))
+	times_form = append(times_form, widget.NewFormItem("Payout Delay  ", delay))
 
-	table.owner.owners_mid = container.NewVBox(widget.NewForm(second_form...))
+	table.owner.times = container.NewVBox(widget.NewForm(times_form...))
+	table.owner.times.Hide()
 
 	instructions := "To start a game on a table you own:\n---\nSelect number of seats at the table (6 max)\n\nSelect DERO or ASSET as chips\n\nSelect blinds and any required ante (can be 0)\n\nClick 'Set Table' to open your table for others to join\n\nClick 'Force Start' if you'd like to start the table before all the seats are filled\n\nWhen done playing, click 'Close Table' to close it\n\n'Clean Table' is your reset button, it shuffles the deck and move the turn to the next player,\nif clean amount is above 0 it will withdraw that amount (in atomic units) from the table\n\nAuto kick time default is off, and payout default is 30 seconds\n\nVisit dreamdapps.io for more docs"
 	help_button := widget.NewButton("Help", func() {
 		dialog.NewInformation("Owners Manual", instructions, d.Window).Show()
 	})
-	first_form = append(first_form, widget.NewFormItem("", table.tournament))
-	first_form = append(first_form, widget.NewFormItem("", help_button))
-	first_form = append(first_form, widget.NewFormItem("", layout.NewSpacer()))
+	settings_form = append(settings_form, widget.NewFormItem("", table.tournament))
+	settings_form = append(settings_form, widget.NewFormItem("", help_button))
+	settings_form = append(settings_form, widget.NewFormItem("", layout.NewSpacer()))
 
 	table.unlock = widget.NewButton("Unlock Holdero Contract", nil)
 	table.unlock.Importance = widget.HighImportance
@@ -343,13 +343,13 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	third_form = append(third_form, widget.NewFormItem("", spacer))
 	third_form = append(third_form, widget.NewFormItem("", container.NewVBox(table.unlock, table.new)))
 
-	table.owner.owners_left = container.NewVBox(widget.NewForm(first_form...))
-	table.owner.owners_left.Hide()
+	table.owner.settings = container.NewVBox(widget.NewForm(settings_form...))
+	table.owner.settings.Hide()
 
 	help_spacer := canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
 	help_spacer.SetMinSize(fyne.NewSize(180, 0))
 
-	return container.NewVScroll(container.NewVBox(table.owner.owners_left, table.owner.owners_mid, layout.NewSpacer(), container.NewVBox(widget.NewForm(third_form...))))
+	return container.NewVScroll(container.NewVBox(table.owner.settings, table.owner.times, layout.NewSpacer(), container.NewVBox(widget.NewForm(third_form...))))
 }
 
 func holderoMenuConfirm(c int, d *dreams.AppObject) {

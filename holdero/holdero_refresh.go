@@ -308,15 +308,15 @@ func disableActions() {
 // Disable Holdero owner actions
 func disableOwnerControls(d bool) {
 	if d {
-		table.owner.owners_left.Hide()
-		table.owner.owners_mid.Hide()
+		table.owner.settings.Hide()
+		table.owner.times.Hide()
 	} else {
-		table.owner.owners_left.Show()
-		table.owner.owners_mid.Show()
+		table.owner.settings.Show()
+		table.owner.times.Show()
 	}
 
-	table.owner.owners_left.Refresh()
-	table.owner.owners_mid.Refresh()
+	table.owner.settings.Refresh()
+	table.owner.times.Refresh()
 }
 
 // Sets Holdero table info labels

@@ -64,6 +64,11 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Con
 						holderoRefresh(d, 0)
 					}
 				} else {
+					if rpc.IsReady() {
+						dialog.NewInformation("Select Table", "Select a table SCID to play at", d.Window).Show()
+					} else {
+						dialog.NewInformation("Not Connected", "Connect to daemon and wallet", d.Window).Show()
+					}
 					tabs.SelectIndex(0)
 				}
 			}()
@@ -104,13 +109,11 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Con
 					disableOwnerControls(false)
 					if checkTableVersion(text) >= 110 {
 						table.owner.chips.Show()
-						table.owner.timeout.Show()
-						table.owner.owners_mid.Show()
+						table.owner.times.Show()
 					} else {
 						table.owner.chips.Hide()
 						table.owner.chips.SetSelected("DERO")
-						table.owner.timeout.Hide()
-						table.owner.owners_mid.Hide()
+						table.owner.times.Hide()
 					}
 				} else {
 					disableOwnerControls(true)
