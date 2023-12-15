@@ -89,6 +89,7 @@ type settings struct {
 	shared  *widget.RadioGroup
 }
 
+var creating bool
 var publicTables []tableInfo
 var ownedTables []tableInfo
 var favoriteTables []tableInfo
@@ -115,21 +116,6 @@ func DreamsMenuIntro() (entries map[string][]string) {
 	}
 
 	return
-}
-
-func OnConnected() {
-	table.entry.CursorColumn = 1
-	table.entry.Refresh()
-	if len(rpc.Wallet.Address) == 66 {
-		CheckExistingKey()
-		menu.Assets.Names.ClearSelected()
-		menu.Assets.Names.Options = []string{}
-		menu.Assets.Names.Refresh()
-		menu.Assets.Names.Options = append(menu.Assets.Names.Options, rpc.Wallet.Address[0:12])
-		if menu.Assets.Names.Options != nil {
-			menu.Assets.Names.SetSelectedIndex(0)
-		}
-	}
 }
 
 func (s *settings) EnableCardSelects() {
@@ -286,7 +272,7 @@ func publicList(d *dreams.AppObject) fyne.CanvasObject {
 	var item tableInfo
 
 	table.Public.List.OnSelected = func(id widget.ListItemID) {
-		if gnomes.Connected() {
+		if gnomes.IsConnected() {
 			item = setHolderoEntryText(publicTables[id])
 			table.Favorites.List.UnselectAll()
 			table.Owned.List.UnselectAll()
@@ -342,7 +328,7 @@ func favoritesList() fyne.CanvasObject {
 	var item tableInfo
 
 	table.Favorites.List.OnSelected = func(id widget.ListItemID) {
-		if gnomes.Connected() {
+		if gnomes.IsConnected() {
 			item = setHolderoEntryText(favoriteTables[id])
 			table.Public.List.UnselectAll()
 			table.Owned.List.UnselectAll()
@@ -396,7 +382,7 @@ func ownedList(d *dreams.AppObject) fyne.CanvasObject {
 		})
 
 	table.Owned.List.OnSelected = func(id widget.ListItemID) {
-		if gnomes.Connected() {
+		if gnomes.IsConnected() {
 			setHolderoEntryText(ownedTables[id])
 			table.Public.List.UnselectAll()
 			table.Favorites.List.UnselectAll()
@@ -977,6 +963,7 @@ func BetButton() fyne.Widget {
 			}
 		}
 	})
+	table.bet.Importance = widget.HighImportance
 
 	table.bet.Hide()
 

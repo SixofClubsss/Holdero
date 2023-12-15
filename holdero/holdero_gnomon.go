@@ -12,6 +12,7 @@ import (
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/widget"
 )
 
 // Check if wallet owns Holdero table
@@ -63,12 +64,21 @@ func checkTableVersion(scid string) uint64 {
 	return 0
 }
 
-// Make list of public and owned tables
-func createTableList() {
-	if gnomon.IsReady() {
+// Make list of public and owned tables with icon images for lists
+func createTableList(progress *widget.ProgressBar) {
+	if gnomon.IsReady() && !creating {
+		creating = true
+		defer func() {
+			creating = false
+		}()
 		var owner bool
 		var newPublic, newOwned, newFavorites []tableInfo
+
 		tables := gnomon.GetAllOwnersAndSCIDs()
+		if progress != nil {
+			progress.Max = float64(len(tables))
+		}
+
 		for scid := range tables {
 			if !gnomon.IsReady() {
 				break
@@ -79,23 +89,19 @@ func createTableList() {
 				if version != nil {
 					var info tableInfo
 					headers := gnomes.GetSCHeaders(scid)
-					if headers != nil {
-						if headers[1] != "" {
-							info.desc = headers[1]
+					if headers.Name != "" {
+						info.name = headers.Name
+						if headers.Description != "" {
+							info.desc = headers.Description
 						}
 
-						if headers[0] != "" {
-							info.name = headers[0]
-						}
-
-						if len(headers[2]) > 6 {
-							if img, err := dreams.DownloadCanvas(headers[2], headers[0]); err == nil {
+						if headers.IconURL != "" {
+							if img, err := dreams.DownloadCanvas(headers.IconURL, headers.Name); err == nil {
 								img.SetMinSize(fyne.NewSize(66, 66))
 								info.image = &img
 							} else {
 								logger.Errorln("[Holdero]", err)
 							}
-
 						}
 					}
 
@@ -192,6 +198,9 @@ func createTableList() {
 						}
 					}
 				}
+			}
+			if progress != nil {
+				progress.SetValue(progress.Value + 1)
 			}
 		}
 

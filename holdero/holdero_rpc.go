@@ -1121,7 +1121,7 @@ func OwnerT3(o bool) (t *dero.Transfer) {
 			Amount:      0,
 		}
 	} else {
-		if fee, ok := rpc.FindStringKey(rpc.RatingSCID, "ContractUnlock", rpc.Daemon.Rpc).(float64); ok {
+		if fee, ok := rpc.GetStringKey(rpc.RatingSCID, "ContractUnlock", rpc.Daemon.Rpc).(float64); ok {
 			unlockFee = uint64(fee)
 		} else {
 			logger.Println("[FetchFees] Could not get current contract unlock fee, using default")

@@ -11,6 +11,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/validation"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	dreams "github.com/dReam-dApps/dReams"
@@ -122,6 +123,7 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 	max := container.NewStack()
 
 	swap_button := widget.NewButton("Swap", nil)
+	swap_button.Importance = widget.HighImportance
 	swap_button.OnTapped = func() {
 		switch select_pair.Selected {
 		case "DERO-dReams":
@@ -130,6 +132,8 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 				if amt := (f * 333) * 100000; amt > 0 {
 					DreamsConfirm(1, amt, d)
 				}
+			} else {
+				dialog.NewInformation("Swap", "Amount error", d.Window).Show()
 			}
 		case "dReams-DERO":
 			f, err := strconv.ParseFloat(swap_entry.Text, 64)
@@ -137,12 +141,14 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 				if amt := f * 100000; amt > 0 {
 					DreamsConfirm(2, amt, d)
 				}
+			} else {
+				dialog.NewInformation("Swap", "Amount error", d.Window).Show()
 			}
 		}
 	}
 
 	swap_entry, swap_boxes = CreateSwapContainer(select_pair.Selected)
-	menu.Assets.Swap = container.NewBorder(select_pair, swap_button, nil, nil, swap_boxes)
+	menu.Assets.Swap = container.NewBorder(nil, container.NewBorder(nil, nil, nil, swap_button, select_pair), nil, nil, swap_boxes)
 	menu.Assets.Swap.Hide()
 
 	select_pair.OnChanged = func(s string) {

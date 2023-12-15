@@ -96,7 +96,7 @@ func StartApp() {
 
 	// Initialize vars
 	gnomon.SetDBStorageType("boltdb")
-	gnomon.SetFastsync(true)
+	gnomon.SetFastsync(true, true, 10000)
 
 	// Initialize profile widgets
 	line := canvas.NewLine(bundle.TextColor)
@@ -122,7 +122,6 @@ func StartApp() {
 	connect_box.Button.OnTapped = func() {
 		rpc.GetAddress(app_tag)
 		rpc.Ping()
-		OnConnected()
 		if rpc.Daemon.IsConnected() && !gnomon.IsInitialized() && !gnomon.IsStarting() {
 			filter := []string{
 				GetHolderoCode(0),
@@ -157,9 +156,9 @@ func StartApp() {
 
 	// Stand alone process
 	go func() {
+		var synced bool
 		time.Sleep(6 * time.Second)
 		ticker := time.NewTicker(3 * time.Second)
-
 		for {
 			select {
 			case <-ticker.C: // do on interval
@@ -170,7 +169,7 @@ func StartApp() {
 
 				connect_box.RefreshBalance()
 				if !rpc.Startup {
-					gnomes.GnomonEndPoint()
+					gnomes.EndPoint()
 				}
 
 				if rpc.Daemon.IsConnected() && gnomon.IsInitialized() {
@@ -200,6 +199,11 @@ func StartApp() {
 				} else {
 					menu.DisableIndexControls(true)
 					connect_box.Disconnect.SetChecked(false)
+				}
+
+				if !synced && gnomon.IsReady() && rpc.Wallet.Address != "" {
+					menu.CheckWalletNames(rpc.Wallet.Address)
+					synced = true
 				}
 
 				if rpc.Daemon.IsConnected() {

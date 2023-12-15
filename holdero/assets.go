@@ -7,6 +7,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
@@ -331,9 +332,17 @@ func DreamsConfirm(c, amt float64, d *dreams.AppObject) {
 		if b {
 			switch c {
 			case 1:
-				rpc.GetdReams(uint64(x * 100000))
+				if tx := rpc.GetdReams(uint64(x * 100000)); tx != "" {
+					go menu.ShowTxDialog("Swap", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+				} else {
+					go menu.ShowTxDialog("Swap", "TX error, check logs", tx, 3*time.Second, d.Window)
+				}
 			case 2:
-				rpc.TradedReams(uint64(amt))
+				if tx := rpc.TradedReams(uint64(amt)); tx != "" {
+					go menu.ShowTxDialog("Swap", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+				} else {
+					go menu.ShowTxDialog("Swap", "TX error, check logs", tx, 3*time.Second, d.Window)
+				}
 			default:
 
 			}

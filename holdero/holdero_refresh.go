@@ -107,11 +107,15 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 				continue
 			}
 
-			if !Settings.synced && gnomes.GnomonScan(d.IsConfiguring()) {
+			if !Settings.synced && gnomes.Scan(d.IsConfiguring()) {
 				reset := cont.Objects[1]
-				cont.Objects[1] = syncScreen()
+				screen, bar := syncScreen()
+				cont.Objects[1] = screen
 				logger.Println("[Holdero] Syncing")
-				createTableList()
+				if len(rpc.Wallet.Address) == 66 {
+					CheckExistingKey()
+				}
+				createTableList(bar)
 				Settings.synced = true
 				cont.Objects[1] = reset
 				H.Actions.Show()
@@ -487,7 +491,7 @@ func revealingKey(d *dreams.AppObject) {
 }
 
 // Splash screen for when tables lists syncing
-func syncScreen() *fyne.Container {
+func syncScreen() (max *fyne.Container, bar *widget.ProgressBar) {
 	text := canvas.NewText("Syncing...", color.White)
 	text.Alignment = fyne.TextAlignCenter
 	text.TextSize = 21
@@ -495,10 +499,17 @@ func syncScreen() *fyne.Container {
 	img := canvas.NewImageFromResource(ResourceHolderoCirclePng)
 	img.SetMinSize(fyne.NewSize(150, 150))
 
-	return container.NewBorder(
+	bar = widget.NewProgressBar()
+	bar.TextFormatter = func() string {
+		return ""
+	}
+
+	max = container.NewBorder(
 		dwidget.LabelColor(container.NewVBox(widget.NewLabel(""))),
 		nil,
 		nil,
 		nil,
-		container.NewCenter(img, text), widget.NewProgressBarInfinite())
+		container.NewCenter(img, text), bar)
+
+	return
 }

@@ -408,9 +408,8 @@ Public table that uses HGC or DERO`
 	label.Alignment = fyne.TextAlignCenter
 
 	var choice *widget.Select
-	var confirm *dialog.CustomDialog
-	done := make(chan struct{})
 
+	done := make(chan struct{})
 	confirm_button := widget.NewButtonWithIcon("Confirm", dreams.FyneIcon("confirm"), func() {
 		if choice.SelectedIndex() < 3 && choice.SelectedIndex() >= 0 {
 			uploadHolderoContract(choice.SelectedIndex())
@@ -420,8 +419,6 @@ Public table that uses HGC or DERO`
 			table.new.Show()
 		}
 
-		confirm.Hide()
-		confirm = nil
 		done <- struct{}{}
 	})
 	confirm_button.Importance = widget.HighImportance
@@ -449,8 +446,6 @@ Public table that uses HGC or DERO`
 
 		}
 
-		confirm.Hide()
-		confirm = nil
 		done <- struct{}{}
 	})
 
@@ -464,7 +459,7 @@ Public table that uses HGC or DERO`
 	spacer := canvas.NewRectangle(color.Transparent)
 	spacer.SetMinSize(fyne.NewSize(420, 100))
 
-	confirm = dialog.NewCustom(title, "", container.NewStack(spacer, label), d.Window)
+	confirm := dialog.NewCustom(title, "", container.NewStack(spacer, label), d.Window)
 	confirm.SetButtons([]fyne.CanvasObject{actions})
 	go menu.ShowConfirmDialog(done, confirm)
 }

@@ -7,6 +7,7 @@ import (
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
+	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2"
@@ -30,24 +31,26 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Con
 	Settings.check.Disable()
 
 	tabs := container.NewAppTabs(
+		container.NewTabItemWithIcon("", ResourceHolderoCirclePng, layout.NewSpacer()),
 		container.NewTabItem("Tables", publicList(d)),
 		container.NewTabItem("Favorites", favoritesList()),
 		container.NewTabItem("Owned", ownedList(d)),
 		container.NewTabItem("View Table", layout.NewSpacer()),
 		container.NewTabItem("How to Play", layout.NewSpacer()))
 
-	tabs.SelectIndex(0)
+	tabs.DisableIndex(0)
+	tabs.SelectIndex(1)
 
 	tabs.OnSelected = func(ti *container.TabItem) {
 		switch ti.Text {
 		case "Tables":
 			if rpc.Daemon.IsConnected() {
-				go createTableList()
+				go createTableList(nil)
 			}
 		case "How to Play":
 			instructions := "Connect to your wallet and daemon and wait for tables to sync\n\nClick on a table in the list to connect to it\n\nClick on 'View Table' to view it\n\nIf there is a open seat you can click 'Sit Down' to join the game\n\nWhen it is your turn you can click 'Deal Hand' to get your cards\n\nHoldero is a no limit single raise version of Hold'em\n\nThere is no all in, players must call the bet or fold\n\nAt the start of each deal players can leave the table\n\nIf you are inactive during the hand you will be timed out and removed from the table\n\nAssets that unlock dReam Tools give access to bot players and odds calculators\n\nYou can create and view your tables in the 'Owned' tab\n\nVisit dreamdapps.io for more docs"
 			dialog.NewInformation("How to play", instructions, d.Window).Show()
-			tabs.SelectIndex(0)
+			tabs.SelectIndex(1)
 
 		default:
 		}
@@ -56,9 +59,14 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Con
 			go func() {
 				if len(round.Contract) == 64 {
 					fetchHolderoSC()
+					if round.ID == 0 {
+						if menu.Assets.Names.SelectedIndex() == 0 && len(menu.Assets.Names.Options) > 1 {
+							dialog.NewInformation("Anon", "You are playing as a anon player, select name in assets/profile tab", d.Window).Show()
+						}
+					}
 					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content = change_screen
 					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content.Refresh()
-					tabs.SelectIndex(0)
+					tabs.SelectIndex(1)
 					now := time.Now().Unix()
 					if now > round.Last+33 {
 						holderoRefresh(d, 0)
@@ -69,7 +77,7 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Con
 					} else {
 						dialog.NewInformation("Not Connected", "Connect to daemon and wallet", d.Window).Show()
 					}
-					tabs.SelectIndex(0)
+					tabs.SelectIndex(1)
 				}
 			}()
 		}
