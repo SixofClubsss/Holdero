@@ -326,7 +326,7 @@ func fetchHolderoSC() {
 						round.cards.Faces.Name = c.Faces.Name
 						round.cards.Backs.Name = c.Backs.Name
 						round.cards.Faces.Url = c.Faces.Url
-						round.cards.Faces.Url = c.Backs.Url
+						round.cards.Backs.Url = c.Backs.Url
 					}
 				}
 			} else {
