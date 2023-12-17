@@ -3,6 +3,7 @@ package holdero
 import (
 	"fmt"
 	"image/color"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -115,7 +116,21 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 		})
 
 	balance_tabs := container.NewAppTabs(
-		container.NewTabItem("Balances", container.NewStack(menu.Assets.Balances)))
+		container.NewTabItem("Balances", container.NewStack(menu.Assets.Balances)),
+		container.NewTabItem("Explorer", layout.NewSpacer()),
+		container.NewTabItem("Send Message", layout.NewSpacer()))
+
+	balance_tabs.OnSelected = func(ti *container.TabItem) {
+		switch ti.Text {
+		case "Explorer":
+			link, _ := url.Parse("https://explorer.dero.io")
+			fyne.CurrentApp().OpenURL(link)
+			balance_tabs.SelectIndex(0)
+		case "Send Message":
+			go menu.SendMessageMenu("", bundle.ResourceDReamsIconAltPng)
+			balance_tabs.SelectIndex(0)
+		}
+	}
 
 	var swap_entry *dwidget.DeroAmts
 	var swap_boxes *fyne.Container
