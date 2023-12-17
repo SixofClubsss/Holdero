@@ -40,7 +40,7 @@ func ifBet(w, r uint64) {
 		table.check.SetText("Fold")
 		table.bet.SetText("Call")
 		round.display.results = round.raiser + " Raised, " + raised + " to Call"
-	} else if w == 0 {
+	} else if w == 0 && round.cards.Local1 != "" {
 		var float float64
 		if round.Ante == 0 {
 			float = float64(round.BB) / 100000
@@ -64,20 +64,20 @@ func ifBet(w, r uint64) {
 
 // Single shot when players turn, calls ifBet() and sets called and placedBet signals
 func singleShot(turn, trigger bool) bool {
-	if turn && !trigger {
-		if round.Wager == 0 {
-			if round.flop {
-				signals.called = true
-			} else {
-				signals.called = false
-			}
-
-			if signals.called {
-				signals.placedBet = false
-				signals.called = false
-			}
+	if round.Wager == 0 {
+		if round.flop {
+			signals.called = true
+		} else {
+			signals.called = false
 		}
 
+		if signals.called {
+			signals.placedBet = false
+			signals.called = false
+		}
+	}
+
+	if turn && !trigger {
 		ifBet(round.Wager, round.Raised)
 		return true
 	}

@@ -835,7 +835,7 @@ func DealHandButton() fyne.Widget {
 			ActionBuffer()
 		}
 	})
-
+	table.deal.Importance = widget.HighImportance
 	table.deal.Hide()
 
 	return table.deal
