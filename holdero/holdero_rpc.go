@@ -403,7 +403,7 @@ func fetchHolderoSC() {
 
 // Submit playerId, name, avatar and sit at Holdero table
 //   - name and av are for name and avatar in player id string
-func SitDown(name, av string) {
+func SitDown(name, av string) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -442,10 +442,12 @@ func SitDown(name, av string) {
 	}
 
 	rpc.PrintLog("[Holdero] Sit Down TX: %s", txid)
+
+	return txid.TXID
 }
 
 // Leave Holdero seat on players turn
-func Leave() {
+func Leave() (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -478,6 +480,8 @@ func Leave() {
 	}
 
 	rpc.PrintLog("[Holdero] Leave TX: %s", txid)
+
+	return txid.TXID
 }
 
 // Owner table settings for Holdero
@@ -485,7 +489,7 @@ func Leave() {
 //   - bb, sb and ante define big blind, small blind and antes. Ante can be 0
 //   - chips defines if tables is using Dero or assets
 //   - name and av are for name and avatar in owners id string
-func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) {
+func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -535,6 +539,8 @@ func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) {
 	}
 
 	rpc.PrintLog("[Holdero] Set Table TX: %s", txid)
+
+	return txid.TXID
 }
 
 // Submit blinds/ante to deal Holdero hand
@@ -727,7 +733,7 @@ func Check() (tx string) {
 
 // Holdero single winner payout
 //   - w defines which player the pot is going to
-func PayOut(w string) string {
+func PayOut(w string) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -754,7 +760,7 @@ func PayOut(w string) string {
 
 	if err := rpcClientW.CallFor(ctx, &txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Payout: %s", err)
-		return ""
+		return
 	}
 
 	rpc.PrintLog("[Holdero] Payout TX: %s", txid)
@@ -878,7 +884,7 @@ func RevealKey(key string) {
 }
 
 // Owner can shuffle deck for Holdero, clean above 0 can retrieve balance
-func CleanTable(amt uint64) {
+func CleanTable(amt uint64) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -909,10 +915,12 @@ func CleanTable(amt uint64) {
 	}
 
 	rpc.PrintLog("[Holdero] Clean Table TX: %s", txid)
+
+	return txid.TXID
 }
 
 // Owner can timeout a player at Holdero table
-func TimeOut() {
+func TimeOut() (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -942,10 +950,12 @@ func TimeOut() {
 	}
 
 	rpc.PrintLog("[Holdero] Timeout TX: %s", txid)
+
+	return txid.TXID
 }
 
 // Owner can force start a Holdero table with empty seats
-func ForceStat() {
+func ForceStat() (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -975,12 +985,14 @@ func ForceStat() {
 	}
 
 	rpc.PrintLog("[Holdero] Force Start TX: %s", txid)
+
+	return txid.TXID
 }
 
 // Share asset url at Holdero table
 //   - face and back are the names of assets
 //   - faceUrl and backUrl are the Urls for those assets
-func SharedDeckUrl(face, faceUrl, back, backUrl string) {
+func SharedDeckUrl(face, faceUrl, back, backUrl string) (tx string) {
 	rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 	defer cancel()
 
@@ -1021,11 +1033,15 @@ func SharedDeckUrl(face, faceUrl, back, backUrl string) {
 		}
 
 		rpc.PrintLog("[Holdero] Shared TX: %s", txid)
+
+		return txid.TXID
 	}
+
+	return
 }
 
 // Deposit tournament chip bal with name to leader board SC
-func TourneyDeposit(bal uint64, name string) {
+func TourneyDeposit(bal uint64, name string) (tx string) {
 	if bal > 0 {
 		rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 		defer cancel()
@@ -1059,9 +1075,13 @@ func TourneyDeposit(bal uint64, name string) {
 
 		rpc.PrintLog("[Holdero] Tournament Deposit TX: %s", txid)
 
+		return txid.TXID
+
 	} else {
 		rpc.PrintError("[Holdero] Tournament Deposit: no chips")
 	}
+
+	return
 }
 
 // Code latest SC code for Holdero public or private SC
@@ -1138,7 +1158,7 @@ func OwnerT3(o bool) (t *dero.Transfer) {
 
 // Install new Holdero SC
 //   - pub defines public or private SC
-func uploadHolderoContract(pub int) {
+func uploadHolderoContract(pub int) (tx string) {
 	if rpc.IsReady() {
 		rpcClientW, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
 		defer cancel()
@@ -1166,5 +1186,9 @@ func uploadHolderoContract(pub int) {
 		}
 
 		rpc.PrintLog("[Holdero] Upload TX: %s", txid)
+
+		return txid.TXID
 	}
+
+	return
 }

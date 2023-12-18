@@ -15,7 +15,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
@@ -56,46 +55,36 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	player_select := widget.NewSelect(players, nil)
 	player_select.SetSelectedIndex(0)
 
-	blinds_entry := dwidget.NewDeroEntry("Big Blind: ", 0.1, 1)
-	blinds_entry.SetPlaceHolder("Dero:")
-	blinds_entry.SetText("Big Blind: 0.0")
-	blinds_entry.Validator = validation.NewRegexp(`^(Big Blind: )\d{1,}\.\d{0,1}$|^(Big Blind: )\d{1,}$`, "Int or float required")
-	blinds_entry.OnChanged = func(s string) {
-		if blinds_entry.Validate() != nil {
-			blinds_entry.SetText("Big Blind: 0.0")
-			table.owner.blinds = 0
-		} else {
-			trimmed := strings.Trim(s, "Biglnd: ")
-			if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
-				if uint64(f*100000)%10000 == 0 {
-					blinds_entry.SetText(blinds_entry.Prefix + strconv.FormatFloat(roundFloat(f, 1), 'f', int(blinds_entry.Decimal), 64))
-					table.owner.blinds = uint64(roundFloat(f*100000, 1))
-				} else {
-					blinds_entry.SetText(blinds_entry.Prefix + strconv.FormatFloat(roundFloat(f, 1), 'f', int(blinds_entry.Decimal), 64))
-				}
+	blinds_entry := dwidget.NewDeroEntry("", 0.1, 1)
+	blinds_entry.SetPlaceHolder("Big Blind:")
+	blinds_entry.SetText("0.0")
+	blinds_entry.Validator = func(s string) error {
+		if f, err := strconv.ParseFloat(s, 64); err == nil {
+			if uint64(f*100000)%10000 == 0 {
+				table.owner.blinds = uint64(roundFloat(f*100000, 1))
+				return nil
+			} else {
+				return fmt.Errorf("one decimal place max")
 			}
 		}
+
+		return fmt.Errorf("amount error")
 	}
 
-	ante_entry := dwidget.NewDeroEntry("Ante: ", 0.1, 1)
+	ante_entry := dwidget.NewDeroEntry("", 0.1, 1)
 	ante_entry.SetPlaceHolder("Ante:")
-	ante_entry.SetText("Ante: 0.0")
-	ante_entry.Validator = validation.NewRegexp(`^(Ante: )\d{1,}\.\d{0,1}$|^(Ante: )\d{1,}$`, "Int or float required")
-	ante_entry.OnChanged = func(s string) {
-		if ante_entry.Validate() != nil {
-			ante_entry.SetText("Ante: 0.0")
-			table.owner.ante = 0
-		} else {
-			trimmed := strings.Trim(s, ante_entry.Prefix)
-			if f, err := strconv.ParseFloat(trimmed, 64); err == nil {
-				if uint64(f*100000)%10000 == 0 {
-					ante_entry.SetText(ante_entry.Prefix + strconv.FormatFloat(roundFloat(f, 1), 'f', int(ante_entry.Decimal), 64))
-					table.owner.ante = uint64(roundFloat(f*100000, 1))
-				} else {
-					ante_entry.SetText(ante_entry.Prefix + strconv.FormatFloat(roundFloat(f, 1), 'f', int(ante_entry.Decimal), 64))
-				}
+	ante_entry.SetText("0.0")
+	ante_entry.Validator = func(s string) error {
+		if f, err := strconv.ParseFloat(s, 64); err == nil {
+			if uint64(f*100000)%10000 == 0 {
+				table.owner.ante = uint64(roundFloat(f*100000, 1))
+				return nil
+			} else {
+				return fmt.Errorf("one decimal place max")
 			}
 		}
+
+		return fmt.Errorf("amount error")
 	}
 
 	options := []string{"DERO", "ASSET"}
@@ -142,7 +131,11 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 				info := fmt.Sprintf("Setting table for,\n\nPlayers: (%d)\n\nChips: (%s)\n\nBlinds: (%s/%s)\n\nAnte: (%s)", players, chips, rpc.FromAtomic(bb, 5), rpc.FromAtomic(sb, 5), rpc.FromAtomic(ante, 5))
 				dialog.NewConfirm("Set Table", info, func(b bool) {
 					if b {
-						SetTable(int(players), bb, sb, ante, chips, menu.Username, Settings.avatar.url)
+						if tx := SetTable(int(players), bb, sb, ante, chips, menu.Username, Settings.avatar.url); tx != "" {
+							go menu.ShowTxDialog("Set Table", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+						} else {
+							go menu.ShowTxDialog("Set Table", "TX error, check logs", tx, 3*time.Second, d.Window)
+						}
 					}
 				}, d.Window).Show()
 			}
@@ -151,15 +144,23 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		}
 	})
 
-	clean_entry := dwidget.NewDeroEntry("Clean: ", 1, 0)
+	clean_entry := dwidget.NewDeroEntry("", 1, 0)
 	clean_entry.AllowFloat = false
 	clean_entry.SetPlaceHolder("Atomic:")
-	clean_entry.SetText("Clean: 0")
-	clean_entry.Validator = validation.NewRegexp(`^(Clean: )\d{1,}`, "Int required")
-	clean_entry.OnChanged = func(s string) {
-		if clean_entry.Validate() != nil {
-			clean_entry.SetText("Clean: 0")
+	clean_entry.SetText("0")
+	clean_entry.Validator = func(s string) (err error) {
+		if len(s) > 1 {
+			if strings.HasPrefix(s, "0") {
+				clean_entry.SetText(strings.TrimLeft(s, "0"))
+				return
+			}
 		}
+
+		if _, err = strconv.ParseInt(s, 10, 64); err == nil {
+			return
+		}
+
+		return fmt.Errorf("int required")
 	}
 
 	clean_button := widget.NewButton("Clean Table", func() {
@@ -168,8 +169,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 			return
 		}
 
-		trimmed := strings.Trim(clean_entry.Text, "Clean: ")
-		c, err := strconv.Atoi(trimmed)
+		c, err := strconv.Atoi(clean_entry.Text)
 		if err != nil {
 			dialog.NewInformation("Clean Table", "Invalid clean amount", d.Window).Show()
 			logger.Errorln("[Holdero] Invalid Clean Amount")
@@ -189,16 +189,24 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		if c == 0 {
 			dialog.NewConfirm("Clean Table", "Would you like to reset this table?", func(b bool) {
 				if b {
-					CleanTable(0)
+					if tx := CleanTable(0); tx != "" {
+						go menu.ShowTxDialog("Clean Table", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+					} else {
+						go menu.ShowTxDialog("Clean Table", "TX error, check logs", tx, 3*time.Second, d.Window)
+					}
 				}
 			}, d.Window).Show()
 
 			return
 		}
 
-		dialog.NewConfirm("Clean Table", fmt.Sprintf("Would you like to withdraw %s %s from this table and reset it? ", rpc.FromAtomic(trimmed, 5), table.owner.chips.Selected), func(b bool) {
+		dialog.NewConfirm("Clean Table", fmt.Sprintf("Would you like to withdraw %s %s from this table and reset it? ", rpc.FromAtomic(uint64(c), 5), table.owner.chips.Selected), func(b bool) {
 			if b {
-				CleanTable(uint64(c))
+				if tx := CleanTable(uint64(c)); tx != "" {
+					go menu.ShowTxDialog("Clean Table", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+				} else {
+					go menu.ShowTxDialog("Clean Table", "TX error, check logs", tx, 3*time.Second, d.Window)
+				}
 			}
 		}, d.Window).Show()
 	})
@@ -211,7 +219,11 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 		dialog.NewConfirm("Timeout", "Would you like to timeout the current player at this table?", func(b bool) {
 			if b {
-				TimeOut()
+				if tx := TimeOut(); tx != "" {
+					go menu.ShowTxDialog("Timeout", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+				} else {
+					go menu.ShowTxDialog("Timeout", "TX error, check logs", tx, 3*time.Second, d.Window)
+				}
 			}
 		}, d.Window).Show()
 	})
@@ -229,7 +241,11 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 		dialog.NewConfirm("Force Start", "Would you like to start this table before all seats are filled?", func(b bool) {
 			if b {
-				ForceStat()
+				if tx := ForceStat(); tx != "" {
+					go menu.ShowTxDialog("Force Start", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+				} else {
+					go menu.ShowTxDialog("Force Start", "TX error, check logs", tx, 3*time.Second, d.Window)
+				}
 			}
 		}, d.Window).Show()
 	})
@@ -247,7 +263,11 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 		dialog.NewConfirm("Close Table", "Would you like to close this table?", func(b bool) {
 			if b {
-				SetTable(1, 0, 0, 0, "", "", "")
+				if tx := SetTable(1, 0, 0, 0, "", "", ""); tx != "" {
+					go menu.ShowTxDialog("Close Table", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+				} else {
+					go menu.ShowTxDialog("Close Table", "TX error, check logs", tx, 3*time.Second, d.Window)
+				}
 			}
 		}, d.Window).Show()
 	})
@@ -258,7 +278,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	settings_form := []*widget.FormItem{}
 	settings_form = append(settings_form, widget.NewFormItem("Seats", player_select))
 	settings_form = append(settings_form, widget.NewFormItem("Chips", table.owner.chips))
-	settings_form = append(settings_form, widget.NewFormItem("Blinds", blinds_entry))
+	settings_form = append(settings_form, widget.NewFormItem("Big Blind", blinds_entry))
 	settings_form = append(settings_form, widget.NewFormItem("Ante", ante_entry))
 	settings_form = append(settings_form, widget.NewFormItem("", set_button))
 	settings_form = append(settings_form, widget.NewFormItem("", force_button))
@@ -307,7 +327,11 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		info := fmt.Sprintf("Would you like to deposit %s Tournament Chips into leader board contract?", strconv.FormatFloat(balance, 'f', 5, 64))
 		dialog.NewConfirm("Tournament Deposit", info, func(b bool) {
 			if b {
-				TourneyDeposit(bal, menu.Username)
+				if tx := TourneyDeposit(bal, menu.Username); tx != "" {
+					go menu.ShowTxDialog("Tournament Deposit", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+				} else {
+					go menu.ShowTxDialog("Tournament Deposit", "TX error, check logs", tx, 3*time.Second, d.Window)
+				}
 			}
 		}, d.Window).Show()
 	})
@@ -412,7 +436,11 @@ Public table that uses HGC or DERO`
 	done := make(chan struct{})
 	confirm_button := widget.NewButtonWithIcon("Confirm", dreams.FyneIcon("confirm"), func() {
 		if choice.SelectedIndex() < 3 && choice.SelectedIndex() >= 0 {
-			uploadHolderoContract(choice.SelectedIndex())
+			if tx := uploadHolderoContract(choice.SelectedIndex()); tx != "" {
+				go menu.ShowTxDialog("Table Upload", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+			} else {
+				go menu.ShowTxDialog("Table Upload", "TX error, check logs", tx, 3*time.Second, d.Window)
+			}
 		}
 
 		if c == 2 {

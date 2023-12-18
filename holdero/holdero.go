@@ -799,12 +799,16 @@ func checkNames(seats string) bool {
 }
 
 // Holdero player sit down button to join current table
-func SitButton() fyne.Widget {
+func SitButton(d *dreams.AppObject) fyne.Widget {
 	table.sit = widget.NewButton("Sit Down", func() {
 		if menu.Username != "" {
 			if checkNames(round.display.seats) {
-				SitDown(menu.Username, Settings.avatar.url)
-				ActionBuffer()
+				if tx := SitDown(menu.Username, Settings.avatar.url); tx != "" {
+					go menu.ShowTxDialog("Sit Down", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+					ActionBuffer()
+				} else {
+					go menu.ShowTxDialog("Sit Down", "TX error, check logs", tx, 3*time.Second, d.Window)
+				}
 			}
 		} else {
 			logger.Warnln("[Holdero] Pick a name")
@@ -817,10 +821,14 @@ func SitButton() fyne.Widget {
 }
 
 // Holdero player leave button to leave current table seat
-func LeaveButton() fyne.Widget {
+func LeaveButton(d *dreams.AppObject) fyne.Widget {
 	table.leave = widget.NewButton("Leave", func() {
-		Leave()
-		ActionBuffer()
+		if tx := Leave(); tx != "" {
+			go menu.ShowTxDialog("Leave", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+			ActionBuffer()
+		} else {
+			go menu.ShowTxDialog("Leave", "TX error, check logs", tx, 3*time.Second, d.Window)
+		}
 	})
 
 	table.leave.Hide()
@@ -829,10 +837,13 @@ func LeaveButton() fyne.Widget {
 }
 
 // Holdero player deal hand button
-func DealHandButton() fyne.Widget {
+func DealHandButton(d *dreams.AppObject) fyne.Widget {
 	table.deal = widget.NewButton("Deal Hand", func() {
 		if tx := DealHand(); tx != "" {
+			go menu.ShowTxDialog("Deal Hand", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
 			ActionBuffer()
+		} else {
+			go menu.ShowTxDialog("Deal Hand", "TX error, check logs", tx, 3*time.Second, d.Window)
 		}
 	})
 	table.deal.Importance = widget.HighImportance
@@ -850,8 +861,17 @@ func BetAmount() fyne.CanvasObject {
 	if table.betEntry.Text == "" {
 		table.betEntry.SetText("0.0")
 	}
-	table.betEntry.Validator = validation.NewRegexp(`^\d{1,}\.\d{1,5}$|^[^0.]\d{0,}$`, "Int or float required")
+	table.betEntry.Validator = validation.NewRegexp(`^\d{1,}\.\d{1,1}$|^[^0.]\d{0,1}$`, "Int or float required")
 	table.betEntry.OnChanged = func(s string) {
+		if s == "" {
+			return
+		}
+
+		if len(s) > 3 && strings.HasPrefix(s, "0") {
+			table.betEntry.SetText(strings.TrimLeft(s, "0"))
+			return
+		}
+
 		if f, err := strconv.ParseFloat(s, 64); err == nil {
 			if signals.placedBet {
 				table.betEntry.SetText(strconv.FormatFloat(float64(round.Raised)/100000, 'f', int(table.betEntry.Decimal), 64))
@@ -954,13 +974,18 @@ func roundFloat(val float64, precision uint) float64 {
 
 // Holdero place bet button
 //   - Input from Table.BetEntry
-func BetButton() fyne.Widget {
+func BetButton(d *dreams.AppObject) fyne.Widget {
 	table.bet = widget.NewButton("Bet", func() {
 		if table.betEntry.Validate() == nil {
 			if tx := Bet(table.betEntry.Text); tx != "" {
+				go menu.ShowTxDialog(table.bet.Text, fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
 				signals.bet = true
 				ActionBuffer()
+			} else {
+				go menu.ShowTxDialog(table.bet.Text, "TX error, check logs", tx, 3*time.Second, d.Window)
 			}
+		} else {
+			go menu.ShowTxDialog(table.bet.Text, "Amount error", "", 3*time.Second, d.Window)
 		}
 	})
 	table.bet.Importance = widget.HighImportance
@@ -971,11 +996,14 @@ func BetButton() fyne.Widget {
 }
 
 // Holdero check and fold button
-func CheckButton() fyne.Widget {
+func CheckButton(d *dreams.AppObject) fyne.Widget {
 	table.check = widget.NewButton("Check", func() {
 		if tx := Check(); tx != "" {
+			go menu.ShowTxDialog(table.check.Text, fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
 			signals.bet = true
 			ActionBuffer()
+		} else {
+			go menu.ShowTxDialog(table.check.Text, "TX error, check logs", tx, 3*time.Second, d.Window)
 		}
 	})
 

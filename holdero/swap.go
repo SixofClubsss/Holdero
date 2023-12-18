@@ -127,7 +127,11 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 			fyne.CurrentApp().OpenURL(link)
 			balance_tabs.SelectIndex(0)
 		case "Send Message":
-			go menu.SendMessageMenu("", bundle.ResourceDReamsIconAltPng)
+			if rpc.Wallet.IsConnected() {
+				go menu.SendMessageMenu("", bundle.ResourceDReamsIconAltPng)
+			} else {
+				dialog.NewInformation("Not Connected", "Connect a wallet to send a message", d.Window).Show()
+			}
 			balance_tabs.SelectIndex(0)
 		}
 	}

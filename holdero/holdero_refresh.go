@@ -51,7 +51,7 @@ func ifBet(w, r uint64) {
 		table.betEntry.SetText(this)
 		table.check.SetText("Check")
 		table.bet.SetText("Bet")
-		if !signals.reveal {
+		if !signals.reveal && !signals.end {
 			round.display.results = "Check or Bet"
 			table.betEntry.Enable()
 		}

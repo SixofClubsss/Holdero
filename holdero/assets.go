@@ -262,7 +262,7 @@ func getAgentNumber(scid string) int {
 // Holdero shared cards toggle object
 //   - Do not send a blank url
 //   - If cards are not present locally, it is downloaded
-func SharedDecks() fyne.Widget {
+func SharedDecks(d *dreams.AppObject) fyne.Widget {
 	options := []string{"Shared Decks"}
 	Settings.shared = widget.NewRadioGroup(options, func(string) {
 		if Settings.sharing || ((len(round.cards.Faces.Name) < 3 || len(round.cards.Backs.Name) < 3) && round.ID != 1) {
@@ -275,7 +275,11 @@ func SharedDecks() fyne.Widget {
 			Settings.sharing = true
 			if round.ID == 1 {
 				if Settings.faces.Name != "" && Settings.faces.URL != "" && Settings.backs.Name != "" && Settings.backs.URL != "" {
-					SharedDeckUrl(Settings.faces.Name, Settings.faces.URL, Settings.backs.Name, Settings.backs.URL)
+					if tx := SharedDeckUrl(Settings.faces.Name, Settings.faces.URL, Settings.backs.Name, Settings.backs.URL); tx != "" {
+						go menu.ShowTxDialog("Shared Deck", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+					} else {
+						go menu.ShowTxDialog("Shared Deck", "TX error, check logs", tx, 3*time.Second, d.Window)
+					}
 					dir := dreams.GetDir()
 					back := "/cards/backs/" + Settings.backs.Name + ".png"
 					face := "/cards/" + Settings.faces.Name + "/card1.png"
