@@ -233,13 +233,12 @@ func updateListItem(i widget.ListItemID, o fyne.CanvasObject, t []tableInfo) {
 
 	header := fmt.Sprintf("%s   %s   %s", t[i].name, t[i].desc, t[i].scid)
 	if o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*widget.Label).Text != header {
-
 		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*widget.Label).SetText(header)
 		if t[i].chips != "" {
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Label).SetText(fmt.Sprintf("%s   %s   %s   Last move: %s   v%s", t[i].seats, t[i].chips, t[i].blinds, t[i].last, t[i].version))
 		}
 
-		badge := canvas.NewImageFromResource(menu.DisplayRating(menu.Control.Ratings[t[i].scid]))
+		badge := canvas.NewImageFromResource(menu.DisplayRating(t[i].rating))
 		badge.SetMinSize(fyne.NewSize(35, 35))
 		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0] = badge
 
@@ -255,6 +254,10 @@ func updateListItem(i widget.ListItemID, o fyne.CanvasObject, t []tableInfo) {
 		frame.SetMinSize(fyne.NewSize(70, 70))
 		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1] = frame
 		o.Refresh()
+	} else {
+		if t[i].chips != "" {
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Label).SetText(fmt.Sprintf("%s   %s   %s   Last move: %s   v%s", t[i].seats, t[i].chips, t[i].blinds, t[i].last, t[i].version))
+		}
 	}
 }
 

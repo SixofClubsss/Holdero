@@ -117,6 +117,7 @@ func createTableList(progress *widget.ProgressBar) {
 					_, rating := gnomon.GetSCIDValuesByKey(rpc.RatingSCID, scid)
 
 					if restrict != nil && rating != nil {
+						// TODO maybe replace with gnomes.SC
 						menu.Control.Lock()
 						menu.Control.Ratings[scid] = rating[0]
 						menu.Control.Unlock()
