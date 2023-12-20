@@ -131,11 +131,8 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 				info := fmt.Sprintf("Setting table for,\n\nPlayers: (%d)\n\nChips: (%s)\n\nBlinds: (%s/%s)\n\nAnte: (%s)", players, chips, rpc.FromAtomic(bb, 5), rpc.FromAtomic(sb, 5), rpc.FromAtomic(ante, 5))
 				dialog.NewConfirm("Set Table", info, func(b bool) {
 					if b {
-						if tx := SetTable(int(players), bb, sb, ante, chips, menu.Username, Settings.avatar.url); tx != "" {
-							go menu.ShowTxDialog("Set Table", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-						} else {
-							go menu.ShowTxDialog("Set Table", "TX error, check logs", tx, 3*time.Second, d.Window)
-						}
+						tx := SetTable(int(players), bb, sb, ante, chips, menu.Username, Settings.avatar.url)
+						go menu.ShowTxDialog("Set Table", "Holdero", tx, 3*time.Second, d.Window)
 					}
 				}, d.Window).Show()
 			}
@@ -189,11 +186,8 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		if c == 0 {
 			dialog.NewConfirm("Clean Table", "Would you like to reset this table?", func(b bool) {
 				if b {
-					if tx := CleanTable(0); tx != "" {
-						go menu.ShowTxDialog("Clean Table", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-					} else {
-						go menu.ShowTxDialog("Clean Table", "TX error, check logs", tx, 3*time.Second, d.Window)
-					}
+					tx := CleanTable(0)
+					go menu.ShowTxDialog("Clean Table", "Holdero", tx, 3*time.Second, d.Window)
 				}
 			}, d.Window).Show()
 
@@ -202,11 +196,9 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 		dialog.NewConfirm("Clean Table", fmt.Sprintf("Would you like to withdraw %s %s from this table and reset it? ", rpc.FromAtomic(uint64(c), 5), table.owner.chips.Selected), func(b bool) {
 			if b {
-				if tx := CleanTable(uint64(c)); tx != "" {
-					go menu.ShowTxDialog("Clean Table", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-				} else {
-					go menu.ShowTxDialog("Clean Table", "TX error, check logs", tx, 3*time.Second, d.Window)
-				}
+				tx := CleanTable(uint64(c))
+				go menu.ShowTxDialog("Clean Table", "Holdero", tx, 3*time.Second, d.Window)
+
 			}
 		}, d.Window).Show()
 	})
@@ -219,11 +211,8 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 		dialog.NewConfirm("Timeout", "Would you like to timeout the current player at this table?", func(b bool) {
 			if b {
-				if tx := TimeOut(); tx != "" {
-					go menu.ShowTxDialog("Timeout", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-				} else {
-					go menu.ShowTxDialog("Timeout", "TX error, check logs", tx, 3*time.Second, d.Window)
-				}
+				tx := TimeOut()
+				go menu.ShowTxDialog("Timeout", "Holdero", tx, 3*time.Second, d.Window)
 			}
 		}, d.Window).Show()
 	})
@@ -241,11 +230,8 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 		dialog.NewConfirm("Force Start", "Would you like to start this table before all seats are filled?", func(b bool) {
 			if b {
-				if tx := ForceStat(); tx != "" {
-					go menu.ShowTxDialog("Force Start", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-				} else {
-					go menu.ShowTxDialog("Force Start", "TX error, check logs", tx, 3*time.Second, d.Window)
-				}
+				tx := ForceStat()
+				go menu.ShowTxDialog("Force Start", "Holdero", tx, 3*time.Second, d.Window)
 			}
 		}, d.Window).Show()
 	})
@@ -263,11 +249,9 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 
 		dialog.NewConfirm("Close Table", "Would you like to close this table?", func(b bool) {
 			if b {
-				if tx := SetTable(1, 0, 0, 0, "", "", ""); tx != "" {
-					go menu.ShowTxDialog("Close Table", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-				} else {
-					go menu.ShowTxDialog("Close Table", "TX error, check logs", tx, 3*time.Second, d.Window)
-				}
+				tx := SetTable(1, 0, 0, 0, "", "", "")
+				go menu.ShowTxDialog("Close Table", "Holdero", tx, 3*time.Second, d.Window)
+
 			}
 		}, d.Window).Show()
 	})
@@ -327,11 +311,9 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		info := fmt.Sprintf("Would you like to deposit %s Tournament Chips into leader board contract?", strconv.FormatFloat(balance, 'f', 5, 64))
 		dialog.NewConfirm("Tournament Deposit", info, func(b bool) {
 			if b {
-				if tx := TourneyDeposit(bal, menu.Username); tx != "" {
-					go menu.ShowTxDialog("Tournament Deposit", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-				} else {
-					go menu.ShowTxDialog("Tournament Deposit", "TX error, check logs", tx, 3*time.Second, d.Window)
-				}
+				tx := TourneyDeposit(bal, menu.Username)
+				go menu.ShowTxDialog("Tournament Deposit", "Holdero", tx, 3*time.Second, d.Window)
+
 			}
 		}, d.Window).Show()
 	})
@@ -436,11 +418,8 @@ Public table that uses HGC or DERO`
 	done := make(chan struct{})
 	confirm_button := widget.NewButtonWithIcon("Confirm", dreams.FyneIcon("confirm"), func() {
 		if choice.SelectedIndex() < 3 && choice.SelectedIndex() >= 0 {
-			if tx := uploadHolderoContract(choice.SelectedIndex()); tx != "" {
-				go menu.ShowTxDialog("Table Upload", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-			} else {
-				go menu.ShowTxDialog("Table Upload", "TX error, check logs", tx, 3*time.Second, d.Window)
-			}
+			tx := uploadHolderoContract(choice.SelectedIndex())
+			go menu.ShowTxDialog("Table Upload", "Holdero", tx, 3*time.Second, d.Window)
 		}
 
 		if c == 2 {

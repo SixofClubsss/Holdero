@@ -807,10 +807,10 @@ func SitButton(d *dreams.AppObject) fyne.Widget {
 		if menu.Username != "" {
 			if checkNames(round.display.seats) {
 				if tx := SitDown(menu.Username, Settings.avatar.url); tx != "" {
-					go menu.ShowTxDialog("Sit Down", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+					go menu.ShowTxDialog("Sit Down", "Holdero", tx, 3*time.Second, d.Window)
 					ActionBuffer()
 				} else {
-					go menu.ShowTxDialog("Sit Down", "TX error, check logs", tx, 3*time.Second, d.Window)
+					go menu.ShowMessageDialog("Sit Down", "TX error, check logs", 3*time.Second, d.Window)
 				}
 			}
 		} else {
@@ -827,10 +827,10 @@ func SitButton(d *dreams.AppObject) fyne.Widget {
 func LeaveButton(d *dreams.AppObject) fyne.Widget {
 	table.leave = widget.NewButton("Leave", func() {
 		if tx := Leave(); tx != "" {
-			go menu.ShowTxDialog("Leave", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+			go menu.ShowTxDialog("Leave", "Holdero", tx, 3*time.Second, d.Window)
 			ActionBuffer()
 		} else {
-			go menu.ShowTxDialog("Leave", "TX error, check logs", tx, 3*time.Second, d.Window)
+			go menu.ShowMessageDialog("Leave", "TX error, check logs", 3*time.Second, d.Window)
 		}
 	})
 
@@ -843,10 +843,10 @@ func LeaveButton(d *dreams.AppObject) fyne.Widget {
 func DealHandButton(d *dreams.AppObject) fyne.Widget {
 	table.deal = widget.NewButton("Deal Hand", func() {
 		if tx := DealHand(); tx != "" {
-			go menu.ShowTxDialog("Deal Hand", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+			go menu.ShowTxDialog("Deal Hand", "Holdero", tx, 3*time.Second, d.Window)
 			ActionBuffer()
 		} else {
-			go menu.ShowTxDialog("Deal Hand", "TX error, check logs", tx, 3*time.Second, d.Window)
+			go menu.ShowMessageDialog("Deal Hand", "TX error, check logs", 3*time.Second, d.Window)
 		}
 	})
 	table.deal.Importance = widget.HighImportance
@@ -981,14 +981,14 @@ func BetButton(d *dreams.AppObject) fyne.Widget {
 	table.bet = widget.NewButton("Bet", func() {
 		if table.betEntry.Validate() == nil {
 			if tx := Bet(table.betEntry.Text); tx != "" {
-				go menu.ShowTxDialog(table.bet.Text, fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+				go menu.ShowTxDialog(table.bet.Text, "Holdero", tx, 3*time.Second, d.Window)
 				signals.bet = true
 				ActionBuffer()
 			} else {
-				go menu.ShowTxDialog(table.bet.Text, "TX error, check logs", tx, 3*time.Second, d.Window)
+				go menu.ShowMessageDialog(table.bet.Text, "TX error, check logs", 3*time.Second, d.Window)
 			}
 		} else {
-			go menu.ShowTxDialog(table.bet.Text, "Amount error", "", 3*time.Second, d.Window)
+			go menu.ShowMessageDialog(table.bet.Text, "Amount error", 3*time.Second, d.Window)
 		}
 	})
 	table.bet.Importance = widget.HighImportance
@@ -1002,11 +1002,11 @@ func BetButton(d *dreams.AppObject) fyne.Widget {
 func CheckButton(d *dreams.AppObject) fyne.Widget {
 	table.check = widget.NewButton("Check", func() {
 		if tx := Check(); tx != "" {
-			go menu.ShowTxDialog(table.check.Text, fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
+			go menu.ShowTxDialog(table.check.Text, "Holdero", tx, 3*time.Second, d.Window)
 			signals.bet = true
 			ActionBuffer()
 		} else {
-			go menu.ShowTxDialog(table.check.Text, "TX error, check logs", tx, 3*time.Second, d.Window)
+			go menu.ShowMessageDialog(table.check.Text, "TX error, check logs", 3*time.Second, d.Window)
 		}
 	})
 

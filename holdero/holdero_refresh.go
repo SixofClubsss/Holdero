@@ -131,8 +131,8 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 
 			fetchHolderoSC()
 
-			if (round.Turn == round.ID && rpc.Wallet.Height > signals.height+4) ||
-				(round.Turn != round.ID && round.ID >= 1) || (!signals.myTurn && round.ID >= 1) {
+			if !rpc.IsConfirmingTx() && ((round.Turn == round.ID && rpc.Wallet.Height > signals.height+3) ||
+				(round.Turn != round.ID && round.ID >= 1) || (!signals.myTurn && round.ID >= 1)) {
 				if signals.clicked {
 					trigger = false
 					autoCF = false
@@ -166,7 +166,8 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 						if !signals.reveal && !signals.end && !round.localEnd {
 							if round.cards.Local1 != "" {
 								ActionBuffer()
-								Check()
+								tx := Check()
+								go rpc.ConfirmTx(tx, "Holdero", 45)
 								H.TopLabel.Text = "Auto Check/Fold Tx Sent"
 								H.TopLabel.Refresh()
 								autoCF = true
@@ -189,7 +190,8 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 								go func() {
 									time.Sleep(2100 * time.Millisecond)
 									ActionBuffer()
-									DealHand()
+									tx := DealHand()
+									go rpc.ConfirmTx(tx, "Holdero", 45)
 									H.TopLabel.Text = "Auto Deal Tx Sent"
 									H.TopLabel.Refresh()
 
@@ -241,7 +243,7 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 				waitLabel()
 				revealingKey(d)
 				skip++
-				if skip >= 25 {
+				if skip >= 30 {
 					signals.clicked = false
 					skip = 0
 					trigger = false

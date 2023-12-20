@@ -6,7 +6,7 @@ This file lists the changes to Holdero repo with each version.
 
 ### Added
 
-* CHANGELOG.md
+* CHANGELOG
 * Pull request and templates
 * `semver` versioning 
 * HS gold cards
@@ -32,9 +32,10 @@ This file lists the changes to Holdero repo with each version.
 * Confirmations to dialogs 
 * implement `gnomes` and funcs
 * implement `menu` ShowTxDialog and ShowConfirmDialog
-* implement `rpc` PrintError and PrintLog
+* implement `rpc` PrintError, PrintLog and IsConfirmingTx
 
 ### Fixed
 
+* Deprecated container.NewStack
 * Fyne error when downloading custom
 * Validator hangs

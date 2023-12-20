@@ -275,11 +275,9 @@ func SharedDecks(d *dreams.AppObject) fyne.Widget {
 			Settings.sharing = true
 			if round.ID == 1 {
 				if Settings.faces.Name != "" && Settings.faces.URL != "" && Settings.backs.Name != "" && Settings.backs.URL != "" {
-					if tx := SharedDeckUrl(Settings.faces.Name, Settings.faces.URL, Settings.backs.Name, Settings.backs.URL); tx != "" {
-						go menu.ShowTxDialog("Shared Deck", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-					} else {
-						go menu.ShowTxDialog("Shared Deck", "TX error, check logs", tx, 3*time.Second, d.Window)
-					}
+					tx := SharedDeckUrl(Settings.faces.Name, Settings.faces.URL, Settings.backs.Name, Settings.backs.URL)
+					go menu.ShowTxDialog("Shared Deck", "Holdero", tx, 3*time.Second, d.Window)
+
 					dir := dreams.GetDir()
 					back := "/cards/backs/" + Settings.backs.Name + ".png"
 					face := "/cards/" + Settings.faces.Name + "/card1.png"
@@ -336,17 +334,13 @@ func DreamsConfirm(c, amt float64, d *dreams.AppObject) {
 		if b {
 			switch c {
 			case 1:
-				if tx := rpc.GetdReams(uint64(x * 100000)); tx != "" {
-					go menu.ShowTxDialog("Swap", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-				} else {
-					go menu.ShowTxDialog("Swap", "TX error, check logs", tx, 3*time.Second, d.Window)
-				}
+				tx := rpc.GetdReams(uint64(x * 100000))
+				go menu.ShowTxDialog("Swap", "Swap", tx, 3*time.Second, d.Window)
+
 			case 2:
-				if tx := rpc.TradedReams(uint64(amt)); tx != "" {
-					go menu.ShowTxDialog("Swap", fmt.Sprintf("TXID: %s", tx), tx, 3*time.Second, d.Window)
-				} else {
-					go menu.ShowTxDialog("Swap", "TX error, check logs", tx, 3*time.Second, d.Window)
-				}
+				tx := rpc.TradedReams(uint64(amt))
+				go menu.ShowTxDialog("Swap", "Swap", tx, 3*time.Second, d.Window)
+
 			default:
 
 			}
