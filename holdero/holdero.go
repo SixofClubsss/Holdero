@@ -17,6 +17,7 @@ import (
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
+	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 	"github.com/sirupsen/logrus"
@@ -24,7 +25,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
@@ -46,28 +46,28 @@ type holderoObjects struct {
 	tournament *widget.Button
 	betEntry   *dwidget.DeroAmts
 	warning    *fyne.Container
-	stats      struct {
-		fyne.Container
-		name    *canvas.Text
-		desc    *canvas.Text
-		owner   *canvas.Text
-		chips   *canvas.Text
-		blinds  *canvas.Text
-		version *canvas.Text
-		last    *canvas.Text
-		seats   *canvas.Text
-		open    *canvas.Text
-		image   canvas.Image
+	owner      struct {
+		valid    bool
+		blinds   uint64
+		ante     uint64
+		chips    *widget.RadioGroup
+		settings *fyne.Container
+		times    *fyne.Container
 	}
-	owner struct {
-		valid       bool
-		blinds      uint64
-		ante        uint64
-		chips       *widget.RadioGroup
-		timeout     *widget.Button
-		owners_left *fyne.Container
-		owners_mid  *fyne.Container
-	}
+}
+
+type tableInfo struct {
+	name    string
+	desc    string
+	scid    string
+	owner   string
+	chips   string
+	blinds  string
+	version string
+	last    string
+	seats   string
+	rating  uint64
+	image   *canvas.Image
 }
 
 type settings struct {
@@ -89,6 +89,10 @@ type settings struct {
 	shared  *widget.RadioGroup
 }
 
+var creating bool
+var publicTables []tableInfo
+var ownedTables []tableInfo
+var favoriteTables []tableInfo
 var table holderoObjects
 var Settings settings
 var logger = structures.Logger.WithFields(logrus.Fields{})
@@ -114,21 +118,6 @@ func DreamsMenuIntro() (entries map[string][]string) {
 	return
 }
 
-func OnConnected() {
-	table.entry.CursorColumn = 1
-	table.entry.Refresh()
-	if len(rpc.Wallet.Address) == 66 {
-		CheckExistingKey()
-		menu.Control.Names.ClearSelected()
-		menu.Control.Names.Options = []string{}
-		menu.Control.Names.Refresh()
-		menu.Control.Names.Options = append(menu.Control.Names.Options, rpc.Wallet.Address[0:12])
-		if menu.Control.Names.Options != nil {
-			menu.Control.Names.SetSelectedIndex(0)
-		}
-	}
-}
-
 func (s *settings) EnableCardSelects() {
 	if round.ID == 1 {
 		s.faces.Select.Enable()
@@ -142,7 +131,7 @@ func (s *settings) ClearAssets() {
 	s.avatars.Select.Options = []string{}
 }
 
-func (s *settings) SortCardAsset() {
+func (s *settings) SortCardAssets() {
 	sort.Strings(s.faces.Select.Options)
 	sort.Strings(s.backs.Select.Options)
 
@@ -175,7 +164,11 @@ func (s *settings) AddFaces(add, check string) {
 }
 
 func (s *settings) CurrentFaces() []string {
-	return Settings.faces.Select.Options
+	return s.faces.Select.Options
+}
+
+func (s *settings) CurrentBacks() []string {
+	return s.backs.Select.Options
 }
 
 func (s *settings) AddBacks(add, check string) {
@@ -203,160 +196,143 @@ func initValues() {
 	autoBetDefault()
 }
 
-// Holdero SCID entry
-//   - Bound to rpc.Round.Contract
-//   - Entry text set on list selection
-//   - Changes clear table and check if current entry is valid table
-func holderoContractEntry() fyne.Widget {
-	var wait bool
-	table.entry = widget.NewSelectEntry(nil)
-	options := []string{""}
-	table.entry.SetOptions(options)
-	table.entry.PlaceHolder = "Holdero Contract Address: "
-	table.entry.OnCursorChanged = func() {
-		if rpc.Daemon.IsConnected() && !wait {
-			wait = true
-			text := table.entry.Text
-			go clearShared()
-			if len(text) == 64 {
-				if checkTableOwner(text) {
-					disableOwnerControls(false)
-					if checkTableVersion(text) >= 110 {
-						table.owner.chips.Show()
-						table.owner.timeout.Show()
-						table.owner.owners_mid.Show()
-					} else {
-						table.owner.chips.Hide()
-						table.owner.chips.SetSelected("DERO")
-						table.owner.timeout.Hide()
-						table.owner.owners_mid.Hide()
-					}
-				} else {
-					disableOwnerControls(true)
-				}
-
-				if rpc.Wallet.IsConnected() && checkHolderoContract(text) {
-					table.tournament.Show()
-				} else {
-					table.tournament.Hide()
-				}
-			} else {
-				signals.contract = false
-				Settings.check.SetChecked(false)
-				table.tournament.Hide()
-			}
-			FetchHolderoSC()
-			wait = false
-		}
-	}
-
-	this := binding.BindString(&round.Contract)
-	table.entry.Bind(this)
-
-	return table.entry
-}
-
-// Routine when Holdero SCID is clicked
-func setHolderoControls(str string) (item string) {
-	split := strings.Split(str, "   ")
-	if len(split) >= 3 {
-		trimmed := strings.Trim(split[2], " ")
-		if len(trimmed) == 64 {
-			item = str
-			table.entry.SetText(trimmed)
-			go getTableStats(trimmed, true)
-			signals.times.block = rpc.Wallet.Height
-		}
+// Sets contract entry text when list item pressed, returns item for use in list funcs
+func setHolderoEntryText(t tableInfo) (item tableInfo) {
+	if len(t.scid) == 64 {
+		potIsEmpty(0)
+		item = t
+		table.entry.SetText(t.scid)
+		signals.times.block = rpc.Wallet.Height
 	}
 
 	return
 }
 
-// Public Holdero table listings object
-func tableListings(tab *container.AppTabs) fyne.CanvasObject {
+// List item with table info and icon
+func listItem() fyne.CanvasObject {
+	spacer := canvas.NewImageFromImage(nil)
+	spacer.SetMinSize(fyne.NewSize(70, 70))
+	return container.NewStack(container.NewBorder(
+		nil,
+		nil,
+		container.NewStack(container.NewCenter(spacer), canvas.NewImageFromImage(nil)),
+		nil,
+		container.NewBorder(
+			nil,
+			container.NewHBox(canvas.NewImageFromImage(nil), widget.NewLabel("")),
+			container.NewStack(canvas.NewImageFromImage(nil), canvas.NewImageFromImage(nil)),
+			nil,
+			widget.NewLabel(""))))
+}
+
+// Update func for listItem
+func updateListItem(i widget.ListItemID, o fyne.CanvasObject, t []tableInfo) {
+	if i > len(t)-1 {
+		return
+	}
+
+	header := fmt.Sprintf("%s   %s   %s", t[i].name, t[i].desc, t[i].scid)
+	if o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*widget.Label).Text != header {
+		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*widget.Label).SetText(header)
+		if t[i].chips != "" {
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Label).SetText(fmt.Sprintf("%s   %s   %s   Last move: %s   v%s", t[i].seats, t[i].chips, t[i].blinds, t[i].last, t[i].version))
+		}
+
+		badge := canvas.NewImageFromResource(menu.DisplayRating(t[i].rating))
+		badge.SetMinSize(fyne.NewSize(35, 35))
+		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0] = badge
+
+		if t[i].image != nil {
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = t[i].image
+		} else {
+			unknown := canvas.NewImageFromResource(ResourceUnknownAvatarPng)
+			unknown.SetMinSize(fyne.NewSize(66, 66))
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = unknown
+		}
+
+		frame := canvas.NewImageFromResource(bundle.ResourceFramePng)
+		frame.SetMinSize(fyne.NewSize(70, 70))
+		o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1] = frame
+		o.Refresh()
+	} else {
+		if t[i].chips != "" {
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Label).SetText(fmt.Sprintf("%s   %s   %s   Last move: %s   v%s", t[i].seats, t[i].chips, t[i].blinds, t[i].last, t[i].version))
+		}
+	}
+}
+
+// Public Holdero table list object
+func publicList(d *dreams.AppObject) fyne.CanvasObject {
 	table.Public.List = widget.NewList(
 		func() int {
-			return len(table.Public.SCIDs)
+			return len(publicTables)
 		},
-		func() fyne.CanvasObject {
-			return container.NewHBox(container.NewMax(canvas.NewImageFromImage(nil)), widget.NewLabel(""))
-		},
+		listItem,
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*fyne.Container).Objects[1].(*widget.Label).SetText(table.Public.SCIDs[i])
-			if table.Public.SCIDs[i][0:2] != "  " {
-				var key string
-				split := strings.Split(table.Public.SCIDs[i], "   ")
-				if len(split) >= 3 {
-					trimmed := strings.Trim(split[2], " ")
-					if len(trimmed) == 64 {
-						key = trimmed
-					}
-				}
-
-				badge := canvas.NewImageFromResource(menu.DisplayRating(menu.Control.Contract_rating[key]))
-				badge.SetMinSize(fyne.NewSize(35, 35))
-				o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0] = badge
-			}
+			updateListItem(i, o, publicTables)
 		})
 
-	var item string
+	var item tableInfo
 
 	table.Public.List.OnSelected = func(id widget.ListItemID) {
-		if id != 0 && menu.Connected() {
-			go func() {
-				item = setHolderoControls(table.Public.SCIDs[id])
-				table.Favorites.List.UnselectAll()
-				table.Owned.List.UnselectAll()
-			}()
+		if gnomes.IsConnected() {
+			item = setHolderoEntryText(publicTables[id])
+			table.Favorites.List.UnselectAll()
+			table.Owned.List.UnselectAll()
 		}
 	}
 
 	save_favorite := widget.NewButton("Favorite", func() {
-		table.Favorites.SCIDs = append(table.Favorites.SCIDs, item)
-		sort.Strings(table.Favorites.SCIDs)
+		if item.name == "" {
+			return
+		}
+
+		for _, sc := range table.Favorites.SCIDs {
+			if item.scid == sc {
+				return
+			}
+		}
+		favoriteTables = append(favoriteTables, item)
+		table.Favorites.SCIDs = append(table.Favorites.SCIDs, item.scid)
 	})
+	save_favorite.Importance = widget.LowImportance
 
 	rate_contract := widget.NewButton("Rate", func() {
 		if len(round.Contract) == 64 {
 			if !checkTableOwner(round.Contract) {
-				reset := tab.Selected().Content
-				tab.Selected().Content = menu.RateConfirm(round.Contract, tab, reset)
-				tab.Selected().Content.Refresh()
-
+				menu.RateConfirm(round.Contract, d)
 			} else {
-				logger.Warnln("[Holdero] You own this contract")
+				dialog.NewInformation("Can't rate", "You are the owner of this SCID", d.Window).Show()
+				logger.Warnln("[Holdero] Can't rate, you own this contract")
 			}
 		}
 	})
+	rate_contract.Importance = widget.LowImportance
 
-	tables_cont := container.NewBorder(
+	return container.NewBorder(
 		nil,
 		container.NewBorder(nil, nil, save_favorite, rate_contract, layout.NewSpacer()),
 		nil,
 		nil,
 		table.Public.List)
-
-	return tables_cont
 }
 
-// Favorite Holdero tables object
-func holderoFavorites() fyne.CanvasObject {
+// Favorite Holdero tables list object
+func favoritesList() fyne.CanvasObject {
 	table.Favorites.List = widget.NewList(
 		func() int {
-			return len(table.Favorites.SCIDs)
+			return len(favoriteTables)
 		},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("")
-		},
+		listItem,
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(table.Favorites.SCIDs[i])
+			updateListItem(i, o, favoriteTables)
 		})
 
-	var item string
+	var item tableInfo
 
 	table.Favorites.List.OnSelected = func(id widget.ListItemID) {
-		if menu.Connected() {
-			item = setHolderoControls(table.Favorites.SCIDs[id])
+		if gnomes.IsConnected() {
+			item = setHolderoEntryText(favoriteTables[id])
 			table.Public.List.UnselectAll()
 			table.Owned.List.UnselectAll()
 		}
@@ -365,27 +341,26 @@ func holderoFavorites() fyne.CanvasObject {
 	remove := widget.NewButton("Remove", func() {
 		if len(table.Favorites.SCIDs) > 0 {
 			table.Favorites.List.UnselectAll()
-			for i := range table.Favorites.SCIDs {
-				if table.Favorites.SCIDs[i] == item {
-					copy(table.Favorites.SCIDs[i:], table.Favorites.SCIDs[i+1:])
-					table.Favorites.SCIDs[len(table.Favorites.SCIDs)-1] = ""
-					table.Favorites.SCIDs = table.Favorites.SCIDs[:len(table.Favorites.SCIDs)-1]
+			table.Favorites.RemoveSCID(item.scid)
+			for i := range favoriteTables {
+				if favoriteTables[i].scid == item.scid {
+					copy(favoriteTables[i:], favoriteTables[i+1:])
+					favoriteTables[len(favoriteTables)-1] = tableInfo{}
+					favoriteTables = favoriteTables[:len(favoriteTables)-1]
 					break
 				}
 			}
 		}
 		table.Favorites.List.Refresh()
-		sort.Strings(table.Favorites.SCIDs)
 	})
+	remove.Importance = widget.LowImportance
 
-	cont := container.NewBorder(
+	return container.NewBorder(
 		nil,
 		container.NewBorder(nil, nil, nil, remove, layout.NewSpacer()),
 		nil,
 		nil,
 		table.Favorites.List)
-
-	return cont
 }
 
 // Returns table.Favorites.SCIDs
@@ -398,28 +373,31 @@ func SetFavoriteTables(fav []string) {
 	table.Favorites.SCIDs = fav
 }
 
-// Owned Holdero tables object
-func myTables() fyne.CanvasObject {
+// Owned Holdero tables list object
+func ownedList(d *dreams.AppObject) fyne.CanvasObject {
 	table.Owned.List = widget.NewList(
 		func() int {
-			return len(table.Owned.SCIDs)
+			return len(ownedTables)
 		},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("")
-		},
+		listItem,
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(table.Owned.SCIDs[i])
+			updateListItem(i, o, ownedTables)
 		})
 
 	table.Owned.List.OnSelected = func(id widget.ListItemID) {
-		if menu.Connected() {
-			setHolderoControls(table.Owned.SCIDs[id])
+		if gnomes.IsConnected() {
+			setHolderoEntryText(ownedTables[id])
 			table.Public.List.UnselectAll()
 			table.Favorites.List.UnselectAll()
 		}
 	}
 
-	return table.Owned.List
+	return container.NewBorder(
+		nil,
+		nil,
+		nil,
+		ownersBox(d),
+		table.Owned.List)
 }
 
 // Table owner name and avatar objects
@@ -427,7 +405,6 @@ func myTables() fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	var out fyne.CanvasObject
 	if signals.In1 {
@@ -437,28 +414,33 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p1.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In1 {
 		if round.p1.url != "" {
-			avatar = &shared.avatar.p1
-			if round.Turn == 1 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
+			if !shared.loaded.p1 {
+				shared.loaded.p1 = true
+				if img, err := dreams.DownloadCanvas(round.p1.url, "P1"); err == nil {
+					shared.avatar.p1 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 1 avatar:", err)
+					shared.avatar.p1 = canvas.NewImageFromResource(a)
+				}
 			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 1 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+			shared.loaded.p1 = false
+			shared.avatar.p1 = canvas.NewImageFromResource(a)
+		}
+
+		if round.Turn == 1 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p1 = canvas.NewImageFromImage(nil)
+		frame = canvas.NewImageFromImage(nil)
 	}
 
 	if signals.Out1 {
@@ -472,13 +454,13 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(242, 20))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(359, 50))
+	shared.avatar.p1.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p1.Move(fyne.NewPos(359, 50))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(357, 48))
 
-	return container.NewWithoutLayout(name, out, avatar, frame)
+	return container.NewWithoutLayout(name, out, shared.avatar.p1, frame)
 }
 
 // Player 2 name and avatar objects
@@ -486,7 +468,6 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In2 {
 		if round.Turn == 2 {
@@ -495,40 +476,45 @@ func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p2.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In2 {
 		if round.p2.url != "" {
-			avatar = &shared.avatar.p2
-			if round.Turn == 2 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
+			if !shared.loaded.p2 {
+				shared.loaded.p2 = true
+				if img, err := dreams.DownloadCanvas(round.p2.url, "P2"); err == nil {
+					shared.avatar.p2 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 2 avatar:", err)
+					shared.avatar.p2 = canvas.NewImageFromResource(a)
+				}
 			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 2 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+			shared.loaded.p2 = false
+			shared.avatar.p2 = canvas.NewImageFromResource(a)
+		}
+
+		if round.Turn == 2 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p2 = canvas.NewImageFromImage(nil)
+		frame = canvas.NewImageFromImage(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(667, 20))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(782, 50))
+	shared.avatar.p2.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p2.Move(fyne.NewPos(782, 50))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(780, 48))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p2, frame)
 }
 
 // Player 3 name and avatar objects
@@ -536,7 +522,6 @@ func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In3 {
 		if round.Turn == 3 {
@@ -545,40 +530,45 @@ func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p3.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In3 {
 		if round.p3.url != "" {
-			avatar = &shared.avatar.p3
-			if round.Turn == 3 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
+			if !shared.loaded.p3 {
+				shared.loaded.p3 = true
+				if img, err := dreams.DownloadCanvas(round.p3.url, "P3"); err == nil {
+					shared.avatar.p3 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 3 avatar:", err)
+					shared.avatar.p3 = canvas.NewImageFromResource(a)
+				}
 			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 3 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+			shared.loaded.p3 = false
+			shared.avatar.p3 = canvas.NewImageFromResource(a)
+		}
+
+		if round.Turn == 3 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p3 = canvas.NewImageFromImage(nil)
+		frame = canvas.NewImageFromImage(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(889, 300))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(987, 327))
+	shared.avatar.p3.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p3.Move(fyne.NewPos(987, 327))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(985, 325))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p3, frame)
 }
 
 // Player 4 name and avatar objects
@@ -586,7 +576,6 @@ func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In4 {
 		if round.Turn == 4 {
@@ -595,40 +584,45 @@ func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p4.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In4 {
 		if round.p4.url != "" {
-			avatar = &shared.avatar.p4
-			if round.Turn == 4 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
+			if !shared.loaded.p4 {
+				shared.loaded.p4 = true
+				if img, err := dreams.DownloadCanvas(round.p4.url, "P4"); err == nil {
+					shared.avatar.p4 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 4 avatar:", err)
+					shared.avatar.p4 = canvas.NewImageFromResource(a)
+				}
 			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 4 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+			shared.loaded.p4 = false
+			shared.avatar.p4 = canvas.NewImageFromResource(a)
+		}
+
+		if round.Turn == 4 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p4 = canvas.NewImageFromImage(nil)
+		frame = canvas.NewImageFromImage(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(688, 555))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(686, 480))
+	shared.avatar.p4.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p4.Move(fyne.NewPos(686, 480))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(684, 478))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p4, frame)
 }
 
 // Player 5 name and avatar objects
@@ -636,7 +630,6 @@ func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In5 {
 		if round.Turn == 5 {
@@ -645,40 +638,45 @@ func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p5.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In5 {
 		if round.p5.url != "" {
-			avatar = &shared.avatar.p5
-			if round.Turn == 5 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
+			if !shared.loaded.p5 {
+				shared.loaded.p5 = true
+				if img, err := dreams.DownloadCanvas(round.p5.url, "P5"); err == nil {
+					shared.avatar.p5 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 5 avatar:", err)
+					shared.avatar.p5 = canvas.NewImageFromResource(a)
+				}
 			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 5 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+			shared.loaded.p5 = false
+			shared.avatar.p5 = canvas.NewImageFromResource(a)
+		}
+
+		if round.Turn == 5 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p5 = canvas.NewImageFromResource(nil)
+		frame = canvas.NewImageFromResource(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 25))
 	name.Move(fyne.NewPos(258, 555))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(257, 480))
+	shared.avatar.p5.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p5.Move(fyne.NewPos(257, 480))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(255, 478))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p5, frame)
 }
 
 // Player 6 name and avatar objects
@@ -686,7 +684,6 @@ func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 //   - Pass t for player's turn frame resource
 func Player6_label(a, f, t fyne.Resource) fyne.CanvasObject {
 	var name fyne.CanvasObject
-	var avatar fyne.CanvasObject
 	var frame fyne.CanvasObject
 	if signals.In6 {
 		if round.Turn == 6 {
@@ -695,40 +692,45 @@ func Player6_label(a, f, t fyne.Resource) fyne.CanvasObject {
 			name = canvas.NewText(round.p6.name, color.White)
 		}
 	} else {
-		name = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		name = canvas.NewText("", color.Transparent)
 	}
 
 	if a != nil && signals.In6 {
 		if round.p6.url != "" {
-			avatar = &shared.avatar.p6
-			if round.Turn == 6 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
+			if !shared.loaded.p6 {
+				shared.loaded.p6 = true
+				if img, err := dreams.DownloadCanvas(round.p6.url, "P6"); err == nil {
+					shared.avatar.p6 = &img
+				} else {
+					logger.Errorln("[Holdero] Player 6 avatar:", err)
+					shared.avatar.p6 = canvas.NewImageFromResource(a)
+				}
 			}
 		} else {
-			avatar = canvas.NewImageFromResource(a)
-			if round.Turn == 6 {
-				frame = canvas.NewImageFromResource(t)
-			} else {
-				frame = canvas.NewImageFromResource(f)
-			}
+			shared.loaded.p6 = false
+			shared.avatar.p6 = canvas.NewImageFromResource(a)
+		}
+
+		if round.Turn == 6 {
+			frame = canvas.NewImageFromResource(t)
+		} else {
+			frame = canvas.NewImageFromResource(f)
 		}
 	} else {
-		avatar = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
-		frame = canvas.NewRectangle(color.RGBA{0, 0, 0, 0})
+		shared.avatar.p6 = canvas.NewImageFromResource(nil)
+		frame = canvas.NewImageFromResource(nil)
 	}
 
 	name.Resize(fyne.NewSize(100, 27))
 	name.Move(fyne.NewPos(56, 267))
 
-	avatar.Resize(fyne.NewSize(74, 74))
-	avatar.Move(fyne.NewPos(55, 193))
+	shared.avatar.p6.Resize(fyne.NewSize(74, 74))
+	shared.avatar.p6.Move(fyne.NewPos(55, 193))
 
 	frame.Resize(fyne.NewSize(78, 78))
 	frame.Move(fyne.NewPos(53, 191))
 
-	return container.NewWithoutLayout(name, avatar, frame)
+	return container.NewWithoutLayout(name, shared.avatar.p6, frame)
 }
 
 // Set Holdero table image resource
@@ -800,12 +802,16 @@ func checkNames(seats string) bool {
 }
 
 // Holdero player sit down button to join current table
-func SitButton() fyne.Widget {
+func SitButton(d *dreams.AppObject) fyne.Widget {
 	table.sit = widget.NewButton("Sit Down", func() {
 		if menu.Username != "" {
 			if checkNames(round.display.seats) {
-				SitDown(menu.Username, Settings.avatar.url)
-				ActionBuffer()
+				if tx := SitDown(menu.Username, Settings.avatar.url); tx != "" {
+					go menu.ShowTxDialog("Sit Down", "Holdero", tx, 3*time.Second, d.Window)
+					ActionBuffer()
+				} else {
+					go menu.ShowMessageDialog("Sit Down", "TX error, check logs", 3*time.Second, d.Window)
+				}
 			}
 		} else {
 			logger.Warnln("[Holdero] Pick a name")
@@ -818,10 +824,14 @@ func SitButton() fyne.Widget {
 }
 
 // Holdero player leave button to leave current table seat
-func LeaveButton() fyne.Widget {
+func LeaveButton(d *dreams.AppObject) fyne.Widget {
 	table.leave = widget.NewButton("Leave", func() {
-		Leave()
-		ActionBuffer()
+		if tx := Leave(); tx != "" {
+			go menu.ShowTxDialog("Leave", "Holdero", tx, 3*time.Second, d.Window)
+			ActionBuffer()
+		} else {
+			go menu.ShowMessageDialog("Leave", "TX error, check logs", 3*time.Second, d.Window)
+		}
 	})
 
 	table.leave.Hide()
@@ -830,13 +840,16 @@ func LeaveButton() fyne.Widget {
 }
 
 // Holdero player deal hand button
-func DealHandButton() fyne.Widget {
+func DealHandButton(d *dreams.AppObject) fyne.Widget {
 	table.deal = widget.NewButton("Deal Hand", func() {
 		if tx := DealHand(); tx != "" {
+			go menu.ShowTxDialog("Deal Hand", "Holdero", tx, 3*time.Second, d.Window)
 			ActionBuffer()
+		} else {
+			go menu.ShowMessageDialog("Deal Hand", "TX error, check logs", 3*time.Second, d.Window)
 		}
 	})
-
+	table.deal.Importance = widget.HighImportance
 	table.deal.Hide()
 
 	return table.deal
@@ -851,8 +864,17 @@ func BetAmount() fyne.CanvasObject {
 	if table.betEntry.Text == "" {
 		table.betEntry.SetText("0.0")
 	}
-	table.betEntry.Validator = validation.NewRegexp(`^\d{1,}\.\d{1,5}$|^[^0.]\d{0,}$`, "Int or float required")
+	table.betEntry.Validator = validation.NewRegexp(`^\d{1,}\.\d{1,1}$|^[^0.]\d{0,1}$`, "Int or float required")
 	table.betEntry.OnChanged = func(s string) {
+		if s == "" {
+			return
+		}
+
+		if len(s) > 3 && strings.HasPrefix(s, "0") {
+			table.betEntry.SetText(strings.TrimLeft(s, "0"))
+			return
+		}
+
 		if f, err := strconv.ParseFloat(s, 64); err == nil {
 			if signals.placedBet {
 				table.betEntry.SetText(strconv.FormatFloat(float64(round.Raised)/100000, 'f', int(table.betEntry.Decimal), 64))
@@ -862,7 +884,9 @@ func BetAmount() fyne.CanvasObject {
 			} else {
 
 				if round.Wager > 0 {
+					table.check.SetText("Fold")
 					if round.Raised > 0 {
+						table.bet.SetText("Call")
 						if signals.placedBet {
 							table.betEntry.SetText(strconv.FormatFloat(float64(round.Raised)/100000, 'f', int(table.betEntry.Decimal), 64))
 						} else {
@@ -876,6 +900,11 @@ func BetAmount() fyne.CanvasObject {
 							}
 						}
 					} else {
+						if f > float64(round.Wager)/100000 {
+							table.bet.SetText("Raise")
+						} else {
+							table.bet.SetText("Call")
+						}
 
 						if f < float64(round.Wager)/100000 {
 							table.betEntry.SetText(strconv.FormatFloat(float64(round.Wager)/100000, 'f', int(table.betEntry.Decimal), 64))
@@ -891,7 +920,8 @@ func BetAmount() fyne.CanvasObject {
 						}
 					}
 				} else {
-
+					table.bet.SetText("Bet")
+					table.check.SetText("Check")
 					if rpc.Daemon.IsConnected() {
 						float := f * 100000
 						if uint64(float)%10000 == 0 {
@@ -947,15 +977,21 @@ func roundFloat(val float64, precision uint) float64 {
 
 // Holdero place bet button
 //   - Input from Table.BetEntry
-func BetButton() fyne.Widget {
+func BetButton(d *dreams.AppObject) fyne.Widget {
 	table.bet = widget.NewButton("Bet", func() {
 		if table.betEntry.Validate() == nil {
 			if tx := Bet(table.betEntry.Text); tx != "" {
+				go menu.ShowTxDialog(table.bet.Text, "Holdero", tx, 3*time.Second, d.Window)
 				signals.bet = true
 				ActionBuffer()
+			} else {
+				go menu.ShowMessageDialog(table.bet.Text, "TX error, check logs", 3*time.Second, d.Window)
 			}
+		} else {
+			go menu.ShowMessageDialog(table.bet.Text, "Amount error", 3*time.Second, d.Window)
 		}
 	})
+	table.bet.Importance = widget.HighImportance
 
 	table.bet.Hide()
 
@@ -963,11 +999,14 @@ func BetButton() fyne.Widget {
 }
 
 // Holdero check and fold button
-func CheckButton() fyne.Widget {
+func CheckButton(d *dreams.AppObject) fyne.Widget {
 	table.check = widget.NewButton("Check", func() {
 		if tx := Check(); tx != "" {
+			go menu.ShowTxDialog(table.check.Text, "Holdero", tx, 3*time.Second, d.Window)
 			signals.bet = true
 			ActionBuffer()
+		} else {
+			go menu.ShowMessageDialog(table.check.Text, "TX error, check logs", 3*time.Second, d.Window)
 		}
 	})
 
@@ -988,7 +1027,7 @@ func AutoOptions(d *dreams.AppObject) fyne.CanvasObject {
 			dialog.NewInformation("Not connected", "You are not connected to a Holdero SC", d.Window).Show()
 			return
 		}
-		FetchHolderoSC()
+		fetchHolderoSC()
 	})
 
 	cf := widget.NewCheck("Auto Check/Fold", func(b bool) {
@@ -1022,7 +1061,7 @@ func TimeOutWarning() *fyne.Container {
 	msg := canvas.NewText("Make your move, or you will be Timed Out", color.RGBA{240, 0, 0, 240})
 	msg.TextSize = 15
 
-	table.warning = container.NewMax(rect, msg)
+	table.warning = container.NewStack(rect, msg)
 
 	table.warning.Hide()
 
@@ -1478,7 +1517,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 		top_box)
 
 	odds_box := container.NewVBox(layout.NewSpacer(), odds_button)
-	max := container.NewMax(scroll, odds_box)
+	max := container.NewStack(scroll, odds_box)
 
 	stats_label := widget.NewLabel("")
 
@@ -1519,8 +1558,8 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	var err error
 	var img image.Image
 	var rast *canvas.Raster
-	if img, _, err = image.Decode(bytes.NewReader(dreams.Theme.Img.Resource.Content())); err != nil {
-		if img, _, err = image.Decode(bytes.NewReader(bundle.ResourceBackgroundPng.Content())); err != nil {
+	if img, _, err = image.Decode(bytes.NewReader(menu.Theme.Img.Resource.Content())); err != nil {
+		if img, _, err = image.Decode(bytes.NewReader(menu.DefaultThemeResource().StaticContent)); err != nil {
 			logger.Warnf("[holderoTools] Fallback %s\n", err)
 			source := image.Rect(2, 2, 4, 4)
 
@@ -1533,7 +1572,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	}
 
 	bm.SetContent(
-		container.New(layout.NewMaxLayout(),
+		container.NewStack(
 			rast,
 			bundle.Alpha180,
 			tabs))

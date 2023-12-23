@@ -1,39 +1,46 @@
 package holdero
 
 import (
+	"image/color"
 	"strconv"
 	"time"
 
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
-	"github.com/dReam-dApps/dReams/menu"
+	"github.com/dReam-dApps/dReams/dwidget"
+	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
 
-var tables_menu bool
-
-// Sets bet amount and current bet readout
+// Sets bet entry amount, bet button text and current bet readout
 func ifBet(w, r uint64) {
 	if w > 0 && r > 0 && !signals.placedBet {
 		float := float64(w) / 100000
 		wager := strconv.FormatFloat(float, 'f', 1, 64)
 		table.betEntry.SetText(wager)
+		table.check.SetText("Fold")
+		table.bet.SetText("Call")
 		round.display.results = round.raiser + " Raised, " + wager + " to Call "
 	} else if w > 0 && !signals.placedBet {
 		float := float64(w) / 100000
 		wager := strconv.FormatFloat(float, 'f', 1, 64)
 		table.betEntry.SetText(wager)
+		table.check.SetText("Fold")
+		table.bet.SetText("Call")
 		round.display.results = round.bettor + " Bet " + wager
 	} else if r > 0 && signals.placedBet {
 		float := float64(r) / 100000
 		raised := strconv.FormatFloat(float, 'f', 1, 64)
 		table.betEntry.SetText(raised)
+		table.check.SetText("Fold")
+		table.bet.SetText("Call")
 		round.display.results = round.raiser + " Raised, " + raised + " to Call"
-	} else if w == 0 && !signals.bet {
+	} else if w == 0 && round.cards.Local1 != "" {
 		var float float64
 		if round.Ante == 0 {
 			float = float64(round.BB) / 100000
@@ -42,7 +49,9 @@ func ifBet(w, r uint64) {
 		}
 		this := strconv.FormatFloat(float, 'f', 1, 64)
 		table.betEntry.SetText(this)
-		if !signals.reveal {
+		table.check.SetText("Check")
+		table.bet.SetText("Bet")
+		if !signals.reveal && !signals.end {
 			round.display.results = "Check or Bet"
 			table.betEntry.Enable()
 		}
@@ -53,8 +62,21 @@ func ifBet(w, r uint64) {
 	table.betEntry.Refresh()
 }
 
-// Single shot triggering ifBet() on players turn
+// Single shot when players turn, calls ifBet() and sets called and placedBet signals
 func singleShot(turn, trigger bool) bool {
+	if round.Wager == 0 {
+		if round.flop {
+			signals.called = true
+		} else {
+			signals.called = false
+		}
+
+		if signals.called {
+			signals.placedBet = false
+			signals.called = false
+		}
+	}
+
 	if turn && !trigger {
 		ifBet(round.Wager, round.Raised)
 		return true
@@ -68,7 +90,7 @@ func singleShot(turn, trigger bool) bool {
 }
 
 // Main Holdero process
-func fetch(d *dreams.AppObject) {
+func fetch(d *dreams.AppObject, cont *fyne.Container) {
 	initValues()
 	time.Sleep(3 * time.Second)
 	var autoCF, autoD, autoB, trigger bool
@@ -85,10 +107,17 @@ func fetch(d *dreams.AppObject) {
 				continue
 			}
 
-			if !Settings.synced && menu.GnomonScan(d.IsConfiguring()) {
+			if !Settings.synced && gnomes.Scan(d.IsConfiguring()) {
+				reset := cont.Objects[1]
+				screen, bar := syncScreen()
+				cont.Objects[1] = screen
 				logger.Println("[Holdero] Syncing")
-				createTableList()
+				if len(rpc.Wallet.Address) == 66 {
+					CheckExistingKey()
+				}
+				createTableList(bar)
 				Settings.synced = true
+				cont.Objects[1] = reset
 				H.Actions.Show()
 			}
 
@@ -100,22 +129,10 @@ func fetch(d *dreams.AppObject) {
 				signals.sit = true
 			}
 
-			FetchHolderoSC()
+			fetchHolderoSC()
 
-			table.stats.Container = *container.NewVBox(
-				container.NewMax(tableIcon(bundle.ResourceAvatarFramePng)),
-				table.stats.name,
-				table.stats.desc,
-				table.stats.owner,
-				table.stats.chips,
-				table.stats.blinds,
-				table.stats.version,
-				table.stats.last,
-				table.stats.seats)
-			table.stats.Container.Refresh()
-
-			if (round.Turn == round.ID && rpc.Wallet.Height > signals.height+4) ||
-				(round.Turn != round.ID && round.ID >= 1) || (!signals.myTurn && round.ID >= 1) {
+			if !rpc.IsConfirmingTx() && ((round.Turn == round.ID && rpc.Wallet.Height > signals.height+3) ||
+				(round.Turn != round.ID && round.ID >= 1) || (!signals.myTurn && round.ID >= 1)) {
 				if signals.clicked {
 					trigger = false
 					autoCF = false
@@ -131,7 +148,6 @@ func fetch(d *dreams.AppObject) {
 					round.first = false
 					delay = 0
 					round.delay = false
-					go refreshHolderoPlayers()
 				}
 
 				if round.delay {
@@ -143,8 +159,6 @@ func fetch(d *dreams.AppObject) {
 					}
 				} else {
 					setHolderoLabel()
-					GetUrls(round.cards.Faces.Url, round.cards.Backs.Url)
-					Called(round.flop, round.Wager)
 					trigger = singleShot(signals.myTurn, trigger)
 					holderoRefresh(d, offset)
 					// Auto check
@@ -152,7 +166,8 @@ func fetch(d *dreams.AppObject) {
 						if !signals.reveal && !signals.end && !round.localEnd {
 							if round.cards.Local1 != "" {
 								ActionBuffer()
-								Check()
+								tx := Check()
+								go rpc.ConfirmTx(tx, "Holdero", 45)
 								H.TopLabel.Text = "Auto Check/Fold Tx Sent"
 								H.TopLabel.Refresh()
 								autoCF = true
@@ -175,7 +190,8 @@ func fetch(d *dreams.AppObject) {
 								go func() {
 									time.Sleep(2100 * time.Millisecond)
 									ActionBuffer()
-									DealHand()
+									tx := DealHand()
+									go rpc.ConfirmTx(tx, "Holdero", 45)
 									H.TopLabel.Text = "Auto Deal Tx Sent"
 									H.TopLabel.Refresh()
 
@@ -227,7 +243,7 @@ func fetch(d *dreams.AppObject) {
 				waitLabel()
 				revealingKey(d)
 				skip++
-				if skip >= 25 {
+				if skip >= 30 {
 					signals.clicked = false
 					skip = 0
 					trigger = false
@@ -284,8 +300,9 @@ func disableActions() {
 	table.entry.SetText("")
 	clearShared()
 	disableOwnerControls(true)
-	table.Public.SCIDs = []string{}
-	table.Owned.SCIDs = []string{}
+	publicTables = []tableInfo{}
+	ownedTables = []tableInfo{}
+	favoriteTables = []tableInfo{}
 	table.unlock.Hide()
 	table.new.Hide()
 	table.tournament.Hide()
@@ -297,15 +314,15 @@ func disableActions() {
 // Disable Holdero owner actions
 func disableOwnerControls(d bool) {
 	if d {
-		table.owner.owners_left.Hide()
-		table.owner.owners_mid.Hide()
+		table.owner.settings.Hide()
+		table.owner.times.Hide()
 	} else {
-		table.owner.owners_left.Show()
-		table.owner.owners_mid.Show()
+		table.owner.settings.Show()
+		table.owner.times.Show()
 	}
 
-	table.owner.owners_left.Refresh()
-	table.owner.owners_mid.Refresh()
+	table.owner.settings.Refresh()
+	table.owner.times.Refresh()
 }
 
 // Sets Holdero table info labels
@@ -354,8 +371,8 @@ func waitLabel() {
 
 // Refresh all Holdero gui objects
 func holderoRefresh(d *dreams.AppObject, offset int) {
-	go ShowAvatar(d.OnTab("Holdero"))
-	go refreshHolderoCards(round.cards.Local1, round.cards.Local2, d)
+	refreshHolderoCards(round.cards.Local1, round.cards.Local2, d)
+	refreshHolderoPlayers(d.OnTab("Holdero"))
 	if !signals.clicked {
 		if round.ID == 0 && rpc.Wallet.IsConnected() {
 			if signals.sit {
@@ -387,8 +404,6 @@ func holderoRefresh(d *dreams.AppObject, offset int) {
 				table.deal.Show()
 			}
 
-			table.check.SetText(round.display.checkButton)
-			table.bet.SetText(round.display.betButton)
 			if signals.bet {
 				table.check.Hide()
 				table.bet.Hide()
@@ -422,43 +437,44 @@ func holderoRefresh(d *dreams.AppObject, offset int) {
 			}
 		}
 	}
-
-	if tables_menu {
-		if offset%3 == 0 {
-			go getTableStats(round.Contract, false)
-		}
-	}
-
-	go func() {
-		refreshHolderoPlayers()
-		H.DApp.Refresh()
-	}()
 }
 
 // Refresh Holdero player names and avatars
-func refreshHolderoPlayers() {
-	H.Back.Objects[0] = HolderoTable(ResourcePokerTablePng)
-	H.Back.Objects[0].Refresh()
+func refreshHolderoPlayers(tab bool) {
+	if tab {
+		H.Back.Objects[0] = HolderoTable(ResourcePokerTablePng)
+		H.Back.Objects[0].Refresh()
 
-	H.Back.Objects[1] = Player1_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[1].Refresh()
+		go func() {
+			H.Back.Objects[1] = Player1_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
+			H.Back.Objects[1].Refresh()
+		}()
 
-	H.Back.Objects[2] = Player2_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[2].Refresh()
+		go func() {
+			H.Back.Objects[2] = Player2_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
+			H.Back.Objects[2].Refresh()
+		}()
 
-	H.Back.Objects[3] = Player3_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[3].Refresh()
+		go func() {
+			H.Back.Objects[3] = Player3_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
+			H.Back.Objects[3].Refresh()
+		}()
 
-	H.Back.Objects[4] = Player4_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[4].Refresh()
+		go func() {
+			H.Back.Objects[4] = Player4_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
+			H.Back.Objects[4].Refresh()
+		}()
 
-	H.Back.Objects[5] = Player5_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[5].Refresh()
+		go func() {
+			H.Back.Objects[5] = Player5_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
+			H.Back.Objects[5].Refresh()
+		}()
 
-	H.Back.Objects[6] = Player6_label(ResourceUnknownAvatarPng, bundle.ResourceAvatarFramePng, ResourceTurnFramePng)
-	H.Back.Objects[6].Refresh()
-
-	H.Back.Refresh()
+		go func() {
+			H.Back.Objects[6] = Player6_label(ResourceUnknownAvatarPng, bundle.ResourceFramePng, ResourceTurnFramePng)
+			H.Back.Objects[6].Refresh()
+		}()
+	}
 }
 
 // Reveal key notification and display
@@ -474,4 +490,28 @@ func revealingKey(d *dreams.AppObject) {
 			}
 		}
 	}
+}
+
+// Splash screen for when tables lists syncing
+func syncScreen() (max *fyne.Container, bar *widget.ProgressBar) {
+	text := canvas.NewText("Syncing...", color.White)
+	text.Alignment = fyne.TextAlignCenter
+	text.TextSize = 21
+
+	img := canvas.NewImageFromResource(ResourceHolderoCirclePng)
+	img.SetMinSize(fyne.NewSize(150, 150))
+
+	bar = widget.NewProgressBar()
+	bar.TextFormatter = func() string {
+		return ""
+	}
+
+	max = container.NewBorder(
+		dwidget.LabelColor(container.NewVBox(widget.NewLabel(""))),
+		nil,
+		nil,
+		nil,
+		container.NewCenter(img, text), bar)
+
+	return
 }

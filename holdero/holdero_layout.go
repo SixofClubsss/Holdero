@@ -7,11 +7,14 @@ import (
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
+	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
@@ -19,7 +22,7 @@ import (
 var H dreams.ContainerStack
 
 // Holdero tables menu tab layout
-func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *container.Split {
+func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Container {
 	Settings.check = widget.NewCheck("", func(b bool) {
 		if !b {
 			disableOwnerControls(true)
@@ -27,38 +30,27 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *containe
 	})
 	Settings.check.Disable()
 
-	check_box := container.NewVBox(Settings.check)
+	tabs := container.NewAppTabs(
+		container.NewTabItemWithIcon("", ResourceHolderoCirclePng, layout.NewSpacer()),
+		container.NewTabItem("Tables", publicList(d)),
+		container.NewTabItem("Favorites", favoritesList()),
+		container.NewTabItem("Owned", ownedList(d)),
+		container.NewTabItem("View Table", layout.NewSpacer()),
+		container.NewTabItem("How to Play", layout.NewSpacer()))
 
-	var tabs *container.AppTabs
-	table.unlock = widget.NewButton("Unlock Holdero Contract", nil)
-	table.unlock.Hide()
-
-	table.new = widget.NewButton("New Holdero Table", nil)
-	table.new.Hide()
-
-	unlock_cont := container.NewVBox(
-		layout.NewSpacer(),
-		table.unlock,
-		table.new)
-
-	owner_buttons := container.NewAdaptiveGrid(2, container.NewMax(layout.NewSpacer()), unlock_cont)
-	owned_tab := container.NewBorder(nil, owner_buttons, nil, nil, myTables())
-
-	tabs = container.NewAppTabs(
-		container.NewTabItem("Tables", layout.NewSpacer()),
-		container.NewTabItem("Favorites", holderoFavorites()),
-		container.NewTabItem("Owned", owned_tab),
-		container.NewTabItem("View Table", layout.NewSpacer()))
-
-	tabs.SelectIndex(0)
-	tabs.Selected().Content = tableListings(tabs)
+	tabs.DisableIndex(0)
+	tabs.SelectIndex(1)
 
 	tabs.OnSelected = func(ti *container.TabItem) {
 		switch ti.Text {
 		case "Tables":
 			if rpc.Daemon.IsConnected() {
-				go createTableList()
+				go createTableList(nil)
 			}
+		case "How to Play":
+			instructions := "Connect to your wallet and daemon and wait for tables to sync\n\nClick on a table in the list to connect to it\n\nClick on 'View Table' to view it\n\nIf there is a open seat you can click 'Sit Down' to join the game\n\nWhen it is your turn you can click 'Deal Hand' to get your cards\n\nHoldero is a no limit single raise version of Hold'em\n\nThere is no all in, players must call the bet or fold\n\nAt the start of each deal players can leave the table\n\nIf you are inactive during the hand you will be timed out and removed from the table\n\nAssets that unlock dReam Tools give access to bot players and odds calculators\n\nYou can create and view your tables in the 'Owned' tab\n\nVisit dreamdapps.io for more docs"
+			dialog.NewInformation("How to play", instructions, d.Window).Show()
+			tabs.SelectIndex(1)
 
 		default:
 		}
@@ -66,53 +58,91 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *containe
 		if ti.Text == "View Table" {
 			go func() {
 				if len(round.Contract) == 64 {
-					FetchHolderoSC()
-					tables_menu = false
+					fetchHolderoSC()
+					if round.ID == 0 {
+						if menu.Assets.Names.SelectedIndex() == 0 && len(menu.Assets.Names.Options) > 1 {
+							dialog.NewInformation("Anon", "You are playing as a anon player, select name in assets/profile tab", d.Window).Show()
+						}
+					}
 					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content = change_screen
 					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content.Refresh()
-					tabs.SelectIndex(0)
+					tabs.SelectIndex(1)
 					now := time.Now().Unix()
 					if now > round.Last+33 {
 						holderoRefresh(d, 0)
 					}
 				} else {
-					tabs.SelectIndex(0)
+					if rpc.IsReady() {
+						dialog.NewInformation("Select Table", "Select a table SCID to play at", d.Window).Show()
+					} else {
+						dialog.NewInformation("Not Connected", "Connect to daemon and wallet", d.Window).Show()
+					}
+					tabs.SelectIndex(1)
 				}
 			}()
 		}
 	}
 
-	max := container.NewMax(bundle.Alpha120, tabs)
+	// Holdero SCID entry bound to round.Contract
+	// entry text set on all List selections
+	table.entry = widget.NewSelectEntry(nil)
+	options := []string{""}
+	table.entry.SetOptions(options)
+	table.entry.PlaceHolder = "Holdero Contract Address: "
+
+	this := binding.BindString(&round.Contract)
+	table.entry.Bind(this)
+
+	tabs.SetTabLocation(container.TabLocationLeading)
+
+	contract_cont := container.NewBorder(nil, nil, nil, Settings.check, table.entry)
 
 	table.unlock.OnTapped = func() {
-		max.Objects[1] = holderoMenuConfirm(1, max.Objects, tabs)
-		max.Objects[1].Refresh()
+		holderoMenuConfirm(1, d)
 	}
 
 	table.new.OnTapped = func() {
-		max.Objects[1] = holderoMenuConfirm(2, max.Objects, tabs)
-		max.Objects[1].Refresh()
+		holderoMenuConfirm(2, d)
 	}
 
-	menu_bottom := container.NewVBox(layout.NewSpacer(), container.NewHBox(container.NewMax(ownersBox(d))))
+	// Changes to SCID entry clear table and check if current entry is valid table
+	var wait bool
+	table.entry.OnCursorChanged = func() {
+		if rpc.Daemon.IsConnected() && !wait {
+			wait = true
+			text := table.entry.Text
+			go clearShared()
+			if len(text) == 64 {
+				if checkTableOwner(text) {
+					disableOwnerControls(false)
+					if checkTableVersion(text) >= 110 {
+						table.owner.chips.Show()
+						table.owner.times.Show()
+					} else {
+						table.owner.chips.Hide()
+						table.owner.chips.SetSelected("DERO")
+						table.owner.times.Hide()
+					}
+				} else {
+					disableOwnerControls(true)
+				}
 
-	contract_cont := container.NewHScroll(holderoContractEntry())
-	contract_cont.SetMinSize(fyne.NewSize(640, 35.1875))
+				if rpc.Wallet.IsConnected() && checkHolderoContract(text) {
+					table.tournament.Show()
+				} else {
+					table.tournament.Hide()
+				}
+			} else {
+				signals.contract = false
+				Settings.check.SetChecked(false)
+				table.tournament.Hide()
+			}
+			fetchHolderoSC()
+			wait = false
+		}
+	}
 
-	asset_items := container.NewAdaptiveGrid(1, container.NewVBox(displayTableStats()))
-
-	player_input := container.NewVBox(
-		contract_cont,
-		asset_items,
-		layout.NewSpacer())
-
-	player_box := container.NewHBox(player_input, check_box)
-	menu_top := container.NewHSplit(player_box, max)
-
-	menuBox := container.NewVSplit(menu_top, menu_bottom)
-	menuBox.SetOffset(1)
-
-	return menuBox
+	return container.NewStack(bundle.Alpha120, container.NewBorder(contract_cont, nil, nil, nil, tabs))
 }
 
 // Holdero tab layout
@@ -133,11 +163,11 @@ func placeHoldero(change_screen *widget.Button, d *dreams.AppObject) *fyne.Conta
 
 	H.Actions = *container.NewVBox(
 		layout.NewSpacer(),
-		SitButton(),
-		LeaveButton(),
-		DealHandButton(),
-		CheckButton(),
-		BetButton(),
+		SitButton(d),
+		LeaveButton(d),
+		DealHandButton(d),
+		CheckButton(d),
+		BetButton(d),
 		BetAmount())
 
 	options := container.NewVBox(layout.NewSpacer(), AutoOptions(d), change_screen)
@@ -155,7 +185,7 @@ func placeHoldero(change_screen *widget.Button, d *dreams.AppObject) *fyne.Conta
 }
 
 // Layout all objects for Holdero dApp
-func LayoutAllItems(d *dreams.AppObject) *container.Split {
+func LayoutAllItems(d *dreams.AppObject) *fyne.Container {
 	H.LeftLabel = widget.NewLabel("")
 	H.RightLabel = widget.NewLabel("")
 	H.TopLabel = canvas.NewText(round.display.results, color.White)
@@ -164,22 +194,21 @@ func LayoutAllItems(d *dreams.AppObject) *container.Split {
 	H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 
 	var holdero_objs *fyne.Container
-	var contract_objs *container.Split
+	var contract_objs *fyne.Container
 	contract_change_screen := widget.NewButton("Tables", nil)
+	contract_change_screen.Importance = widget.HighImportance
 	contract_change_screen.OnTapped = func() {
 		go func() {
-			tables_menu = true
 			d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content = contract_objs
 			d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content.Refresh()
 		}()
 	}
 
-	tables_menu = true
 	holdero_objs = placeHoldero(contract_change_screen, d)
 	contract_objs = placeContract(holdero_objs, d)
 
 	// Main process
-	go fetch(d)
+	go fetch(d, contract_objs)
 
 	return contract_objs
 }

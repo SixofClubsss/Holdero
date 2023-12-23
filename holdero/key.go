@@ -15,12 +15,12 @@ import (
 )
 
 // Gets local cards with local key
-func Card(hash string) int {
+func findCard(hash string) int {
 	for i := 1; i < 53; i++ {
 		finder := strconv.Itoa(i)
 		add := rpc.Wallet.ClientKey + finder + round.seed
-		card := sha256.Sum256([]byte(add))
-		str := hex.EncodeToString(card[:])
+		sha := sha256.Sum256([]byte(add))
+		str := hex.EncodeToString(sha[:])
 
 		if str == hash {
 			return i
@@ -31,14 +31,13 @@ func Card(hash string) int {
 }
 
 // Generate a new Holdero key
-func GenerateKey() string {
+func generateKey() string {
 	random, _ := rand.Prime(rand.Reader, 128)
 	shasum := sha256.Sum256([]byte(random.String()))
 	str := hex.EncodeToString(shasum[:])
 	rpc.Wallet.KeyLock = true
-	EncryptFile([]byte(str), "config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
-	logger.Println("[Holdero] Round Key: ", str)
-	rpc.AddLog("Round Key: " + str)
+	EncryptFile([]byte(str), "Holdero", "config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
+	rpc.PrintLog("[Holdero] Round Key: %s", str)
 
 	return str
 }
@@ -52,17 +51,17 @@ func createHash(key string) string {
 }
 
 // Encrypt plaintext data with pass
-func Encrypt(data []byte, pass, add string) []byte {
+func Encrypt(data []byte, tag, pass, add string) []byte {
 	block, _ := aes.NewCipher([]byte(createHash(pass)))
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		logger.Println("[Encrypt]", err)
+		logger.Printf("[%s] Encrypt %s\n", tag, err)
 		return nil
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		logger.Println("[Encrypt]", err)
+		logger.Printf("[%s] Encrypt %s\n", tag, err)
 		return nil
 	}
 
@@ -72,17 +71,17 @@ func Encrypt(data []byte, pass, add string) []byte {
 }
 
 // Decrypt ciphertext with pass
-func Decrypt(data []byte, pass, add string) []byte {
+func Decrypt(data []byte, tag, pass, add string) []byte {
 	key := []byte(createHash(pass))
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		logger.Println("[Decrypt]", err)
+		logger.Printf("[%s] Decrypt %s\n", tag, err)
 		return nil
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		logger.Println("[Decrypt]", err)
+		logger.Printf("[%s] Decrypt %s\n", tag, err)
 		return nil
 	}
 
@@ -92,7 +91,7 @@ func Decrypt(data []byte, pass, add string) []byte {
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, extra)
 	if err != nil {
-		logger.Println("[Decrypt]", err)
+		logger.Printf("[%s] Decrypt %s\n", tag, err)
 		return nil
 	}
 
@@ -100,35 +99,37 @@ func Decrypt(data []byte, pass, add string) []byte {
 }
 
 // Write encrypted file
-func EncryptFile(data []byte, filename, pass, add string) {
+func EncryptFile(data []byte, tag, filename, pass, add string) {
 	if data != nil {
 		if file, err := os.Create(filename); err == nil {
 			defer file.Close()
-			file.Write(Encrypt(data, pass, add))
+			file.Write(Encrypt(data, tag, pass, add))
 		}
 	}
 }
 
 // Decrypt a file
-func DecryptFile(filename, pass, add string) []byte {
+func DecryptFile(tag, filename, pass, add string) []byte {
 	if data, err := os.ReadFile(filename); err == nil {
-		return Decrypt(data, pass, add)
+		return Decrypt(data, tag, pass, add)
 	}
 	return nil
 }
 
 // Check if Holdero key exists and decrypt
 func CheckExistingKey() {
-	if _, err := os.Stat("config/.key"); err == nil {
-		key := DecryptFile("config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
-		if key != nil {
-			rpc.Wallet.ClientKey = string(key)
-			rpc.Wallet.KeyLock = true
-			return
+	if rpc.Wallet.ClientKey == "" {
+		if _, err := os.Stat("config/.key"); err == nil {
+			key := DecryptFile("Holdero", "config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
+			if key != nil {
+				rpc.Wallet.ClientKey = string(key)
+				rpc.Wallet.KeyLock = true
+				return
+			}
 		}
-	}
 
-	shasum := sha256.Sum256([]byte("nil"))
-	str := hex.EncodeToString(shasum[:])
-	rpc.Wallet.ClientKey = str
+		shasum := sha256.Sum256([]byte("nil"))
+		str := hex.EncodeToString(shasum[:])
+		rpc.Wallet.ClientKey = str
+	}
 }

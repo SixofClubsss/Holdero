@@ -9,19 +9,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	dreams "github.com/dReam-dApps/dReams"
-
 	"fyne.io/fyne/v2/canvas"
 )
 
 type sharedCards struct {
 	avatar struct {
-		p1 canvas.Image
-		p2 canvas.Image
-		p3 canvas.Image
-		p4 canvas.Image
-		p5 canvas.Image
-		p6 canvas.Image
+		p1 *canvas.Image
+		p2 *canvas.Image
+		p3 *canvas.Image
+		p4 *canvas.Image
+		p5 *canvas.Image
+		p6 *canvas.Image
 	}
 	loaded struct {
 		p1 bool
@@ -67,87 +65,12 @@ func clearShared() {
 	shared.loaded.p4 = false
 	shared.loaded.p5 = false
 	shared.loaded.p6 = false
-	shared.avatar.p1 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p2 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p3 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p4 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p5 = *canvas.NewImageFromImage(nil)
-	shared.avatar.p6 = *canvas.NewImageFromImage(nil)
-}
-
-// Gets shared card urls from connected table
-func GetUrls(face, back string) {
-	if round.ID != 1 {
-		Settings.faces.URL = face
-		Settings.backs.URL = back
-	}
-}
-
-// Single shot control for displaying shared player avatars
-//   - If tab is not selected, we don't check
-func ShowAvatar(tab bool) {
-	if tab {
-		var err error
-		if round.p1.url != "" {
-			if !shared.loaded.p1 {
-				if shared.avatar.p1, err = dreams.DownloadFile(round.p1.url, "P1"); err == nil {
-					shared.loaded.p1 = true
-				}
-			}
-		} else {
-			shared.loaded.p1 = false
-		}
-
-		if round.p2.url != "" {
-			if !shared.loaded.p2 {
-				if shared.avatar.p2, err = dreams.DownloadFile(round.p2.url, "P2"); err == nil {
-					shared.loaded.p2 = true
-				}
-			}
-		} else {
-			shared.loaded.p2 = false
-		}
-
-		if round.p3.url != "" {
-			if !shared.loaded.p3 {
-				if shared.avatar.p3, err = dreams.DownloadFile(round.p3.url, "P3"); err == nil {
-					shared.loaded.p3 = true
-				}
-			}
-		} else {
-			shared.loaded.p3 = false
-		}
-
-		if round.p4.url != "" {
-			if !shared.loaded.p4 {
-				if shared.avatar.p4, err = dreams.DownloadFile(round.p4.url, "P4"); err == nil {
-					shared.loaded.p4 = true
-				}
-			}
-		} else {
-			shared.loaded.p4 = false
-		}
-
-		if round.p5.name != "" {
-			if !shared.loaded.p5 {
-				if shared.avatar.p5, err = dreams.DownloadFile(round.p5.name, "P5"); err == nil {
-					shared.loaded.p5 = true
-				}
-			}
-		} else {
-			shared.loaded.p5 = false
-		}
-
-		if round.p6.url != "" {
-			if !shared.loaded.p6 {
-				if shared.avatar.p6, err = dreams.DownloadFile(round.p6.url, "P6"); err == nil {
-					shared.loaded.p6 = true
-				}
-			}
-		} else {
-			shared.loaded.p6 = false
-		}
-	}
+	shared.avatar.p1 = canvas.NewImageFromImage(nil)
+	shared.avatar.p2 = canvas.NewImageFromImage(nil)
+	shared.avatar.p3 = canvas.NewImageFromImage(nil)
+	shared.avatar.p4 = canvas.NewImageFromImage(nil)
+	shared.avatar.p5 = canvas.NewImageFromImage(nil)
+	shared.avatar.p6 = canvas.NewImageFromImage(nil)
 }
 
 // Code for storing card deck in memory
@@ -413,11 +336,11 @@ func downloadPopUp(p float64, i int) { /// pop up for loading progress
 		Shared.window.Resize(fyne.NewSize(300, 30))
 		Shared.window.SetFixedSize(true)
 		Shared.window.SetIcon(nil)
-		content := container.NewMax(downloadProgress(p))
+		content := container.NewStack(downloadProgress(p))
 		Shared.window.SetContent(content)
 		Shared.window.Show()
 	} else {
-		content := container.NewMax(downloadProgress(p))
+		content := container.NewStack(downloadProgress(p))
 		Shared.window.SetContent(content)
 	}
 }
@@ -544,8 +467,15 @@ func SharedImage(c string) *canvas.Image {
 }
 */
 
+var downloading bool
+
 // Download a single uncompressed image image file to filepath
 func downloadFileLocal(filepath string, url string) (err error) {
+	downloading = true
+	defer func() {
+		downloading = false
+	}()
+
 	_, dir := os.Stat("cards")
 	if os.IsNotExist(dir) {
 		logger.Println("[Holdero] Creating Cards Dir")
@@ -596,6 +526,7 @@ func downloadFileLocal(filepath string, url string) (err error) {
 // Function to get and prepare deck assets for use in dReams
 //   - face will be download path
 func GetZipDeck(face, url string) {
+	downloading = true
 	downloadFileLocal("cards/"+face+".zip", url)
 	files, err := Unzip("cards/"+face+".zip", "cards/"+face)
 
@@ -604,6 +535,7 @@ func GetZipDeck(face, url string) {
 	}
 
 	logger.Println("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))
+	downloading = false
 }
 
 // Unzip a src file into destination

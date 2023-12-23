@@ -648,27 +648,6 @@ func getPlayerCardValues(a1, a2, b1, b2, c1, c2, d1, d2, e1, e2, f1, f2 interfac
 	}
 }
 
-// If Holdero player has called set Signal.Called, and reset Signal.PlacedBet when no wager
-func Called(fb bool, w uint64) {
-	if w == 0 {
-		if fb {
-			signals.called = true
-		} else {
-			signals.called = false
-		}
-
-		if signals.called {
-			round.Raised = 0
-			round.Wager = 0
-			signals.placedBet = false
-			signals.called = false
-		}
-
-		round.display.betButton = "Bet"
-		round.display.checkButton = "Check"
-	}
-}
-
 // Holdero players turn display string
 func turnReadout(t interface{}) (turn string) {
 	if t != nil {
@@ -844,7 +823,7 @@ func allFolded(p1, p2, p3, p4, p5, p6, s interface{}) {
 		if GameIsActive() && round.Pot > 0 {
 			if !signals.log {
 				signals.log = true
-				rpc.AddLog(round.display.results)
+				rpc.PrintLog("[Holdero] %s", round.display.results)
 			}
 
 			updateStatsWins(round.Pot, who, true)

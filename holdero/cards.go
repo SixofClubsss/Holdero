@@ -416,7 +416,7 @@ func P6_b(c int) fyne.CanvasObject {
 func Is_In(hash string, who int, end bool) int {
 	if hash != "" {
 		if end {
-			return KeyCard(hash, who)
+			return keyCard(hash, who)
 		} else {
 			return 0
 		}
@@ -428,6 +428,11 @@ func Is_In(hash string, who int, end bool) int {
 // Returns a custom card face image
 //   - face defines which deck to look for
 func CustomCard(c int, face string) *canvas.Image {
+	if downloading {
+		logger.Debugln("[CustomCard] Waiting for download to complete")
+		return canvas.NewImageFromImage(nil)
+	}
+
 	dir := dreams.GetDir()
 	mid := "/cards/" + face + "/"
 	path := dir + mid + cardEnd(c)
@@ -442,6 +447,11 @@ func CustomCard(c int, face string) *canvas.Image {
 // Returns a custom card back image
 //   - back defines which back to look for
 func CustomBack(back string) *canvas.Image {
+	if downloading {
+		logger.Debugln("[CustomBack] Waiting for download to complete")
+		return canvas.NewImageFromImage(nil)
+	}
+
 	dir := dreams.GetDir()
 	post := "/cards/backs/" + back + ".png"
 	path := dir + post
@@ -603,10 +613,10 @@ func refreshHolderoCards(l1, l2 string, d *dreams.AppObject) {
 	if d.OS() == "darwin" {
 		align = 10
 	}
-	card.layout.Objects[0] = Hole_1(Card(l1), size.Width+align, size.Height)
+	card.layout.Objects[0] = Hole_1(findCard(l1), size.Width+align, size.Height)
 	card.layout.Objects[0].Refresh()
 
-	card.layout.Objects[1] = Hole_2(Card(l2), size.Width+align, size.Height)
+	card.layout.Objects[1] = Hole_2(findCard(l2), size.Width+align, size.Height)
 	card.layout.Objects[1].Refresh()
 
 	card.layout.Objects[2] = P1_a(Is_In(round.cards.P1C1, 1, signals.end))
