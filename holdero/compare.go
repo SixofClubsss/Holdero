@@ -838,7 +838,7 @@ func compareAll(r *ranker) (end_res string) {
 		end_res = round.p5.name + " Wins with " + handToText(r.p5Rank)
 		payWinningHand(5, r)
 	} else if r.p6Rank < r.p1Rank && r.p6Rank < r.p2Rank && r.p6Rank < r.p3Rank && r.p6Rank < r.p4Rank && r.p6Rank < r.p5Rank {
-		end_res = round.p6.name + " Wins with" + handToText(r.p6Rank)
+		end_res = round.p6.name + " Wins with " + handToText(r.p6Rank)
 		payWinningHand(6, r)
 	} else {
 
