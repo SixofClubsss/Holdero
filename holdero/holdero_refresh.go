@@ -320,9 +320,6 @@ func disableOwnerControls(d bool) {
 		table.owner.settings.Show()
 		table.owner.times.Show()
 	}
-
-	table.owner.settings.Refresh()
-	table.owner.times.Refresh()
 }
 
 // Sets Holdero table info labels
@@ -347,8 +344,6 @@ func setHolderoLabel() {
 	}
 
 	H.TopLabel.Refresh()
-	H.LeftLabel.Refresh()
-	H.RightLabel.Refresh()
 }
 
 // Holdero label for waiting for block
@@ -366,7 +361,6 @@ func waitLabel() {
 		H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
 	}
 	H.TopLabel.Refresh()
-	H.RightLabel.Refresh()
 }
 
 // Refresh all Holdero gui objects
