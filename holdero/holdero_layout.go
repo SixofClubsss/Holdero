@@ -65,7 +65,6 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Con
 						}
 					}
 					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content = change_screen
-					d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content.Refresh()
 					tabs.SelectIndex(1)
 					now := time.Now().Unix()
 					if now > round.Last+33 {
@@ -200,7 +199,6 @@ func LayoutAllItems(d *dreams.AppObject) *fyne.Container {
 	contract_change_screen.OnTapped = func() {
 		go func() {
 			d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content = contract_objs
-			d.Window.Content().(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*container.AppTabs).Selected().Content.Refresh()
 		}()
 	}
 
