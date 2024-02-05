@@ -404,9 +404,6 @@ func fetchHolderoSC() {
 // Submit playerId, name, avatar and sit at Holdero table
 //   - name and av are for name and avatar in player id string
 func SitDown(name, av string) (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	var player playerId
 	player.Id = rpc.Wallet.IdHash
 	player.Name = name
@@ -436,7 +433,7 @@ func SitDown(name, av string) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Sit Down: %s", err)
 		return
 	}
@@ -448,9 +445,6 @@ func SitDown(name, av string) (tx string) {
 
 // Leave Holdero seat on players turn
 func Leave() (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	checkoutId := rpc.StringToInt(round.display.playerId)
 	singleNameClear(checkoutId)
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "PlayerLeave"}
@@ -474,7 +468,7 @@ func Leave() (tx string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Leave: %s", err)
 		return
 	}
@@ -490,9 +484,6 @@ func Leave() (tx string) {
 //   - chips defines if tables is using Dero or assets
 //   - name and av are for name and avatar in owners id string
 func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	var player playerId
 	player.Id = rpc.Wallet.IdHash
 	player.Name = name
@@ -533,7 +524,7 @@ func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) (tx string
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Set Table: %s", err)
 		return
 	}
@@ -545,9 +536,6 @@ func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) (tx string
 
 // Submit blinds/ante to deal Holdero hand
 func DealHand() (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	if !rpc.Wallet.KeyLock {
 		rpc.Wallet.ClientKey = generateKey()
 	}
@@ -608,7 +596,7 @@ func DealHand() (tx string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Deal: %s", err)
 		return
 	}
@@ -622,9 +610,6 @@ func DealHand() (tx string) {
 
 // Make Holdero bet
 func Bet(amt string) (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "Bet"}
 	args := dero.Arguments{arg1}
 	txid := dero.Transfer_Result{}
@@ -662,7 +647,7 @@ func Bet(amt string) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Bet: %s", err)
 		return
 	}
@@ -680,9 +665,6 @@ func Bet(amt string) (tx string) {
 
 // Holdero check and fold
 func Check() (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "Bet"}
 	args := dero.Arguments{arg1}
 	txid := dero.Transfer_Result{}
@@ -720,7 +702,7 @@ func Check() (tx string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Check/Fold: %s", err)
 		return
 	}
@@ -734,9 +716,6 @@ func Check() (tx string) {
 // Holdero single winner payout
 //   - w defines which player the pot is going to
 func PayOut(w string) (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "Winner"}
 	arg2 := dero.Argument{Name: "whoWon", DataType: "S", Value: w}
 	args := dero.Arguments{arg1, arg2}
@@ -758,7 +737,7 @@ func PayOut(w string) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Payout: %s", err)
 		return
 	}
@@ -771,9 +750,6 @@ func PayOut(w string) (tx string) {
 // Holdero split winners payout
 //   - Pass in ranker from hand and folded bools to determine split
 func PayoutSplit(r ranker, f1, f2, f3, f4, f5, f6 bool) string {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	ways := 0
 	splitWinners := [6]string{"Zero", "Zero", "Zero", "Zero", "Zero", "Zero"}
 
@@ -837,7 +813,7 @@ func PayoutSplit(r ranker, f1, f2, f3, f4, f5, f6 bool) string {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Split Winner: %s", err)
 		return ""
 	}
@@ -850,8 +826,6 @@ func PayoutSplit(r ranker, f1, f2, f3, f4, f5, f6 bool) string {
 // Reveal Holdero hand key for showdown
 func RevealKey(key string) {
 	time.Sleep(6 * time.Second)
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
 
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "RevealKey"}
 	arg2 := dero.Argument{Name: "pcSeed", DataType: "H", Value: key}
@@ -874,7 +848,7 @@ func RevealKey(key string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Reveal: %s", err)
 		return
 	}
@@ -885,9 +859,6 @@ func RevealKey(key string) {
 
 // Owner can shuffle deck for Holdero, clean above 0 can retrieve balance
 func CleanTable(amt uint64) (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "CleanTable"}
 	arg2 := dero.Argument{Name: "amount", DataType: "U", Value: amt}
 	args := dero.Arguments{arg1, arg2}
@@ -909,7 +880,7 @@ func CleanTable(amt uint64) (tx string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Clean Table: %s", err)
 		return
 	}
@@ -921,9 +892,6 @@ func CleanTable(amt uint64) (tx string) {
 
 // Owner can timeout a player at Holdero table
 func TimeOut() (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "TimeOut"}
 	args := dero.Arguments{arg1}
 	txid := dero.Transfer_Result{}
@@ -944,7 +912,7 @@ func TimeOut() (tx string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Timeout: %s", err)
 		return
 	}
@@ -956,9 +924,6 @@ func TimeOut() (tx string) {
 
 // Owner can force start a Holdero table with empty seats
 func ForceStat() (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "ForceStart"}
 	args := dero.Arguments{arg1}
 	txid := dero.Transfer_Result{}
@@ -979,7 +944,7 @@ func ForceStat() (tx string) {
 		Fees:      fee,
 	}
 
-	if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+	if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 		rpc.PrintError("[Holdero] Force Start: %s", err)
 		return
 	}
@@ -993,9 +958,6 @@ func ForceStat() (tx string) {
 //   - face and back are the names of assets
 //   - faceUrl and backUrl are the Urls for those assets
 func SharedDeckUrl(face, faceUrl, back, backUrl string) (tx string) {
-	client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-	defer cancel()
-
 	var cards CardSpecs
 	if face != "" && back != "" {
 		cards.Faces.Name = face
@@ -1027,7 +989,7 @@ func SharedDeckUrl(face, faceUrl, back, backUrl string) (tx string) {
 			Fees:      fee,
 		}
 
-		if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+		if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 			rpc.PrintError("[Holdero] Shared: %s", err)
 			return
 		}
@@ -1043,9 +1005,6 @@ func SharedDeckUrl(face, faceUrl, back, backUrl string) (tx string) {
 // Deposit tournament chip bal with name to leader board SC
 func TourneyDeposit(bal uint64, name string) (tx string) {
 	if bal > 0 {
-		client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-		defer cancel()
-
 		arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "Deposit"}
 		arg2 := dero.Argument{Name: "name", DataType: "S", Value: name}
 		args := dero.Arguments{arg1, arg2}
@@ -1068,7 +1027,7 @@ func TourneyDeposit(bal uint64, name string) (tx string) {
 			Fees:      fee,
 		}
 
-		if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+		if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 			rpc.PrintError("[Holdero] Tournament Deposit: %s", err)
 			return
 		}
@@ -1160,9 +1119,6 @@ func OwnerT3(o bool) (t *dero.Transfer) {
 //   - pub defines public or private SC
 func uploadHolderoContract(pub int) (tx string) {
 	if rpc.IsReady() {
-		client, ctx, cancel := rpc.SetWalletClient(rpc.Wallet.Rpc, rpc.Wallet.UserPass)
-		defer cancel()
-
 		code := GetHolderoCode(pub)
 		if code == "" {
 			rpc.PrintError("[Holdero] Upload: could not get SC code")
@@ -1180,7 +1136,7 @@ func uploadHolderoContract(pub int) (tx string) {
 			Ringsize:  2,
 		}
 
-		if err := client.CallFor(ctx, &txid, "transfer", params); err != nil {
+		if err := rpc.Wallet.CallFor(&txid, "transfer", params); err != nil {
 			rpc.PrintError("[Holdero] Upload: %s", err)
 			return
 		}

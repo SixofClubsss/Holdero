@@ -27,7 +27,7 @@ import (
 
 const app_tag = "Holdero"
 
-var version = semver.MustParse("0.3.1")
+var version = semver.MustParse("0.3.1-dev.x")
 var gnomon = gnomes.NewGnomes()
 
 // Check holdero package version

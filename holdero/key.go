@@ -36,7 +36,7 @@ func generateKey() string {
 	shasum := sha256.Sum256([]byte(random.String()))
 	str := hex.EncodeToString(shasum[:])
 	rpc.Wallet.KeyLock = true
-	EncryptFile([]byte(str), "Holdero", "config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
+	EncryptFile([]byte(str), "Holdero", "config/.key", rpc.Wallet.RPC.Auth, rpc.Wallet.Address)
 	rpc.PrintLog("[Holdero] Round Key: %s", str)
 
 	return str
@@ -120,7 +120,7 @@ func DecryptFile(tag, filename, pass, add string) []byte {
 func CheckExistingKey() {
 	if rpc.Wallet.ClientKey == "" {
 		if _, err := os.Stat("config/.key"); err == nil {
-			key := DecryptFile("Holdero", "config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
+			key := DecryptFile("Holdero", "config/.key", rpc.Wallet.RPC.Auth, rpc.Wallet.Address)
 			if key != nil {
 				rpc.Wallet.ClientKey = string(key)
 				rpc.Wallet.KeyLock = true
