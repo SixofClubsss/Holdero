@@ -120,6 +120,7 @@ func StartApp() {
 	// Create dwidget connection box with controls
 	connect_box := dwidget.NewHorizontalEntries(app_tag, 1)
 	connect_box.Button.OnTapped = func() {
+		rpc.Wallet.RPC.Init()
 		rpc.GetAddress(app_tag)
 		rpc.Ping()
 		if rpc.Daemon.IsConnected() && !gnomon.IsInitialized() && !gnomon.IsStarting() {
@@ -149,6 +150,7 @@ func StartApp() {
 	tabs := container.NewAppTabs(
 		container.NewTabItem(app_tag, LayoutAllItems(&d)),
 		container.NewTabItem("Assets", menu.PlaceAssets(app_tag, profile, nil, ResourceHolderoCirclePng, &d)),
+		container.NewTabItem("Market", menu.PlaceMarket(&d)),
 		container.NewTabItem("Swap", PlaceSwap(&d)),
 		container.NewTabItem("Log", rpc.SessionLog(app_tag, version)))
 
@@ -163,18 +165,14 @@ func StartApp() {
 			select {
 			case <-ticker.C: // do on interval
 				rpc.Ping()
-				rpc.EchoWallet(app_tag)
-				rpc.GetWalletHeight(app_tag)
-				rpc.GetDreamsBalances(rpc.SCIDs)
+				rpc.Wallet.Sync()
 
 				connect_box.RefreshBalance()
-				if !rpc.Startup {
-					gnomes.EndPoint()
-				}
 
 				if rpc.Daemon.IsConnected() && gnomon.IsInitialized() {
 					connect_box.Disconnect.SetChecked(true)
 					if gnomon.IsRunning() {
+						gnomes.EndPoint()
 						menu.DisableIndexControls(false)
 						gnomon.IndexContains()
 						menu.Info.RefreshIndexed()
@@ -204,10 +202,6 @@ func StartApp() {
 				if !synced && gnomon.IsReady() && rpc.Wallet.Address != "" {
 					menu.CheckWalletNames(rpc.Wallet.Address)
 					synced = true
-				}
-
-				if rpc.Daemon.IsConnected() {
-					rpc.Startup = false
 				}
 
 				d.SignalChannel()

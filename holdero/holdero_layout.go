@@ -1,6 +1,7 @@
 package holdero
 
 import (
+	"fmt"
 	"image/color"
 	"time"
 
@@ -190,7 +191,7 @@ func LayoutAllItems(d *dreams.AppObject) *fyne.Container {
 	H.TopLabel = canvas.NewText(round.display.results, color.White)
 	H.TopLabel.Move(fyne.NewPos(387, 204))
 	H.LeftLabel.SetText("Seats: " + round.display.seats + "      Pot: " + round.display.pot + "      Blinds: " + round.display.blinds + "      Ante: " + round.display.ante + "      Dealer: " + round.display.dealer)
-	H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+	H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      DERO Balance: " + rpc.Wallet.BalanceF("DERO") + "      Height: " + fmt.Sprintf("%d", rpc.Wallet.Height()))
 
 	var holdero_objs *fyne.Container
 	var contract_objs *fyne.Container

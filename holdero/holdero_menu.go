@@ -301,7 +301,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	delay.PlaceHolder = "Payout delay:"
 
 	table.tournament = widget.NewButton("Tournament", func() {
-		bal := rpc.TokenBalance(TourneySCID)
+		bal := rpc.GetAssetBalance(TourneySCID)
 		balance := float64(bal) / 100000
 		if balance == 0 {
 			dialog.NewInformation("Tournament Deposit", "You have no Tournament chips to deposit", d.Window).Show()
@@ -431,7 +431,7 @@ Public table that uses HGC or DERO`
 	confirm_button.Importance = widget.HighImportance
 
 	options := []string{"Public", "Private"}
-	if hgc := rpc.TokenBalance(rpc.HgcSCID); hgc > 0 {
+	if hgc := rpc.GetAssetBalance(rpc.HgcSCID); hgc > 0 {
 		options = append(options, "HGC")
 	}
 

@@ -98,7 +98,7 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 	select_pair.SetSelectedIndex(0)
 
 	assets := []string{}
-	for asset := range rpc.Wallet.Display.Balance {
+	for _, asset := range rpc.Wallet.Balances() {
 		assets = append(assets, asset)
 	}
 
@@ -112,7 +112,7 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 			return widget.NewLabel("")
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(assets[i] + fmt.Sprintf(": %s", rpc.DisplayBalance(assets[i])))
+			o.(*widget.Label).SetText(fmt.Sprintf("%s: %s", assets[i], rpc.Wallet.BalanceF(assets[i])))
 		})
 
 	balance_tabs := container.NewAppTabs(

@@ -261,10 +261,8 @@ func fetchHolderoSC() {
 				getPlayerCardValues(P1C1_jv, P1C2_jv, P2C1_jv, P2C2_jv, P3C1_jv, P3C2_jv, P4C1_jv, P4C2_jv, P5C1_jv, P5C2_jv, P6C1_jv, P6C2_jv)
 			}
 
-			if !rpc.Startup {
-				setHolderoName(OneId_jv, TwoId_jv, ThreeId_jv, FourId_jv, FiveId_jv, SixId_jv)
-				setSignals(Pot_jv, P1Out_jv)
-			}
+			setHolderoName(OneId_jv, TwoId_jv, ThreeId_jv, FourId_jv, FiveId_jv, SixId_jv)
+			setSignals(Pot_jv, P1Out_jv)
 
 			if P1Out_jv != nil {
 				signals.Out1 = true
@@ -352,7 +350,7 @@ func fetchHolderoSC() {
 			if RevealBool_jv != nil && !signals.reveal && !round.localEnd {
 				if rpc.AddOne(Turn_jv) == round.display.playerId {
 					signals.clicked = true
-					signals.height = rpc.Wallet.Height
+					signals.height = rpc.Wallet.Height()
 					signals.reveal = true
 					go RevealKey(rpc.Wallet.ClientKey)
 				}
@@ -383,9 +381,9 @@ func fetchHolderoSC() {
 				if round.Last != 0 {
 					now := time.Now().Unix()
 					if now > round.Last+int64(signals.times.kick)+18 {
-						if rpc.Wallet.Height > signals.times.block+3 {
+						if rpc.Wallet.Height() > signals.times.block+3 {
 							TimeOut()
-							signals.times.block = rpc.Wallet.Height
+							signals.times.block = rpc.Wallet.Height()
 						}
 					}
 				}

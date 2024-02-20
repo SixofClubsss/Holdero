@@ -1069,7 +1069,7 @@ func callBet(m float64, live bool) bool {
 		oddsLog("[callBet]", fmt.Sprintln("Low Balance", amt))
 		return false
 	}
-	curr := "Dero"
+	curr := "DERO"
 	if round.asset {
 		curr = "Tokens"
 	}
@@ -1116,9 +1116,9 @@ func canRaise() bool {
 // Check if wallet balance is to low to call bet
 func lowBalance(amt float64) bool {
 	if round.asset {
-		return amt > float64(rpc.Wallet.ReadTokenBalance(rpc.GetAssetSCIDName(round.assetID)))/100000
+		return amt > float64(rpc.Wallet.Balance(rpc.GetAssetNameBySCID(round.assetID)))/100000
 	} else {
-		return amt > float64(rpc.Wallet.ReadBalance())/100000
+		return amt > float64(rpc.Wallet.Balance("DERO"))/100000
 	}
 }
 
@@ -1303,7 +1303,7 @@ func BetLogic(odds, future float64, live bool) {
 		b = 0
 	}
 
-	curr := "Dero"
+	curr := "DERO"
 	if round.asset {
 		curr = "Tokens"
 	}

@@ -1,6 +1,7 @@
 package holdero
 
 import (
+	"fmt"
 	"image/color"
 	"strconv"
 	"time"
@@ -131,7 +132,7 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 
 			fetchHolderoSC()
 
-			if !rpc.IsConfirmingTx() && ((round.Turn == round.ID && rpc.Wallet.Height > signals.height+3) ||
+			if !rpc.IsConfirmingTx() && ((round.Turn == round.ID && rpc.Wallet.Height() > signals.height+3) ||
 				(round.Turn != round.ID && round.ID >= 1) || (!signals.myTurn && round.ID >= 1)) {
 				if signals.clicked {
 					trigger = false
@@ -328,13 +329,13 @@ func setHolderoLabel() {
 	H.LeftLabel.SetText("Seats: " + round.display.seats + "      Pot: " + round.display.pot + "      Blinds: " + round.display.blinds + "      Ante: " + round.display.ante + "      Dealer: " + round.display.dealer)
 	if round.asset {
 		if round.tourney {
-			H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      Chip Balance: " + rpc.DisplayBalance("Tournament") + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+			H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      Chip Balance: " + rpc.Wallet.BalanceF("Tournament") + "      DERO Balance: " + rpc.Wallet.BalanceF("DERO") + "      Height: " + fmt.Sprintf("%d", rpc.Wallet.Height()))
 		} else {
-			asset_name := rpc.GetAssetSCIDName(round.assetID)
-			H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      " + asset_name + " Balance: " + rpc.DisplayBalance(asset_name) + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+			asset_name := rpc.GetAssetNameBySCID(round.assetID)
+			H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      " + asset_name + " Balance: " + rpc.Wallet.BalanceF(asset_name) + "      DERO Balance: " + rpc.Wallet.BalanceF("DERO") + "      Height: " + fmt.Sprintf("%d", rpc.Wallet.Height()))
 		}
 	} else {
-		H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+		H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      DERO Balance: " + rpc.Wallet.BalanceF("DERO") + "      Height: " + fmt.Sprintf("%d", rpc.Wallet.Height()))
 	}
 
 	if signals.contract {
@@ -351,14 +352,14 @@ func waitLabel() {
 	H.TopLabel.Text = ""
 	if round.asset {
 		if round.tourney {
-			H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      Chip Balance: " + rpc.DisplayBalance("Tournament") + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+			H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      Chip Balance: " + rpc.Wallet.BalanceF("Tournament") + "      DERO Balance: " + rpc.Wallet.BalanceF("DERO") + "      Height: " + fmt.Sprintf("%d", rpc.Wallet.Height()))
 		} else {
-			asset_name := rpc.GetAssetSCIDName(round.assetID)
-			H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      " + asset_name + " Balance: " + rpc.DisplayBalance(asset_name) + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+			asset_name := rpc.GetAssetNameBySCID(round.assetID)
+			H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      " + asset_name + " Balance: " + rpc.Wallet.BalanceF(asset_name) + "      DERO Balance: " + rpc.Wallet.BalanceF("DERO") + "      Height: " + fmt.Sprintf("%d", rpc.Wallet.Height()))
 		}
 
 	} else {
-		H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      Dero Balance: " + rpc.DisplayBalance("Dero") + "      Height: " + rpc.Wallet.Display.Height)
+		H.RightLabel.SetText("Wait for Block" + "      Player ID: " + round.display.playerId + "      DERO Balance: " + rpc.Wallet.BalanceF("DERO") + "      Height: " + fmt.Sprintf("%d", rpc.Wallet.Height()))
 	}
 	H.TopLabel.Refresh()
 }

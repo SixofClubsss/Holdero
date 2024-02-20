@@ -202,7 +202,7 @@ func setHolderoEntryText(t tableInfo) (item tableInfo) {
 		potIsEmpty(0)
 		item = t
 		table.entry.SetText(t.scid)
-		signals.times.block = rpc.Wallet.Height
+		signals.times.block = rpc.Wallet.Height()
 	}
 
 	return
@@ -753,7 +753,7 @@ func ActionBuffer() {
 	table.warning.Hide()
 	round.display.results = ""
 	signals.clicked = true
-	signals.height = rpc.Wallet.Height
+	signals.height = rpc.Wallet.Height()
 }
 
 // Checking for current player names at connected Holdero table
