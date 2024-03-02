@@ -133,7 +133,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 				info := fmt.Sprintf("Setting table for,\n\nPlayers: (%d)\n\nChips: (%s)\n\nBlinds: (%s/%s)\n\nAnte: (%s)", players, chips, rpc.FromAtomic(bb, 5), rpc.FromAtomic(sb, 5), rpc.FromAtomic(ante, 5))
 				dialog.NewConfirm("Set Table", info, func(b bool) {
 					if b {
-						tx := SetTable(int(players), bb, sb, ante, chips, menu.Username, Settings.avatar.url)
+						tx := SetTable(uint64(players), bb, sb, ante, chips, menu.Username, Settings.avatar.url)
 						go menu.ShowTxDialog("Set Table", "Holdero", tx, 3*time.Second, d.Window)
 					}
 				}, d.Window).Show()

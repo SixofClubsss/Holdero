@@ -407,7 +407,12 @@ func SitDown(name, av string) (tx string) {
 	player.Name = name
 	player.Avatar = av
 
-	mar, _ := json.Marshal(player)
+	mar, err := json.Marshal(player)
+	if err != nil {
+		rpc.PrintError("[Holdero] Could not make playerID: %s", err)
+		return
+	}
+
 	hx := hex.EncodeToString(mar)
 
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "PlayerEntry"}
@@ -446,7 +451,7 @@ func Leave() (tx string) {
 	checkoutId := rpc.StringToInt(round.display.playerId)
 	singleNameClear(checkoutId)
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "PlayerLeave"}
-	arg2 := dero.Argument{Name: "id", DataType: "U", Value: checkoutId}
+	arg2 := dero.Argument{Name: "id", DataType: "U", Value: uint64(checkoutId)}
 	args := dero.Arguments{arg1, arg2}
 	txid := dero.Transfer_Result{}
 
@@ -481,13 +486,18 @@ func Leave() (tx string) {
 //   - bb, sb and ante define big blind, small blind and antes. Ante can be 0
 //   - chips defines if tables is using Dero or assets
 //   - name and av are for name and avatar in owners id string
-func SetTable(seats int, bb, sb, ante uint64, chips, name, av string) (tx string) {
+func SetTable(seats, bb, sb, ante uint64, chips, name, av string) (tx string) {
 	var player playerId
 	player.Id = rpc.Wallet.IdHash
 	player.Name = name
 	player.Avatar = av
 
-	mar, _ := json.Marshal(player)
+	mar, err := json.Marshal(player)
+	if err != nil {
+		rpc.PrintError("[Holdero] Could not make playerID: %s", err)
+		return
+	}
+
 	hx := hex.EncodeToString(mar)
 
 	var args dero.Arguments
@@ -784,7 +794,7 @@ func PayoutSplit(r ranker, f1, f2, f3, f4, f5, f6 bool) string {
 	sort.Strings(splitWinners[:])
 
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "SplitWinner"}
-	arg2 := dero.Argument{Name: "div", DataType: "U", Value: ways}
+	arg2 := dero.Argument{Name: "div", DataType: "U", Value: uint64(ways)}
 	arg3 := dero.Argument{Name: "split1", DataType: "S", Value: splitWinners[0]}
 	arg4 := dero.Argument{Name: "split2", DataType: "S", Value: splitWinners[1]}
 	arg5 := dero.Argument{Name: "split3", DataType: "S", Value: splitWinners[2]}
