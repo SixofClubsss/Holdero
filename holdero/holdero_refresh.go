@@ -304,6 +304,7 @@ func disableActions() {
 	publicTables = []tableInfo{}
 	ownedTables = []tableInfo{}
 	favoriteTables = []tableInfo{}
+	SetFavoriteTables([]string{})
 	table.unlock.Hide()
 	table.new.Hide()
 	table.tournament.Hide()
