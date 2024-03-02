@@ -23,10 +23,10 @@ import (
 )
 
 // Create a swap pair container
-func CreateSwapContainer(pair string) (*dwidget.DeroAmts, *fyne.Container) {
+func CreateSwapContainer(pair string) (*dwidget.AmountEntry, *fyne.Container) {
 	split := strings.Split(pair, "-")
 	if len(split) != 2 {
-		return dwidget.NewDeroEntry("", 0, 0), container.NewStack(widget.NewLabel("Invalid Pair"))
+		return dwidget.NewAmountEntry("", 0, 0), container.NewStack(widget.NewLabel("Invalid Pair"))
 	}
 
 	incr := 0.1
@@ -45,7 +45,7 @@ func CreateSwapContainer(pair string) (*dwidget.DeroAmts, *fyne.Container) {
 	swap2_label := canvas.NewText(split[1], bundle.TextColor)
 	swap2_label.Alignment = fyne.TextAlignCenter
 	swap2_label.TextSize = 18
-	swap2_entry := dwidget.NewDeroEntry("", incr, uint(menu.CoinDecimal(split[0])))
+	swap2_entry := dwidget.NewAmountEntry("", incr, uint(menu.CoinDecimal(split[0])))
 	swap2_entry.SetText("0")
 	swap2_entry.Disable()
 
@@ -59,7 +59,7 @@ func CreateSwapContainer(pair string) (*dwidget.DeroAmts, *fyne.Container) {
 	swap1_label := canvas.NewText(split[0], bundle.TextColor)
 	swap1_label.Alignment = fyne.TextAlignCenter
 	swap1_label.TextSize = 18
-	swap1_entry := dwidget.NewDeroEntry("", incr, uint(menu.CoinDecimal(split[0])))
+	swap1_entry := dwidget.NewAmountEntry("", incr, uint(menu.CoinDecimal(split[0])))
 	swap1_entry.SetText("0")
 	swap1_entry.Validator = validation.NewRegexp(`^\d{1,}\.\d{1,5}$|^[^0.]\d{0,}$`, "Int or float required")
 	swap1_entry.OnChanged = func(s string) {
@@ -136,7 +136,7 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 		}
 	}
 
-	var swap_entry *dwidget.DeroAmts
+	var swap_entry *dwidget.AmountEntry
 	var swap_boxes *fyne.Container
 
 	max := container.NewStack()

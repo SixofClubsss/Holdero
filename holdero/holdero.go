@@ -44,7 +44,7 @@ type holderoObjects struct {
 	bet        *widget.Button
 	check      *widget.Button
 	tournament *widget.Button
-	betEntry   *dwidget.DeroAmts
+	betEntry   *dwidget.AmountEntry
 	warning    *fyne.Container
 	owner      struct {
 		valid    bool
@@ -859,7 +859,7 @@ func DealHandButton(d *dreams.AppObject) fyne.Widget {
 //   - Setting the initial value based on if PlacedBet, Wager and Ante
 //   - If entry invalid, set to min bet value
 func BetAmount() fyne.CanvasObject {
-	table.betEntry = dwidget.NewDeroEntry("", 0.1, 1)
+	table.betEntry = dwidget.NewAmountEntry("", 0.1, 1)
 	table.betEntry.Enable()
 	if table.betEntry.Text == "" {
 		table.betEntry.SetText("0.0")
@@ -1558,8 +1558,8 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	var err error
 	var img image.Image
 	var rast *canvas.Raster
-	if img, _, err = image.Decode(bytes.NewReader(menu.Theme.Img.Resource.Content())); err != nil {
-		if img, _, err = image.Decode(bytes.NewReader(menu.DefaultThemeResource().StaticContent)); err != nil {
+	if img, _, err = image.Decode(bytes.NewReader(dreams.Theme.Img.Resource.Content())); err != nil {
+		if img, _, err = image.Decode(bytes.NewReader(menu.DefaultBackgroundResource().StaticContent)); err != nil {
 			logger.Warnf("[holderoTools] Fallback %s\n", err)
 			source := image.Rect(2, 2, 4, 4)
 

@@ -20,7 +20,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-var H dreams.ContainerStack
+var H dwidget.ContainerStack
 
 // Holdero tables menu tab layout
 func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Container {
@@ -157,7 +157,7 @@ func placeHoldero(change_screen *widget.Button, d *dreams.AppObject) *fyne.Conta
 		Player6_label(nil, nil, nil),
 		H.TopLabel)
 
-	holdero_label := container.NewHBox(H.LeftLabel, layout.NewSpacer(), H.RightLabel)
+	holdero_label := container.NewHBox(H.Left.Label, layout.NewSpacer(), H.Right.Label)
 
 	H.Front = *placeHolderoCards(d.Window)
 
@@ -185,13 +185,15 @@ func placeHoldero(change_screen *widget.Button, d *dreams.AppObject) *fyne.Conta
 }
 
 // Layout all objects for Holdero dApp
-func LayoutAllItems(d *dreams.AppObject) *fyne.Container {
-	H.LeftLabel = widget.NewLabel("")
-	H.RightLabel = widget.NewLabel("")
+func LayoutAll(d *dreams.AppObject) *fyne.Container {
+	H.Left.Label = widget.NewLabel("")
+	H.Left.Label.SetText("Seats: " + round.display.seats + "      Pot: " + round.display.pot + "      Blinds: " + round.display.blinds + "      Ante: " + round.display.ante + "      Dealer: " + round.display.dealer)
+
+	H.Right.Label = widget.NewLabel("")
+	H.Right.Label.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      DERO Balance: " + rpc.Wallet.BalanceF("DERO") + "      Height: " + fmt.Sprintf("%d", rpc.Wallet.Height()))
+
 	H.TopLabel = canvas.NewText(round.display.results, color.White)
 	H.TopLabel.Move(fyne.NewPos(387, 204))
-	H.LeftLabel.SetText("Seats: " + round.display.seats + "      Pot: " + round.display.pot + "      Blinds: " + round.display.blinds + "      Ante: " + round.display.ante + "      Dealer: " + round.display.dealer)
-	H.RightLabel.SetText(round.display.readout + "      Player ID: " + round.display.playerId + "      DERO Balance: " + rpc.Wallet.BalanceF("DERO") + "      Height: " + fmt.Sprintf("%d", rpc.Wallet.Height()))
 
 	var holdero_objs *fyne.Container
 	var contract_objs *fyne.Container
