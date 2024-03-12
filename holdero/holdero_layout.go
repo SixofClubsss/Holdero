@@ -142,7 +142,12 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Con
 		}
 	}
 
-	return container.NewStack(bundle.Alpha120, container.NewBorder(contract_cont, nil, nil, nil, tabs))
+	alpha120 := canvas.NewRectangle(color.RGBA{0, 0, 0, 120})
+	if bundle.AppColor == color.White {
+		alpha120 = canvas.NewRectangle(color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0x55})
+	}
+
+	return container.NewStack(alpha120, container.NewBorder(contract_cont, nil, nil, nil, tabs))
 }
 
 // Holdero tab layout
