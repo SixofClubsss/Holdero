@@ -470,36 +470,38 @@ func SharedImage(c string) *canvas.Image {
 var downloading bool
 
 // Download a single uncompressed image image file to filepath
-func downloadFileLocal(filepath string, url string) (err error) {
+func downloadFileLocal(outpath string, url string) (err error) {
 	downloading = true
 	defer func() {
 		downloading = false
 	}()
 
-	_, dir := os.Stat("cards")
+	bpath := filepath.Join(cardPath, "backs")
+
+	_, dir := os.Stat(cardPath)
 	if os.IsNotExist(dir) {
-		logger.Println("[Holdero] Creating Cards Dir")
-		mkdir := os.Mkdir("cards", 0755)
+		logger.Debugln("[Holdero] Creating cards directory")
+		mkdir := os.MkdirAll(cardPath, 0755)
 		if mkdir != nil {
 			logger.Errorln("[Holdero]", mkdir)
 		} else {
-			mksub := os.Mkdir("cards/backs", 0755)
+			mksub := os.MkdirAll(bpath, 0755)
 			if mksub != nil {
 				logger.Errorln("[Holdero]", mksub)
 			}
 		}
 	}
 
-	_, subdir := os.Stat("cards/backs")
+	_, subdir := os.Stat(bpath)
 	if os.IsNotExist(subdir) {
-		logger.Println("[Holdero] Creating Backs Dir")
-		mkdir := os.Mkdir("cards/backs", 0755)
+		logger.Debugln("[Holdero] Creating backs directory")
+		mkdir := os.MkdirAll(bpath, 0755)
 		if mkdir != nil {
 			logger.Errorln("[Holdero]", mkdir)
 		}
 	}
 
-	out, err := os.Create(filepath)
+	out, err := os.Create(outpath)
 	if err != nil {
 		return err
 	}
@@ -527,14 +529,15 @@ func downloadFileLocal(filepath string, url string) (err error) {
 //   - face will be download path
 func GetZipDeck(face, url string) {
 	downloading = true
-	downloadFileLocal("cards/"+face+".zip", url)
-	files, err := Unzip("cards/"+face+".zip", "cards/"+face)
-
+	path := filepath.Join(cardPath, face+".zip")
+	downloadFileLocal(path, url)
+	files, err := Unzip(path, strings.TrimSuffix(path, ".zip"))
 	if err != nil {
 		logger.Errorln("[GetZipDeck]", err)
+		return
 	}
 
-	logger.Println("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))
+	logger.Debugln("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))
 	downloading = false
 }
 
@@ -547,7 +550,10 @@ func Unzip(src string, destination string) ([]string, error) {
 		return filenames, err
 	}
 
-	defer r.Close()
+	defer func() {
+		r.Close()
+		os.Remove(src)
+	}()
 
 	for _, f := range r.File {
 		fpath := filepath.Join(destination, f.Name)

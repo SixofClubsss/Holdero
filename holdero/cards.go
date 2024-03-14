@@ -1,6 +1,8 @@
 package holdero
 
 import (
+	"path/filepath"
+
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 
@@ -32,6 +34,7 @@ type cards struct {
 }
 
 var card cards
+var cardPath = filepath.Join(dreams.GetDir(), "datashards", "assets", "cards")
 
 // Set player hole card one image
 //   - w and h of main window for resize
@@ -433,9 +436,7 @@ func CustomCard(c int, face string) *canvas.Image {
 		return canvas.NewImageFromImage(nil)
 	}
 
-	dir := dreams.GetDir()
-	mid := "/cards/" + face + "/"
-	path := dir + mid + cardEnd(c)
+	path := filepath.Join(cardPath, face, cardEnd(c))
 
 	if dreams.FileExists(path, "Holdero") {
 		return canvas.NewImageFromFile(path)
@@ -452,9 +453,7 @@ func CustomBack(back string) *canvas.Image {
 		return canvas.NewImageFromImage(nil)
 	}
 
-	dir := dreams.GetDir()
-	post := "/cards/backs/" + back + ".png"
-	path := dir + post
+	path := filepath.Join(cardPath, "backs", back+".png")
 
 	if dreams.FileExists(path, "Holdero") {
 		return canvas.NewImageFromFile(path)

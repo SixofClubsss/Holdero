@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -26,8 +27,7 @@ import (
 // Downloads card deck if it does not exists locally
 func getCardDeck(url string) {
 	Settings.faces.URL = url
-	dir := dreams.GetDir()
-	face := dir + "/cards/" + Settings.faces.Name + "/card1.png"
+	face := filepath.Join(cardPath, Settings.faces.Name, "card1.png")
 	if !dreams.FileExists(face, "Holdero") {
 		logger.Println("[Holdero] Downloading " + Settings.faces.URL)
 		go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
@@ -86,11 +86,10 @@ func FaceSelect(assets map[string]string) fyne.CanvasObject {
 // Downloads card back if it does not exists locally
 func getCardBack(s, url string) {
 	Settings.backs.URL = url
-	dir := dreams.GetDir()
-	back := dir + "/cards/backs/" + s + ".png"
+	back := filepath.Join(cardPath, "backs", s+".png")
 	if !dreams.FileExists(back, "Holdero") {
 		logger.Println("[Holdero] Downloading " + Settings.backs.URL)
-		downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
+		downloadFileLocal(back, Settings.backs.URL)
 	}
 }
 
