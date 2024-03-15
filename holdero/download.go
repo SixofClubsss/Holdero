@@ -1,9 +1,6 @@
 package holdero
 
 import (
-	"archive/zip"
-	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -515,68 +512,12 @@ func GetZipDeck(face, url string) {
 		return
 	}
 
-	files, err := Unzip(path, strings.TrimSuffix(path, ".zip"))
+	files, err := dreams.UnzipFile(path, strings.TrimSuffix(path, ".zip"))
 	if err != nil {
 		logger.Errorln("[GetZipDeck]", err)
 		return
 	}
 
-	logger.Debugln("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))
+	logger.Debugln("[GetZipDeck] Unzipped files:\n" + strings.Join(files, "\n"))
 	downloading = false
-}
-
-// Unzip a src file into destination
-func Unzip(src string, destination string) ([]string, error) {
-	var filenames []string
-
-	r, err := zip.OpenReader(src)
-	if err != nil {
-		return filenames, err
-	}
-
-	defer func() {
-		r.Close()
-		os.Remove(src)
-	}()
-
-	for _, f := range r.File {
-		fpath := filepath.Join(destination, f.Name)
-
-		if !strings.HasPrefix(fpath, filepath.Clean(destination)+string(os.PathSeparator)) {
-			return filenames, fmt.Errorf("%s is an illegal filepath", fpath)
-		}
-
-		filenames = append(filenames, fpath)
-
-		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
-			continue
-		}
-
-		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
-			return filenames, err
-		}
-
-		outFile, err := os.OpenFile(fpath,
-			os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-			f.Mode())
-
-		if err != nil {
-			return filenames, err
-		}
-
-		rc, err := f.Open()
-		if err != nil {
-			return filenames, err
-		}
-
-		_, err = io.Copy(outFile, rc)
-		outFile.Close()
-		rc.Close()
-
-		if err != nil {
-			return filenames, err
-		}
-	}
-	return filenames, nil
 }

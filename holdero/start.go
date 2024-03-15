@@ -108,9 +108,8 @@ func StartApp() {
 	form = append(form, widget.NewFormItem("", container.NewVBox(line)))
 	form = append(form, widget.NewFormItem("Avatar", AvatarSelect(menu.Assets.SCIDs)))
 	form = append(form, widget.NewFormItem("Theme", menu.ThemeSelect(&d)))
-	form = append(form, widget.NewFormItem("Card Deck", FaceSelect(menu.Assets.SCIDs)))
+	form = append(form, widget.NewFormItem("Card Deck", FaceSelect(menu.Assets.SCIDs, &d)))
 	form = append(form, widget.NewFormItem("Card Back", BackSelect(menu.Assets.SCIDs)))
-	form = append(form, widget.NewFormItem("Sharing", SharedDecks(&d)))
 	form = append(form, widget.NewFormItem("", layout.NewSpacer()))
 	form = append(form, widget.NewFormItem("", container.NewVBox(line)))
 

@@ -37,7 +37,7 @@ func getCardDeck(url string) {
 // Holdero card face selection object
 //   - Sets shared face url on selected
 //   - If deck is not present locally, it is downloaded
-func FaceSelect(assets map[string]string) fyne.CanvasObject {
+func FaceSelect(assets map[string]string, d *dreams.AppObject) fyne.CanvasObject {
 	var max *fyne.Container
 	options := []string{"Light", "Dark"}
 	icon := menu.AssetIcon(ResourceCardsCirclePng.StaticContent, "", 60)
@@ -78,7 +78,7 @@ func FaceSelect(assets map[string]string) fyne.CanvasObject {
 	}
 
 	Settings.faces.Select.PlaceHolder = "Faces:"
-	max = container.NewBorder(nil, nil, icon, nil, container.NewVBox(Settings.faces.Select))
+	max = container.NewBorder(nil, nil, icon, nil, container.NewVBox(Settings.faces.Select, container.NewCenter(SharedDecks(d))))
 
 	return max
 }
