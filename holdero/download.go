@@ -4,12 +4,12 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"fyne.io/fyne/v2/canvas"
+	dreams "github.com/dReam-dApps/dReams"
 )
 
 type sharedCards struct {
@@ -501,28 +501,7 @@ func downloadFileLocal(outpath string, url string) (err error) {
 		}
 	}
 
-	out, err := os.Create(outpath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status)
-	}
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return dreams.DownloadFile(url, outpath)
 }
 
 // Function to get and prepare deck assets for use in dReams
@@ -530,7 +509,12 @@ func downloadFileLocal(outpath string, url string) (err error) {
 func GetZipDeck(face, url string) {
 	downloading = true
 	path := filepath.Join(cardPath, face+".zip")
-	downloadFileLocal(path, url)
+
+	if err := downloadFileLocal(path, url); err != nil {
+		logger.Errorln("[GetZipDeck]", err)
+		return
+	}
+
 	files, err := Unzip(path, strings.TrimSuffix(path, ".zip"))
 	if err != nil {
 		logger.Errorln("[GetZipDeck]", err)

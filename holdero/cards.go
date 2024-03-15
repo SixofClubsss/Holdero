@@ -680,8 +680,7 @@ func DisplayCard(card int) *canvas.Image {
 		}
 
 		if card > 0 {
-			i := Settings.faces.Select.SelectedIndex()
-			switch i {
+			switch Settings.faces.Select.SelectedIndex() {
 			case -1:
 				return canvas.NewImageFromResource(DisplayLightCard(card))
 			case 0:
@@ -693,8 +692,7 @@ func DisplayCard(card int) *canvas.Image {
 			}
 		}
 
-		i := Settings.backs.Select.SelectedIndex()
-		switch i {
+		switch Settings.backs.Select.SelectedIndex() {
 		case -1:
 			return canvas.NewImageFromResource(ResourceBack1Png)
 		case 0:

@@ -184,7 +184,7 @@ func initValues() {
 	signals.times.delay = 30
 	signals.times.kick = 0
 	Odds.Stop()
-	Settings.faces.Name = "light/"
+	Settings.faces.Name = "light"
 	Settings.backs.Name = "back1.png"
 	Settings.avatar.name = "None"
 	Settings.faces.URL = ""
