@@ -234,7 +234,7 @@ func createTableList(progress *widget.ProgressBar) {
 		publicTables = newPublic
 		ownedTables = newOwned
 
-		for _, sc := range GetFavoriteTables() {
+		for _, sc := range GetAccount().(accountData).Tables {
 			for _, t := range publicTables {
 				if t.scid == sc {
 					newFavorites = append(newFavorites, t)

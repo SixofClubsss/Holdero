@@ -549,7 +549,7 @@ func DealHand() (tx string) {
 	}
 
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "DealHand"}
-	arg2 := dero.Argument{Name: "pcSeed", DataType: "H", Value: rpc.Wallet.ClientKey}
+	arg2 := dero.Argument{Name: "pcSeed", DataType: "H", Value: crypto.HashHexToHash(rpc.Wallet.ClientKey)}
 	args := dero.Arguments{arg1, arg2}
 	txid := dero.Transfer_Result{}
 

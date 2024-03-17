@@ -2,12 +2,10 @@ package holdero
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
 	"math"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -361,16 +359,6 @@ func favoritesList() fyne.CanvasObject {
 		nil,
 		nil,
 		table.Favorites.List)
-}
-
-// Returns table.Favorites.SCIDs
-func GetFavoriteTables() []string {
-	return table.Favorites.SCIDs
-}
-
-// Set table.Favorites.SCIDs
-func SetFavoriteTables(fav []string) {
-	table.Favorites.SCIDs = fav
 }
 
 // Owned Holdero tables list object
@@ -1115,7 +1103,15 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 		bm.Close()
 	})
 
-	stats = readSavedStats()
+	var account dreams.AccountData
+	err := dreams.GetAccount(&account)
+	if err != nil {
+		logger.Errorln("[Holdero] tool stats err", err)
+		clearAccountData()
+	} else {
+		SetAccount(account.Dapp["holdero"])
+	}
+
 	config_opts := []string{}
 	for i := range stats.Bots {
 		config_opts = append(config_opts, stats.Bots[i].Name)
@@ -1369,7 +1365,10 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 			}
 
 			stats.Bots = new
-			WriteHolderoStats(stats)
+			if err := dreams.StoreAccount(saveAccount()); err != nil {
+				logger.Errorln("[Holdero]", err)
+			}
+
 			entry.SetOptions(config_opts)
 			entry.SetText("")
 		}
@@ -1405,10 +1404,12 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 
 			if !ex {
 				stats.Bots = append(stats.Bots, Odds.Bot)
-				if WriteHolderoStats(stats) {
+				if err := dreams.StoreAccount(saveAccount()); err == nil {
 					config_opts = append(config_opts, entry.Text)
 					entry.SetOptions(config_opts)
 					logger.Println("[Holdero] Saved bot config")
+				} else {
+					logger.Errorln("[Holdero]", err)
 				}
 			}
 		}
@@ -1555,7 +1556,6 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 		bm.Close()
 	}()
 
-	var err error
 	var img image.Image
 	var rast *canvas.Raster
 	if img, _, err = image.Decode(bytes.NewReader(dreams.Theme.Img.Resource.Content())); err != nil {
@@ -1621,30 +1621,6 @@ func DisableHolderoTools() {
 		if cards {
 			Odds.Enabled = true
 			Settings.tools.Show()
-			if !dreams.FileExists("config/stats.json", "Holdero") {
-				WriteHolderoStats(stats)
-				logger.Println("[Holdero] Created stats.json")
-			} else {
-				stats = readSavedStats()
-			}
 		}
 	}
-}
-
-// Reading saved Holdero stats from config file
-func readSavedStats() (saved Player_stats) {
-	file, err := os.ReadFile("config/stats.json")
-
-	if err != nil {
-		logger.Errorln("[readSavedStats]", err)
-		return
-	}
-
-	err = json.Unmarshal(file, &saved)
-	if err != nil {
-		logger.Errorln("[readSavedStats]", err)
-		return
-	}
-
-	return
 }

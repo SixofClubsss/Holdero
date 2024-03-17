@@ -1,15 +1,14 @@
 package holdero
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
-	"os"
 	"sort"
 	"sync"
 	"time"
 
+	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2/widget"
@@ -1474,26 +1473,6 @@ func SaveBotConfig(i int, opt Bot_config) {
 	stats.Bots[i].Random[1] = opt.Random[1]
 }
 
-// Write Holdero stats to file
-func WriteHolderoStats(config Player_stats) bool {
-	file, err := os.Create("config/stats.json")
-	if err != nil {
-		logger.Errorln("[WriteHolderoStats]", err)
-		return false
-	}
-
-	defer file.Close()
-	json, _ := json.MarshalIndent(config, "", "")
-
-	_, err = file.Write(json)
-	if err != nil {
-		logger.Errorln("[WriteHolderoStats]", err)
-		return false
-	}
-
-	return true
-}
-
 // Update win or loss of Holdero stats
 func updateStatsWins(amt uint64, player string, fold bool) {
 	if Odds.Enabled && !signals.odds {
@@ -1527,7 +1506,9 @@ func updateStatsWins(amt uint64, player string, fold bool) {
 			}
 		}
 
-		WriteHolderoStats(stats)
+		if err := dreams.StoreAccount(saveAccount()); err != nil {
+			logger.Errorln("[Holdero]", err)
+		}
 		signals.odds = true
 	}
 }
@@ -1546,7 +1527,9 @@ func updateStatsWager(amt float64) {
 			}
 		}
 
-		WriteHolderoStats(stats)
+		if err := dreams.StoreAccount(saveAccount()); err != nil {
+			logger.Errorln("[Holdero]", err)
+		}
 	}
 }
 
@@ -1631,7 +1614,9 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 				}
 			}
 
-			WriteHolderoStats(stats)
+			if err := dreams.StoreAccount(saveAccount()); err != nil {
+				logger.Errorln("[Holdero]", err)
+			}
 		} else {
 			if !fold {
 				stats.Player.Lost++
@@ -1650,8 +1635,9 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 				}
 			}
 
-			WriteHolderoStats(stats)
-
+			if err := dreams.StoreAccount(saveAccount()); err != nil {
+				logger.Errorln("[Holdero]", err)
+			}
 		}
 		signals.odds = true
 	}
