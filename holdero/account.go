@@ -6,6 +6,7 @@ import (
 
 // Holdero account data
 type accountData struct {
+	Key    string       `json:"key"`
 	Tables []string     `json:"tables"`
 	Stats  Player_stats `json:"stats"`
 }
@@ -13,6 +14,7 @@ type accountData struct {
 // Get Holdero account data
 func GetAccount() interface{} {
 	return accountData{
+		Key:    handKey,
 		Tables: table.Favorites.SCIDs,
 		Stats:  stats,
 	}
@@ -28,6 +30,9 @@ func SetAccount(ad interface{}) (err error) {
 	} else {
 		table.Favorites.SCIDs = account.Tables
 		stats = account.Stats
+		if account.Key != "" {
+			handKey = account.Key
+		}
 	}
 
 	return

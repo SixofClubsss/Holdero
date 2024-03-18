@@ -113,9 +113,7 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 				screen, bar := syncScreen()
 				cont.Objects[1] = screen
 				logger.Println("[Holdero] Syncing")
-				if len(rpc.Wallet.Address) == 66 {
-					CheckExistingKey()
-				}
+				setHandKey()
 				createTableList(bar)
 				Settings.synced = true
 				cont.Objects[1] = reset

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/rpc"
 	"github.com/deroproject/derohe/cryptography/crypto"
 	dero "github.com/deroproject/derohe/rpc"
@@ -274,7 +275,7 @@ func fetchHolderoSC() {
 
 			if FlopBool_jv != nil {
 				round.flop = true
-				rpc.Wallet.KeyLock = false
+				handKeyLock = false
 			} else {
 				round.flop = false
 			}
@@ -352,7 +353,7 @@ func fetchHolderoSC() {
 					signals.clicked = true
 					signals.height = rpc.Wallet.Height()
 					signals.reveal = true
-					go RevealKey(rpc.Wallet.ClientKey)
+					go RevealKey(handKey)
 				}
 			}
 
@@ -544,12 +545,12 @@ func SetTable(seats, bb, sb, ante uint64, chips, name, av string) (tx string) {
 
 // Submit blinds/ante to deal Holdero hand
 func DealHand() (tx string) {
-	if !rpc.Wallet.KeyLock {
-		rpc.Wallet.ClientKey = generateKey()
+	if !handKeyLock {
+		handKey = generateKey()
 	}
 
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "DealHand"}
-	arg2 := dero.Argument{Name: "pcSeed", DataType: "H", Value: crypto.HashHexToHash(rpc.Wallet.ClientKey)}
+	arg2 := dero.Argument{Name: "pcSeed", DataType: "H", Value: crypto.HashHexToHash(handKey)}
 	args := dero.Arguments{arg1, arg2}
 	txid := dero.Transfer_Result{}
 
@@ -611,6 +612,12 @@ func DealHand() (tx string) {
 
 	round.display.results = ""
 	updateStatsWager(float64(amount) / 100000)
+	if !Odds.Enabled {
+		if err := dreams.StoreAccount(saveAccount()); err != nil {
+			logger.Errorln("[Holdero]", err)
+		}
+	}
+
 	rpc.PrintLog("[Holdero] Deal TX: %s", txid)
 
 	return txid.TXID
@@ -836,7 +843,7 @@ func RevealKey(key string) {
 	time.Sleep(6 * time.Second)
 
 	arg1 := dero.Argument{Name: "entrypoint", DataType: "S", Value: "RevealKey"}
-	arg2 := dero.Argument{Name: "pcSeed", DataType: "H", Value: key}
+	arg2 := dero.Argument{Name: "pcSeed", DataType: "H", Value: crypto.HashHexToHash(key)}
 	args := dero.Arguments{arg1, arg2}
 	txid := dero.Transfer_Result{}
 

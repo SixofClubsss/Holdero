@@ -1017,6 +1017,7 @@ func AutoOptions(d *dreams.AppObject) fyne.CanvasObject {
 		}
 		fetchHolderoSC()
 	})
+	refresh.Importance = widget.LowImportance
 
 	cf := widget.NewCheck("Auto Check/Fold", func(b bool) {
 		if b {
@@ -1102,15 +1103,6 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 		button.Show()
 		bm.Close()
 	})
-
-	var account dreams.AccountData
-	err := dreams.GetAccount(&account)
-	if err != nil {
-		logger.Errorln("[Holdero] tool stats err", err)
-		clearAccountData()
-	} else {
-		SetAccount(account.Dapp["holdero"])
-	}
 
 	config_opts := []string{}
 	for i := range stats.Bots {
@@ -1556,6 +1548,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 		bm.Close()
 	}()
 
+	var err error
 	var img image.Image
 	var rast *canvas.Raster
 	if img, _, err = image.Decode(bytes.NewReader(dreams.Theme.Img.Resource.Content())); err != nil {

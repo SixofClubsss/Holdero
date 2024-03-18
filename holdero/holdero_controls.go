@@ -345,7 +345,7 @@ func setHolderoName(one, two, three, four, five, six interface{}) {
 func potIsEmpty(pot uint64) {
 	if pot == 0 {
 		if !signals.myTurn {
-			rpc.Wallet.KeyLock = false
+			handKeyLock = false
 		}
 		round.winningHand = []int{}
 		round.cards.flop1 = 0
