@@ -7,8 +7,8 @@ import (
 // Holdero account data
 type accountData struct {
 	Key    string       `json:"key"`
-	Tables []string     `json:"tables"`
-	Stats  Player_stats `json:"stats"`
+	Tables []string     `json:"tables,omitempty"`
+	Stats  Player_stats `json:"stats,omitempty"`
 }
 
 // Get Holdero account data
@@ -25,7 +25,6 @@ func SetAccount(ad interface{}) (err error) {
 	var account accountData
 	err = dreams.SetAccount(ad, &account)
 	if err != nil {
-		logger.Errorln("[SetAccount]", err)
 		clearAccountData()
 	} else {
 		table.Favorites.SCIDs = account.Tables

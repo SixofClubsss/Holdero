@@ -53,10 +53,11 @@ func StartApp() {
 	d := dreams.NewFyneApp(
 		appID,
 		appName,
+		"On-chain Texas Hold'em style poker",
 		bundle.DeroTheme(config.Skin),
 		ResourceHolderoIconPng,
 		menu.DefaultBackgroundResource(),
-		rpc.NewXSWDApplicationData(appName, "On-chain Texas Hold'em style poker", appID, true))
+		true)
 
 	// Set one channel for Holdero routine
 	d.SetChannels(1)

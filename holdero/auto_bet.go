@@ -15,12 +15,12 @@ import (
 )
 
 type holdero_stats struct {
-	Win      int     `json:"win"`
-	Lost     int     `json:"lost"`
-	Fold     int     `json:"fold"`
-	Push     int     `json:"push"`
-	Wagered  float64 `json:"wagered"`
-	Earnings float64 `json:"earnings"`
+	Win      int     `json:"win,omitempty"`
+	Lost     int     `json:"lost,omitempty"`
+	Fold     int     `json:"fold,omitempty"`
+	Push     int     `json:"push,omitempty"`
+	Wagered  float64 `json:"wagered,omitempty"`
+	Earnings float64 `json:"earnings,omitempty"`
 }
 
 type bet_data struct {
@@ -51,8 +51,8 @@ type Bot_config struct {
 }
 
 type Player_stats struct {
-	Player holdero_stats `json:"stats"`
-	Bots   []Bot_config  `json:"bots"`
+	Player holdero_stats `json:"stats,omitempty"`
+	Bots   []Bot_config  `json:"bots,omitempty"`
 }
 
 var stats Player_stats
