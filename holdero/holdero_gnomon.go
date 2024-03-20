@@ -80,7 +80,10 @@ func createTableList(progress *widget.ProgressBar) {
 		}
 
 		for scid := range tables {
-			if !gnomon.IsReady() {
+			if !gnomon.IsReady() || !rpc.Wallet.IsConnected() {
+				newOwned = []tableInfo{}
+				newPublic = []tableInfo{}
+				newFavorites = []tableInfo{}
 				break
 			}
 
