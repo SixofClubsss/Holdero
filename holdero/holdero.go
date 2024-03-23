@@ -292,6 +292,9 @@ func publicList(d *dreams.AppObject) fyne.CanvasObject {
 		}
 		favoriteTables = append(favoriteTables, item)
 		table.Favorites.SCIDs = append(table.Favorites.SCIDs, item.scid)
+		if err := dreams.StoreAccount(saveAccount()); err != nil {
+			logger.Errorln("[Holdero] storing account", err)
+		}
 	})
 	save_favorite.Importance = widget.LowImportance
 
@@ -350,6 +353,9 @@ func favoritesList() fyne.CanvasObject {
 			}
 		}
 		table.Favorites.List.Refresh()
+		if err := dreams.StoreAccount(saveAccount()); err != nil {
+			logger.Errorln("[Holdero] storing account", err)
+		}
 	})
 	remove.Importance = widget.LowImportance
 
@@ -1358,7 +1364,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 
 			stats.Bots = new
 			if err := dreams.StoreAccount(saveAccount()); err != nil {
-				logger.Errorln("[Holdero]", err)
+				logger.Errorln("[Holdero] storing account", err)
 			}
 
 			entry.SetOptions(config_opts)
@@ -1401,7 +1407,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 					entry.SetOptions(config_opts)
 					logger.Println("[Holdero] Saved bot config")
 				} else {
-					logger.Errorln("[Holdero]", err)
+					logger.Errorln("[Holdero] storing account", err)
 				}
 			}
 		}

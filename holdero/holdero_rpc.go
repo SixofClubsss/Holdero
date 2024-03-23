@@ -614,7 +614,7 @@ func DealHand() (tx string) {
 	updateStatsWager(float64(amount) / 100000)
 	if !Odds.Enabled {
 		if err := dreams.StoreAccount(saveAccount()); err != nil {
-			logger.Errorln("[Holdero]", err)
+			logger.Errorln("[Holdero] storing account", err)
 		}
 	}
 

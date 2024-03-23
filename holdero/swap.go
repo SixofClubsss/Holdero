@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -97,26 +96,22 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 	select_pair.PlaceHolder = "Pairs"
 	select_pair.SetSelectedIndex(0)
 
-	assets := []string{}
-	for _, asset := range rpc.Wallet.Balances() {
-		assets = append(assets, asset)
-	}
+	var selectedAsset string
+	_, menu.Assets.Balances.SCIDs = rpc.Wallet.Balances()
 
-	sort.Strings(assets)
-
-	menu.Assets.Balances = widget.NewList(
+	menu.Assets.Balances.List = widget.NewList(
 		func() int {
-			return len(assets)
+			return len(menu.Assets.Balances.SCIDs)
 		},
 		func() fyne.CanvasObject {
 			return widget.NewLabel("")
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(fmt.Sprintf("%s: %s", assets[i], rpc.Wallet.BalanceF(assets[i])))
+			o.(*widget.Label).SetText(fmt.Sprintf("%s: %s", menu.Assets.Balances.SCIDs[i], rpc.Wallet.BalanceF(menu.Assets.Balances.SCIDs[i])))
 		})
 
 	balance_tabs := container.NewAppTabs(
-		container.NewTabItem("Balances", container.NewStack(menu.Assets.Balances)),
+		container.NewTabItem("Balances", container.NewStack(menu.Assets.Balances.List)),
 		container.NewTabItem("Explorer", layout.NewSpacer()),
 		container.NewTabItem("Send Message", layout.NewSpacer()))
 
@@ -182,10 +177,178 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 		menu.Assets.Swap.Refresh()
 	}
 
+	btnTokenRemove := widget.NewButtonWithIcon("", dreams.FyneIcon("contentRemove"), nil)
+	btnTokenRemove.Importance = widget.LowImportance
+	btnTokenRemove.Hide()
+	btnTokenRemove.OnTapped = func() {
+		if selectedAsset == "" {
+			dialog.NewError(fmt.Errorf("select a token to remove"), d.Window).Show()
+			return
+		}
+
+		if selectedAsset == "DERO" || selectedAsset == "dReams" || selectedAsset == "HGC" {
+			dialog.NewInformation("Default", "Can't remove default assets", d.Window).Show()
+			return
+		}
+
+		dialog.NewConfirm("Remove", fmt.Sprintf("Would you like to remove %s from your balance list?", selectedAsset), func(b bool) {
+			if b {
+				menu.Assets.Balances.List.UnselectAll()
+				btnTokenRemove.Hide()
+				rpc.Wallet.TokenRemove(selectedAsset)
+				tkn, names := rpc.Wallet.Balances()
+				menu.Assets.Balances.SCIDs = names
+				err := dreams.StoreAccount(dreams.AddAccountData(tkn, "tokens"))
+				if err != nil {
+					err = fmt.Errorf("storing account %s", err)
+					dialog.NewError(err, d.Window).Show()
+					logger.Errorf("[%s] %s\n", d.Name(), err)
+				}
+			}
+		}, d.Window).Show()
+	}
+
+	btnTokenDefault := widget.NewButtonWithIcon("", dreams.FyneIcon("mediaReplay"), nil)
+	btnTokenDefault.Importance = widget.LowImportance
+	btnTokenDefault.OnTapped = func() {
+		dialog.NewConfirm("Default Balances", "Set balances to default assets", func(b bool) {
+			if b {
+				menu.Assets.Balances.List.UnselectAll()
+				btnTokenRemove.Hide()
+				rpc.Wallet.SetDefaultTokens()
+				tkn, names := rpc.Wallet.Balances()
+				menu.Assets.Balances.SCIDs = names
+				err := dreams.StoreAccount(dreams.AddAccountData(tkn, "tokens"))
+				if err != nil {
+					err = fmt.Errorf("storing account %s", err)
+					dialog.NewError(err, d.Window).Show()
+					logger.Errorf("[%s] %s\n", d.Name(), err)
+				}
+			}
+		}, d.Window).Show()
+	}
+
+	btnTokenAdd := widget.NewButtonWithIcon("", dreams.FyneIcon("contentAdd"), nil)
+	btnTokenAdd.Importance = widget.LowImportance
+	btnTokenAdd.OnTapped = func() {
+		entryName := widget.NewEntry()
+		entryName.SetPlaceHolder("Name:")
+		entryName.Validator = func(s string) error {
+			if s == "" {
+				return fmt.Errorf("enter a name")
+			}
+
+			return nil
+		}
+
+		entrySCID := widget.NewEntry()
+		entrySCID.SetPlaceHolder("SCID:")
+		entrySCID.Validator = func(s string) error {
+			if len(s) == 64 {
+				return nil
+			}
+
+			return fmt.Errorf("not a valid scid")
+		}
+
+		entryDeci := dwidget.NewAmountEntry("", 1, 0)
+		entryDeci.SetPlaceHolder("Decimal:")
+		entryDeci.Validator = func(s string) error {
+			u, err := entryDeci.Uint64()
+			if err != nil {
+				return fmt.Errorf("enter a number 0-5")
+			}
+
+			if u > 5 {
+				return fmt.Errorf("less than 6")
+			}
+
+			return nil
+		}
+
+		var add *dialog.CustomDialog
+		btnAdd := widget.NewButton("Add", nil)
+		btnAdd.Importance = widget.HighImportance
+		btnAdd.OnTapped = func() {
+			err := entryName.Validate()
+			if err != nil {
+				dialog.NewError(err, d.Window).Show()
+				return
+			}
+
+			err = entrySCID.Validate()
+			if err != nil {
+				dialog.NewError(err, d.Window).Show()
+				return
+			}
+
+			err = entryDeci.Validate()
+			if err != nil {
+				dialog.NewError(err, d.Window).Show()
+				return
+			}
+
+			u, err := entryDeci.Uint64()
+			if err != nil {
+				dialog.NewError(err, d.Window).Show()
+				return
+			}
+
+			err = rpc.Wallet.TokenAdd(entryName.Text, entrySCID.Text, int(u))
+			if err != nil {
+				dialog.NewError(err, d.Window).Show()
+				return
+			}
+
+			tkn, names := rpc.Wallet.Balances()
+			menu.Assets.Balances.SCIDs = names
+
+			err = dreams.StoreAccount(dreams.AddAccountData(tkn, "tokens"))
+			if err != nil {
+				err = fmt.Errorf("storing account %s", err)
+				dialog.NewError(err, d.Window).Show()
+				logger.Errorf("[%s] %s\n", d.Name(), err)
+			}
+
+			add.Hide()
+			add = nil
+		}
+
+		btnCancel := widget.NewButton("Cancel", func() {
+			add.Hide()
+			add = nil
+		})
+
+		var form []*widget.FormItem
+		form = append(form, widget.NewFormItem("Name", entryName))
+		form = append(form, widget.NewFormItem("", container.NewVBox(dwidget.NewLine(20, 1, bundle.TextColor))))
+		form = append(form, widget.NewFormItem("SCID", entrySCID))
+		form = append(form, widget.NewFormItem("Decimal", entryDeci))
+
+		add = dialog.NewCustom("Add Token", "", container.NewStack(dwidget.NewSpacer(400, 0), widget.NewForm(form...)), d.Window)
+
+		add.SetButtons([]fyne.CanvasObject{btnAdd, btnCancel})
+
+		add.Show()
+	}
+
+	menu.Assets.Balances.List.OnSelected = func(id widget.ListItemID) {
+		str := menu.Assets.Balances.SCIDs[id]
+		selectedAsset = str
+		if str == "DERO" || str == "dReams" || str == "HGC" {
+			btnTokenRemove.Hide()
+		} else {
+			btnTokenRemove.Show()
+		}
+	}
+
 	swap_tabs := container.NewAppTabs(container.NewTabItem("Swap", container.NewCenter(menu.Assets.Swap)))
 	max.Add(swap_tabs)
 
-	full := container.NewHSplit(container.NewStack(bundle.NewAlpha120(), balance_tabs), max)
+	menu.Assets.AddRmv = container.NewVBox(layout.NewSpacer(), container.NewHBox(layout.NewSpacer(), btnTokenDefault, btnTokenRemove, btnTokenAdd))
+	menu.Assets.AddRmv.Hide()
+
+	full := container.NewHSplit(container.NewStack(bundle.NewAlpha120(), balance_tabs, menu.Assets.AddRmv), max)
 	full.SetOffset(0.66)
 
 	return full

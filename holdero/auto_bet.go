@@ -1507,7 +1507,7 @@ func updateStatsWins(amt uint64, player string, fold bool) {
 		}
 
 		if err := dreams.StoreAccount(saveAccount()); err != nil {
-			logger.Errorln("[Holdero]", err)
+			logger.Errorln("[Holdero] storing account", err)
 		}
 		signals.odds = true
 	}
@@ -1528,7 +1528,7 @@ func updateStatsWager(amt float64) {
 		}
 
 		if err := dreams.StoreAccount(saveAccount()); err != nil {
-			logger.Errorln("[Holdero]", err)
+			logger.Errorln("[Holdero] storing account", err)
 		}
 	}
 }
@@ -1615,7 +1615,7 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			}
 
 			if err := dreams.StoreAccount(saveAccount()); err != nil {
-				logger.Errorln("[Holdero]", err)
+				logger.Errorln("[Holdero] storing account", err)
 			}
 		} else {
 			if !fold {
@@ -1636,7 +1636,7 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			}
 
 			if err := dreams.StoreAccount(saveAccount()); err != nil {
-				logger.Errorln("[Holdero]", err)
+				logger.Errorln("[Holdero] storing account", err)
 			}
 		}
 		signals.odds = true
