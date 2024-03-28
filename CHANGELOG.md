@@ -16,7 +16,7 @@ This file lists the changes to Holdero repo with each version.
 * Fyne 2.4.4
 * dReams 0.12.0
 * Updated card file paths
-* Player handKey stored in account DB
+* Player handKey and stats stored in account DB
 * Update StartApp with upstream functions
 * `dreams` UpdateText and SetUpdate for labels
 * Remove DownloadFile and UnzipFile, pull them from `dreams`
@@ -26,6 +26,7 @@ This file lists the changes to Holdero repo with each version.
 
 * Stop sync if disconnected during
 * Clear favorites list on disconnect
+* Deprecated menu.ReadDreamsConfig
 
 
 ## 0.3.1 - January 19 2024
