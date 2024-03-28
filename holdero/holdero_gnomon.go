@@ -80,7 +80,10 @@ func createTableList(progress *widget.ProgressBar) {
 		}
 
 		for scid := range tables {
-			if !gnomon.IsReady() {
+			if !gnomon.IsReady() || !rpc.Wallet.IsConnected() {
+				newOwned = []tableInfo{}
+				newPublic = []tableInfo{}
+				newFavorites = []tableInfo{}
 				break
 			}
 
@@ -234,7 +237,7 @@ func createTableList(progress *widget.ProgressBar) {
 		publicTables = newPublic
 		ownedTables = newOwned
 
-		for _, sc := range GetFavoriteTables() {
+		for _, sc := range GetAccount().(accountData).Tables {
 			for _, t := range publicTables {
 				if t.scid == sc {
 					newFavorites = append(newFavorites, t)

@@ -2,15 +2,43 @@
 
 This file lists the changes to Holdero repo with each version.
 
+## 0.x.x - In Progress
+
+### Added
+
+* XSWD and DERO connections and calls
+* Account for local DB storage
+* Custom token balance support in PlaceSwap
+* More error logging when downloading
+
+### Changed
+
+* Fyne 2.4.4
+* dReams 0.12.0
+* Updated card file paths
+* Player handKey stored in account DB
+* Update StartApp with upstream functions
+* `dreams` UpdateText and SetUpdate for labels
+* Remove DownloadFile and UnzipFile, pull them from `dreams`
+* Combine SharedDecks widget into FaceSelect
+
+### Fixed
+
+* Stop sync if disconnected during
+* Clear favorites list on disconnect
+
+
 ## 0.3.1 - January 19 2024
 
 ### Changed
+
 * Go 1.21.5
 * Fyne 2.4.3
 * dReams 0.11.1
 * Cleaned up `rpc` client var names
 
 ### Fixed
+
 * Lessened object refreshes to reduce memory use
 
 

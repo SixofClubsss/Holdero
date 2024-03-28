@@ -53,11 +53,11 @@ type tableSignals struct {
 	log       bool
 	odds      bool
 	clicked   bool
-	height    int
+	height    uint64
 	times     struct {
 		kick  int
 		delay int
-		block int
+		block uint64
 	}
 }
 
@@ -345,7 +345,7 @@ func setHolderoName(one, two, three, four, five, six interface{}) {
 func potIsEmpty(pot uint64) {
 	if pot == 0 {
 		if !signals.myTurn {
-			rpc.Wallet.KeyLock = false
+			handKeyLock = false
 		}
 		round.winningHand = []int{}
 		round.cards.flop1 = 0
@@ -834,7 +834,7 @@ func allFolded(p1, p2, p3, p4, p5, p6, s interface{}) {
 // Payout routine when all Holdero players have folded
 func allFoldedWinner() {
 	if round.ID == 1 {
-		if round.localEnd && !rpc.Startup {
+		if round.localEnd {
 			if !signals.paid {
 				signals.paid = true
 				go func() {
@@ -853,7 +853,7 @@ func allFoldedWinner() {
 
 // If Holdero showdown, trigger the hand ranker routine
 func winningHand(e interface{}) {
-	if e != nil && !rpc.Startup && !round.localEnd {
+	if e != nil && !round.localEnd {
 		go func() {
 			getHands(rpc.StringToInt(round.display.seats))
 		}()

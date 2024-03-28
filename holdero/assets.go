@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -26,8 +27,7 @@ import (
 // Downloads card deck if it does not exists locally
 func getCardDeck(url string) {
 	Settings.faces.URL = url
-	dir := dreams.GetDir()
-	face := dir + "/cards/" + Settings.faces.Name + "/card1.png"
+	face := filepath.Join(cardPath, Settings.faces.Name, "card1.png")
 	if !dreams.FileExists(face, "Holdero") {
 		logger.Println("[Holdero] Downloading " + Settings.faces.URL)
 		go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
@@ -37,7 +37,7 @@ func getCardDeck(url string) {
 // Holdero card face selection object
 //   - Sets shared face url on selected
 //   - If deck is not present locally, it is downloaded
-func FaceSelect(assets map[string]string) fyne.CanvasObject {
+func FaceSelect(assets map[string]string, d *dreams.AppObject) fyne.CanvasObject {
 	var max *fyne.Container
 	options := []string{"Light", "Dark"}
 	icon := menu.AssetIcon(ResourceCardsCirclePng.StaticContent, "", 60)
@@ -46,11 +46,11 @@ func FaceSelect(assets map[string]string) fyne.CanvasObject {
 	Settings.faces.Select.OnChanged = func(s string) {
 		switch Settings.faces.Select.SelectedIndex() {
 		case -1:
-			Settings.faces.Name = "light/"
+			Settings.faces.Name = "light"
 		case 0:
-			Settings.faces.Name = "light/"
+			Settings.faces.Name = "light"
 		case 1:
-			Settings.faces.Name = "dark/"
+			Settings.faces.Name = "dark"
 		default:
 			Settings.faces.Name = s
 		}
@@ -78,7 +78,7 @@ func FaceSelect(assets map[string]string) fyne.CanvasObject {
 	}
 
 	Settings.faces.Select.PlaceHolder = "Faces:"
-	max = container.NewBorder(nil, nil, icon, nil, container.NewVBox(Settings.faces.Select))
+	max = container.NewBorder(nil, nil, icon, nil, container.NewVBox(Settings.faces.Select, container.NewCenter(SharedDecks(d))))
 
 	return max
 }
@@ -86,11 +86,12 @@ func FaceSelect(assets map[string]string) fyne.CanvasObject {
 // Downloads card back if it does not exists locally
 func getCardBack(s, url string) {
 	Settings.backs.URL = url
-	dir := dreams.GetDir()
-	back := dir + "/cards/backs/" + s + ".png"
+	back := filepath.Join(cardPath, "backs", s+".png")
 	if !dreams.FileExists(back, "Holdero") {
 		logger.Println("[Holdero] Downloading " + Settings.backs.URL)
-		downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
+		if err := downloadFileLocal(back, Settings.backs.URL); err != nil {
+			logger.Errorln("[Holdero]", err)
+		}
 	}
 }
 
@@ -278,31 +279,34 @@ func SharedDecks(d *dreams.AppObject) fyne.Widget {
 					tx := SharedDeckUrl(Settings.faces.Name, Settings.faces.URL, Settings.backs.Name, Settings.backs.URL)
 					go menu.ShowTxDialog("Shared Deck", "Holdero", tx, 3*time.Second, d.Window)
 
-					dir := dreams.GetDir()
-					back := "/cards/backs/" + Settings.backs.Name + ".png"
-					face := "/cards/" + Settings.faces.Name + "/card1.png"
+					back := filepath.Join(cardPath, "backs", Settings.backs.Name+".png")
+					face := filepath.Join(cardPath, Settings.faces.Name+"/card1.png")
 
-					if !dreams.FileExists(dir+face, "Holdero") {
+					if !dreams.FileExists(face, "Holdero") {
 						go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
 					}
 
-					if !dreams.FileExists(dir+back, "Holdero") {
-						downloadFileLocal("cards/backs/"+Settings.backs.Name+".png", Settings.backs.URL)
+					if !dreams.FileExists(back, "Holdero") {
+						if err := downloadFileLocal(back, Settings.backs.URL); err != nil {
+							logger.Errorln("[Holdero]", err)
+						}
 					}
 				}
 			} else {
 				Settings.faces.Select.Disable()
 				Settings.backs.Select.Disable()
-				dir := dreams.GetDir()
-				back := "/cards/backs/" + round.cards.Backs.Name + ".png"
-				face := "/cards/" + round.cards.Faces.Name + "/card1.png"
 
-				if !dreams.FileExists(dir+face, "Holdero") {
+				back := filepath.Join(cardPath, "backs", round.cards.Backs.Name+".png")
+				face := filepath.Join(cardPath, round.cards.Faces.Name+"/card1.png")
+
+				if !dreams.FileExists(face, "Holdero") {
 					go GetZipDeck(round.cards.Faces.Name, round.cards.Faces.Url)
 				}
 
-				if !dreams.FileExists(dir+back, "Holdero") {
-					downloadFileLocal("cards/backs/"+round.cards.Backs.Name+".png", round.cards.Backs.Url)
+				if !dreams.FileExists(back, "Holdero") {
+					if err := downloadFileLocal(back, round.cards.Backs.Url); err != nil {
+						logger.Errorln("[Holdero]", err)
+					}
 				}
 			}
 		}

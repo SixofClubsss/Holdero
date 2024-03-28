@@ -14,11 +14,14 @@ import (
 	"github.com/dReam-dApps/dReams/rpc"
 )
 
+var handKey string
+var handKeyLock bool
+
 // Gets local cards with local key
 func findCard(hash string) int {
 	for i := 1; i < 53; i++ {
 		finder := strconv.Itoa(i)
-		add := rpc.Wallet.ClientKey + finder + round.seed
+		add := handKey + finder + round.seed
 		sha := sha256.Sum256([]byte(add))
 		str := hex.EncodeToString(sha[:])
 
@@ -35,8 +38,7 @@ func generateKey() string {
 	random, _ := rand.Prime(rand.Reader, 128)
 	shasum := sha256.Sum256([]byte(random.String()))
 	str := hex.EncodeToString(shasum[:])
-	rpc.Wallet.KeyLock = true
-	EncryptFile([]byte(str), "Holdero", "config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
+	handKeyLock = true
 	rpc.PrintLog("[Holdero] Round Key: %s", str)
 
 	return str
@@ -116,20 +118,12 @@ func DecryptFile(tag, filename, pass, add string) []byte {
 	return nil
 }
 
-// Check if Holdero key exists and decrypt
-func CheckExistingKey() {
-	if rpc.Wallet.ClientKey == "" {
-		if _, err := os.Stat("config/.key"); err == nil {
-			key := DecryptFile("Holdero", "config/.key", rpc.Wallet.UserPass, rpc.Wallet.Address)
-			if key != nil {
-				rpc.Wallet.ClientKey = string(key)
-				rpc.Wallet.KeyLock = true
-				return
-			}
-		}
-
+// Sets a nil handKey string
+func setHandKey() {
+	if handKey == "" {
 		shasum := sha256.Sum256([]byte("nil"))
-		str := hex.EncodeToString(shasum[:])
-		rpc.Wallet.ClientKey = str
+		handKey = hex.EncodeToString(shasum[:])
+	} else {
+		handKeyLock = true
 	}
 }

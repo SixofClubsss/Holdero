@@ -1,15 +1,12 @@
 package holdero
 
 import (
-	"archive/zip"
-	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"fyne.io/fyne/v2/canvas"
+	dreams "github.com/dReam-dApps/dReams"
 )
 
 type sharedCards struct {
@@ -470,123 +467,57 @@ func SharedImage(c string) *canvas.Image {
 var downloading bool
 
 // Download a single uncompressed image image file to filepath
-func downloadFileLocal(filepath string, url string) (err error) {
+func downloadFileLocal(outpath string, url string) (err error) {
 	downloading = true
 	defer func() {
 		downloading = false
 	}()
 
-	_, dir := os.Stat("cards")
+	bpath := filepath.Join(cardPath, "backs")
+
+	_, dir := os.Stat(cardPath)
 	if os.IsNotExist(dir) {
-		logger.Println("[Holdero] Creating Cards Dir")
-		mkdir := os.Mkdir("cards", 0755)
+		logger.Debugln("[Holdero] Creating cards directory")
+		mkdir := os.MkdirAll(cardPath, 0755)
 		if mkdir != nil {
 			logger.Errorln("[Holdero]", mkdir)
 		} else {
-			mksub := os.Mkdir("cards/backs", 0755)
+			mksub := os.MkdirAll(bpath, 0755)
 			if mksub != nil {
 				logger.Errorln("[Holdero]", mksub)
 			}
 		}
 	}
 
-	_, subdir := os.Stat("cards/backs")
+	_, subdir := os.Stat(bpath)
 	if os.IsNotExist(subdir) {
-		logger.Println("[Holdero] Creating Backs Dir")
-		mkdir := os.Mkdir("cards/backs", 0755)
+		logger.Debugln("[Holdero] Creating backs directory")
+		mkdir := os.MkdirAll(bpath, 0755)
 		if mkdir != nil {
 			logger.Errorln("[Holdero]", mkdir)
 		}
 	}
 
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status)
-	}
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return dreams.DownloadFile(url, outpath)
 }
 
 // Function to get and prepare deck assets for use in dReams
 //   - face will be download path
 func GetZipDeck(face, url string) {
 	downloading = true
-	downloadFileLocal("cards/"+face+".zip", url)
-	files, err := Unzip("cards/"+face+".zip", "cards/"+face)
+	path := filepath.Join(cardPath, face+".zip")
 
+	if err := downloadFileLocal(path, url); err != nil {
+		logger.Errorln("[GetZipDeck]", err)
+		return
+	}
+
+	files, err := dreams.UnzipFile(path, strings.TrimSuffix(path, ".zip"))
 	if err != nil {
 		logger.Errorln("[GetZipDeck]", err)
+		return
 	}
 
-	logger.Println("[Holdero] Unzipped files:\n" + strings.Join(files, "\n"))
+	logger.Debugln("[GetZipDeck] Unzipped files:\n" + strings.Join(files, "\n"))
 	downloading = false
-}
-
-// Unzip a src file into destination
-func Unzip(src string, destination string) ([]string, error) {
-	var filenames []string
-
-	r, err := zip.OpenReader(src)
-	if err != nil {
-		return filenames, err
-	}
-
-	defer r.Close()
-
-	for _, f := range r.File {
-		fpath := filepath.Join(destination, f.Name)
-
-		if !strings.HasPrefix(fpath, filepath.Clean(destination)+string(os.PathSeparator)) {
-			return filenames, fmt.Errorf("%s is an illegal filepath", fpath)
-		}
-
-		filenames = append(filenames, fpath)
-
-		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
-			continue
-		}
-
-		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
-			return filenames, err
-		}
-
-		outFile, err := os.OpenFile(fpath,
-			os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-			f.Mode())
-
-		if err != nil {
-			return filenames, err
-		}
-
-		rc, err := f.Open()
-		if err != nil {
-			return filenames, err
-		}
-
-		_, err = io.Copy(outFile, rc)
-		outFile.Close()
-		rc.Close()
-
-		if err != nil {
-			return filenames, err
-		}
-	}
-	return filenames, nil
 }

@@ -1,27 +1,26 @@
 package holdero
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
-	"os"
 	"sort"
 	"sync"
 	"time"
 
+	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/rpc"
 
 	"fyne.io/fyne/v2/widget"
 )
 
 type holdero_stats struct {
-	Win      int     `json:"win"`
-	Lost     int     `json:"lost"`
-	Fold     int     `json:"fold"`
-	Push     int     `json:"push"`
-	Wagered  float64 `json:"wagered"`
-	Earnings float64 `json:"earnings"`
+	Win      int     `json:"win,omitempty"`
+	Lost     int     `json:"lost,omitempty"`
+	Fold     int     `json:"fold,omitempty"`
+	Push     int     `json:"push,omitempty"`
+	Wagered  float64 `json:"wagered,omitempty"`
+	Earnings float64 `json:"earnings,omitempty"`
 }
 
 type bet_data struct {
@@ -52,8 +51,8 @@ type Bot_config struct {
 }
 
 type Player_stats struct {
-	Player holdero_stats `json:"stats"`
-	Bots   []Bot_config  `json:"bots"`
+	Player holdero_stats `json:"stats,omitempty"`
+	Bots   []Bot_config  `json:"bots,omitempty"`
 }
 
 var stats Player_stats
@@ -1069,7 +1068,7 @@ func callBet(m float64, live bool) bool {
 		oddsLog("[callBet]", fmt.Sprintln("Low Balance", amt))
 		return false
 	}
-	curr := "Dero"
+	curr := "DERO"
 	if round.asset {
 		curr = "Tokens"
 	}
@@ -1116,9 +1115,9 @@ func canRaise() bool {
 // Check if wallet balance is to low to call bet
 func lowBalance(amt float64) bool {
 	if round.asset {
-		return amt > float64(rpc.Wallet.ReadTokenBalance(rpc.GetAssetSCIDName(round.assetID)))/100000
+		return amt > float64(rpc.Wallet.Balance(rpc.GetAssetNameBySCID(round.assetID)))/100000
 	} else {
-		return amt > float64(rpc.Wallet.ReadBalance())/100000
+		return amt > float64(rpc.Wallet.Balance("DERO"))/100000
 	}
 }
 
@@ -1303,7 +1302,7 @@ func BetLogic(odds, future float64, live bool) {
 		b = 0
 	}
 
-	curr := "Dero"
+	curr := "DERO"
 	if round.asset {
 		curr = "Tokens"
 	}
@@ -1474,26 +1473,6 @@ func SaveBotConfig(i int, opt Bot_config) {
 	stats.Bots[i].Random[1] = opt.Random[1]
 }
 
-// Write Holdero stats to file
-func WriteHolderoStats(config Player_stats) bool {
-	file, err := os.Create("config/stats.json")
-	if err != nil {
-		logger.Errorln("[WriteHolderoStats]", err)
-		return false
-	}
-
-	defer file.Close()
-	json, _ := json.MarshalIndent(config, "", "")
-
-	_, err = file.Write(json)
-	if err != nil {
-		logger.Errorln("[WriteHolderoStats]", err)
-		return false
-	}
-
-	return true
-}
-
 // Update win or loss of Holdero stats
 func updateStatsWins(amt uint64, player string, fold bool) {
 	if Odds.Enabled && !signals.odds {
@@ -1527,7 +1506,9 @@ func updateStatsWins(amt uint64, player string, fold bool) {
 			}
 		}
 
-		WriteHolderoStats(stats)
+		if err := dreams.StoreAccount(saveAccount()); err != nil {
+			logger.Errorln("[Holdero] storing account", err)
+		}
 		signals.odds = true
 	}
 }
@@ -1546,7 +1527,9 @@ func updateStatsWager(amt float64) {
 			}
 		}
 
-		WriteHolderoStats(stats)
+		if err := dreams.StoreAccount(saveAccount()); err != nil {
+			logger.Errorln("[Holdero] storing account", err)
+		}
 	}
 }
 
@@ -1631,7 +1614,9 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 				}
 			}
 
-			WriteHolderoStats(stats)
+			if err := dreams.StoreAccount(saveAccount()); err != nil {
+				logger.Errorln("[Holdero] storing account", err)
+			}
 		} else {
 			if !fold {
 				stats.Player.Lost++
@@ -1650,8 +1635,9 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 				}
 			}
 
-			WriteHolderoStats(stats)
-
+			if err := dreams.StoreAccount(saveAccount()); err != nil {
+				logger.Errorln("[Holdero] storing account", err)
+			}
 		}
 		signals.odds = true
 	}

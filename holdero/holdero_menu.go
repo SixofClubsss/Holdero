@@ -20,28 +20,30 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func HolderoIndicator() (ind menu.DreamsIndicator) {
+func HolderoIndicator() (ind *menu.DreamsIndicator) {
 	purple := color.RGBA{105, 90, 205, 210}
 	blue := color.RGBA{31, 150, 200, 210}
 	alpha := &color.RGBA{0, 0, 0, 0}
 
-	ind.Img = canvas.NewImageFromResource(ResourceHolderoCirclePng)
-	ind.Img.SetMinSize(fyne.NewSize(30, 30))
-	ind.Rect = canvas.NewRectangle(alpha)
-	ind.Rect.SetMinSize(fyne.NewSize(36, 36))
+	ind = &menu.DreamsIndicator{
+		Img:  canvas.NewImageFromResource(ResourceHolderoCirclePng),
+		Rect: canvas.NewRectangle(alpha),
+		Animation: canvas.NewColorRGBAAnimation(purple, blue,
+			time.Second*3, func(c color.Color) {
+				if Odds.IsRunning() {
+					ind.Rect.FillColor = c
+					ind.Img.Show()
+					canvas.Refresh(ind.Rect)
+				} else {
+					ind.Rect.FillColor = alpha
+					ind.Img.Hide()
+					canvas.Refresh(ind.Rect)
+				}
+			}),
+	}
 
-	ind.Animation = canvas.NewColorRGBAAnimation(purple, blue,
-		time.Second*3, func(c color.Color) {
-			if Odds.IsRunning() {
-				ind.Rect.FillColor = c
-				ind.Img.Show()
-				canvas.Refresh(ind.Rect)
-			} else {
-				ind.Rect.FillColor = alpha
-				ind.Img.Hide()
-				canvas.Refresh(ind.Rect)
-			}
-		})
+	ind.Img.SetMinSize(fyne.NewSize(30, 30))
+	ind.Rect.SetMinSize(fyne.NewSize(36, 36))
 
 	ind.Animation.RepeatCount = fyne.AnimationRepeatForever
 	ind.Animation.AutoReverse = true
@@ -55,7 +57,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	player_select := widget.NewSelect(players, nil)
 	player_select.SetSelectedIndex(0)
 
-	blinds_entry := dwidget.NewDeroEntry("", 0.1, 1)
+	blinds_entry := dwidget.NewAmountEntry("", 0.1, 1)
 	blinds_entry.SetPlaceHolder("Big Blind:")
 	blinds_entry.SetText("0.0")
 	blinds_entry.Validator = func(s string) error {
@@ -71,7 +73,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		return fmt.Errorf("amount error")
 	}
 
-	ante_entry := dwidget.NewDeroEntry("", 0.1, 1)
+	ante_entry := dwidget.NewAmountEntry("", 0.1, 1)
 	ante_entry.SetPlaceHolder("Ante:")
 	ante_entry.SetText("0.0")
 	ante_entry.Validator = func(s string) error {
@@ -131,7 +133,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 				info := fmt.Sprintf("Setting table for,\n\nPlayers: (%d)\n\nChips: (%s)\n\nBlinds: (%s/%s)\n\nAnte: (%s)", players, chips, rpc.FromAtomic(bb, 5), rpc.FromAtomic(sb, 5), rpc.FromAtomic(ante, 5))
 				dialog.NewConfirm("Set Table", info, func(b bool) {
 					if b {
-						tx := SetTable(int(players), bb, sb, ante, chips, menu.Username, Settings.avatar.url)
+						tx := SetTable(uint64(players), bb, sb, ante, chips, menu.Username, Settings.avatar.url)
 						go menu.ShowTxDialog("Set Table", "Holdero", tx, 3*time.Second, d.Window)
 					}
 				}, d.Window).Show()
@@ -141,7 +143,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		}
 	})
 
-	clean_entry := dwidget.NewDeroEntry("", 1, 0)
+	clean_entry := dwidget.NewAmountEntry("", 1, 0)
 	clean_entry.AllowFloat = false
 	clean_entry.SetPlaceHolder("Atomic:")
 	clean_entry.SetText("0")
@@ -301,7 +303,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 	delay.PlaceHolder = "Payout delay:"
 
 	table.tournament = widget.NewButton("Tournament", func() {
-		bal := rpc.TokenBalance(TourneySCID)
+		bal := rpc.GetAssetBalance(TourneySCID)
 		balance := float64(bal) / 100000
 		if balance == 0 {
 			dialog.NewInformation("Tournament Deposit", "You have no Tournament chips to deposit", d.Window).Show()
@@ -431,7 +433,7 @@ Public table that uses HGC or DERO`
 	confirm_button.Importance = widget.HighImportance
 
 	options := []string{"Public", "Private"}
-	if hgc := rpc.TokenBalance(rpc.HgcSCID); hgc > 0 {
+	if hgc := rpc.GetAssetBalance(rpc.HgcSCID); hgc > 0 {
 		options = append(options, "HGC")
 	}
 

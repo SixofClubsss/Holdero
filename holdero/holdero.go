@@ -2,12 +2,10 @@ package holdero
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
 	"math"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -44,7 +42,7 @@ type holderoObjects struct {
 	bet        *widget.Button
 	check      *widget.Button
 	tournament *widget.Button
-	betEntry   *dwidget.DeroAmts
+	betEntry   *dwidget.AmountEntry
 	warning    *fyne.Container
 	owner      struct {
 		valid    bool
@@ -184,7 +182,7 @@ func initValues() {
 	signals.times.delay = 30
 	signals.times.kick = 0
 	Odds.Stop()
-	Settings.faces.Name = "light/"
+	Settings.faces.Name = "light"
 	Settings.backs.Name = "back1.png"
 	Settings.avatar.name = "None"
 	Settings.faces.URL = ""
@@ -202,7 +200,7 @@ func setHolderoEntryText(t tableInfo) (item tableInfo) {
 		potIsEmpty(0)
 		item = t
 		table.entry.SetText(t.scid)
-		signals.times.block = rpc.Wallet.Height
+		signals.times.block = rpc.Wallet.Height()
 	}
 
 	return
@@ -294,6 +292,9 @@ func publicList(d *dreams.AppObject) fyne.CanvasObject {
 		}
 		favoriteTables = append(favoriteTables, item)
 		table.Favorites.SCIDs = append(table.Favorites.SCIDs, item.scid)
+		if err := dreams.StoreAccount(saveAccount()); err != nil {
+			logger.Errorln("[Holdero] storing account", err)
+		}
 	})
 	save_favorite.Importance = widget.LowImportance
 
@@ -352,6 +353,9 @@ func favoritesList() fyne.CanvasObject {
 			}
 		}
 		table.Favorites.List.Refresh()
+		if err := dreams.StoreAccount(saveAccount()); err != nil {
+			logger.Errorln("[Holdero] storing account", err)
+		}
 	})
 	remove.Importance = widget.LowImportance
 
@@ -361,16 +365,6 @@ func favoritesList() fyne.CanvasObject {
 		nil,
 		nil,
 		table.Favorites.List)
-}
-
-// Returns table.Favorites.SCIDs
-func GetFavoriteTables() []string {
-	return table.Favorites.SCIDs
-}
-
-// Set table.Favorites.SCIDs
-func SetFavoriteTables(fav []string) {
-	table.Favorites.SCIDs = fav
 }
 
 // Owned Holdero tables list object
@@ -753,7 +747,7 @@ func ActionBuffer() {
 	table.warning.Hide()
 	round.display.results = ""
 	signals.clicked = true
-	signals.height = rpc.Wallet.Height
+	signals.height = rpc.Wallet.Height()
 }
 
 // Checking for current player names at connected Holdero table
@@ -859,7 +853,7 @@ func DealHandButton(d *dreams.AppObject) fyne.Widget {
 //   - Setting the initial value based on if PlacedBet, Wager and Ante
 //   - If entry invalid, set to min bet value
 func BetAmount() fyne.CanvasObject {
-	table.betEntry = dwidget.NewDeroEntry("", 0.1, 1)
+	table.betEntry = dwidget.NewAmountEntry("", 0.1, 1)
 	table.betEntry.Enable()
 	if table.betEntry.Text == "" {
 		table.betEntry.SetText("0.0")
@@ -1029,6 +1023,7 @@ func AutoOptions(d *dreams.AppObject) fyne.CanvasObject {
 		}
 		fetchHolderoSC()
 	})
+	refresh.Importance = widget.LowImportance
 
 	cf := widget.NewCheck("Auto Check/Fold", func(b bool) {
 		if b {
@@ -1115,7 +1110,6 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 		bm.Close()
 	})
 
-	stats = readSavedStats()
 	config_opts := []string{}
 	for i := range stats.Bots {
 		config_opts = append(config_opts, stats.Bots[i].Name)
@@ -1369,7 +1363,10 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 			}
 
 			stats.Bots = new
-			WriteHolderoStats(stats)
+			if err := dreams.StoreAccount(saveAccount()); err != nil {
+				logger.Errorln("[Holdero] storing account", err)
+			}
+
 			entry.SetOptions(config_opts)
 			entry.SetText("")
 		}
@@ -1405,10 +1402,12 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 
 			if !ex {
 				stats.Bots = append(stats.Bots, Odds.Bot)
-				if WriteHolderoStats(stats) {
+				if err := dreams.StoreAccount(saveAccount()); err == nil {
 					config_opts = append(config_opts, entry.Text)
 					entry.SetOptions(config_opts)
 					logger.Println("[Holdero] Saved bot config")
+				} else {
+					logger.Errorln("[Holdero] storing account", err)
 				}
 			}
 		}
@@ -1558,8 +1557,8 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	var err error
 	var img image.Image
 	var rast *canvas.Raster
-	if img, _, err = image.Decode(bytes.NewReader(menu.Theme.Img.Resource.Content())); err != nil {
-		if img, _, err = image.Decode(bytes.NewReader(menu.DefaultThemeResource().StaticContent)); err != nil {
+	if img, _, err = image.Decode(bytes.NewReader(dreams.Theme.Img.Resource.Content())); err != nil {
+		if img, _, err = image.Decode(bytes.NewReader(menu.DefaultBackgroundResource().StaticContent)); err != nil {
 			logger.Warnf("[holderoTools] Fallback %s\n", err)
 			source := image.Rect(2, 2, 4, 4)
 
@@ -1621,30 +1620,6 @@ func DisableHolderoTools() {
 		if cards {
 			Odds.Enabled = true
 			Settings.tools.Show()
-			if !dreams.FileExists("config/stats.json", "Holdero") {
-				WriteHolderoStats(stats)
-				logger.Println("[Holdero] Created stats.json")
-			} else {
-				stats = readSavedStats()
-			}
 		}
 	}
-}
-
-// Reading saved Holdero stats from config file
-func readSavedStats() (saved Player_stats) {
-	file, err := os.ReadFile("config/stats.json")
-
-	if err != nil {
-		logger.Errorln("[readSavedStats]", err)
-		return
-	}
-
-	err = json.Unmarshal(file, &saved)
-	if err != nil {
-		logger.Errorln("[readSavedStats]", err)
-		return
-	}
-
-	return
 }
