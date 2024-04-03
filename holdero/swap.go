@@ -348,7 +348,7 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 	menu.Assets.AddRmv = container.NewVBox(layout.NewSpacer(), container.NewHBox(layout.NewSpacer(), btnTokenDefault, btnTokenRemove, btnTokenAdd))
 	menu.Assets.AddRmv.Hide()
 
-	full := container.NewHSplit(container.NewStack(bundle.NewAlpha120(), balance_tabs, menu.Assets.AddRmv), max)
+	full := container.NewHSplit(container.NewStack(bundle.NewAlpha120(0, 0), balance_tabs, menu.Assets.AddRmv), max)
 	full.SetOffset(0.66)
 
 	return full

@@ -1573,7 +1573,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	bm.SetContent(
 		container.NewStack(
 			rast,
-			bundle.Alpha180,
+			bundle.NewAlpha180(0, 0),
 			tabs))
 	bm.Show()
 }
