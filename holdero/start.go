@@ -27,7 +27,7 @@ const (
 	appID   = "dreamdapps.io.holdero"
 )
 
-var version = semver.MustParse("0.3.1-dev.4")
+var version = semver.MustParse("0.3.1-dev.5")
 var gnomon = gnomes.NewGnomes()
 
 // Check holdero package version
