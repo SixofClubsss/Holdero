@@ -232,7 +232,7 @@ func ValidAsset(s string) bool {
 // Rpc call to get A-Team agent number
 func getAgentNumber(scid string) int {
 	if rpc.Daemon.IsConnected() {
-		rpcClientD, ctx, cancel := rpc.SetDaemonClient(rpc.Daemon.Rpc)
+		client, ctx, cancel := rpc.SetDaemonClient(rpc.Daemon.Endpoint)
 		defer cancel()
 
 		var result *dero.GetSC_Result
@@ -242,20 +242,28 @@ func getAgentNumber(scid string) int {
 			Variables: true,
 		}
 
-		err := rpcClientD.CallFor(ctx, &result, "DERO.GetSC", params)
+		err := client.CallFor(ctx, &result, "DERO.GetSC", params)
 		if err != nil {
 			logger.Errorln("[getAgentNumber]", err)
 			return 1200
 		}
 
-		data := result.VariableStringKeys["metadata"]
-		var agent menu.Agent
+		data, ok := result.VariableStringKeys["metadata"].(string)
+		if !ok {
+			logger.Errorln("[getAgentNumber] expecting metadata to be string")
+			return 1200
+		}
 
-		hx, _ := hex.DecodeString(data.(string))
+		hx, err := hex.DecodeString(data)
+		if err != nil {
+			logger.Errorln("[getAgentNumber]", err)
+			return 1200
+		}
+
+		var agent menu.Agent
 		if err := json.Unmarshal(hx, &agent); err == nil {
 			return agent.ID
 		}
-
 	}
 	return 1200
 }

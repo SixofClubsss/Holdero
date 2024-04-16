@@ -115,7 +115,7 @@ var round holderoValues
 // Get Holdero SC data
 func fetchHolderoSC() {
 	if rpc.Daemon.IsConnected() && signals.contract {
-		client, ctx, cancel := rpc.SetDaemonClient(rpc.Daemon.Rpc)
+		client, ctx, cancel := rpc.SetDaemonClient(rpc.Daemon.Endpoint)
 		defer cancel()
 
 		var result *dero.GetSC_Result
@@ -1065,7 +1065,7 @@ func TourneyDeposit(bal uint64, name string) (tx string) {
 //   - 2 for HGC
 func GetHolderoCode(version int) string {
 	if rpc.Daemon.IsConnected() {
-		client, ctx, cancel := rpc.SetDaemonClient(rpc.Daemon.Rpc)
+		client, ctx, cancel := rpc.SetDaemonClient(rpc.Daemon.Endpoint)
 		defer cancel()
 
 		var result *dero.GetSC_Result
@@ -1115,7 +1115,7 @@ func OwnerT3(o bool) (t *dero.Transfer) {
 			Amount:      0,
 		}
 	} else {
-		if fee, ok := rpc.GetStringKey(rpc.RatingSCID, "ContractUnlock", rpc.Daemon.Rpc).(float64); ok {
+		if fee, ok := rpc.GetStringKey(rpc.RatingSCID, "ContractUnlock", rpc.Daemon.Endpoint).(float64); ok {
 			unlockFee = uint64(fee)
 		} else {
 			logger.Println("[FetchFees] Could not get current contract unlock fee, using default")

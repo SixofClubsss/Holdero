@@ -27,7 +27,7 @@ const (
 	appID   = "dreamdapps.io.holdero"
 )
 
-var version = semver.MustParse("0.3.1-dev.6")
+var version = semver.MustParse("0.3.1-dev.7")
 var gnomon = gnomes.NewGnomes()
 
 // Check holdero package version
@@ -73,10 +73,10 @@ func StartApp() {
 			Theme:  dreams.Theme.Name,
 		}
 
-		if rpc.Daemon.Rpc == "" {
+		if rpc.Daemon.Endpoint == "" {
 			save.Daemon = config.Daemon
 		} else {
-			save.Daemon = []string{rpc.Daemon.Rpc}
+			save.Daemon = []string{rpc.Daemon.Endpoint}
 		}
 
 		menu.StoreSettings(save)
@@ -162,7 +162,7 @@ func StartApp() {
 		for {
 			select {
 			case <-ticker.C: // do on interval
-				rpc.Ping()
+				rpc.Daemon.Ping()
 				rpc.Wallet.Sync()
 
 				connection.RefreshBalance()
