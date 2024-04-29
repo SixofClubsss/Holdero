@@ -73,9 +73,9 @@ func placeContract(change_screen *fyne.Container, d *dreams.AppObject) *fyne.Con
 					}
 				} else {
 					if rpc.IsReady() {
-						dialog.NewInformation("Select Table", "Select a table SCID to play at", d.Window).Show()
+						dialog.NewInformation("View Table", "Select a table SCID to play at", d.Window).Show()
 					} else {
-						dialog.NewInformation("Not Connected", "Connect to daemon and wallet", d.Window).Show()
+						dialog.NewInformation("View Table", "Connect to daemon and wallet", d.Window).Show()
 					}
 					tabs.SelectIndex(1)
 				}

@@ -1013,12 +1013,12 @@ func CheckButton(d *dreams.AppObject) fyne.Widget {
 func AutoOptions(d *dreams.AppObject) fyne.CanvasObject {
 	refresh := widget.NewButtonWithIcon("", fyne.Theme.Icon(fyne.CurrentApp().Settings().Theme(), "viewRefresh"), func() {
 		if !rpc.Daemon.IsConnected() || !rpc.Wallet.IsConnected() {
-			dialog.NewInformation("Not connected", "You are not connected to daemon or wallet", d.Window).Show()
+			dialog.NewInformation("Refresh", "You are not connected to daemon or wallet", d.Window).Show()
 			return
 		}
 
 		if !signals.contract {
-			dialog.NewInformation("Not connected", "You are not connected to a Holdero SC", d.Window).Show()
+			dialog.NewInformation("Refresh", "You are not connected to a Holdero SC", d.Window).Show()
 			return
 		}
 		fetchHolderoSC()

@@ -125,7 +125,7 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 			if rpc.Wallet.IsConnected() {
 				go menu.SendMessageMenu("", bundle.ResourceDReamsIconAltPng)
 			} else {
-				dialog.NewInformation("Not Connected", "Connect a wallet to send a message", d.Window).Show()
+				dialog.NewInformation("Send Message", "Connect a wallet to send a message", d.Window).Show()
 			}
 			balance_tabs.SelectIndex(0)
 		}
