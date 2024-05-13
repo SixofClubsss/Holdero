@@ -251,21 +251,6 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 			return fmt.Errorf("not a valid scid")
 		}
 
-		entryDeci := dwidget.NewAmountEntry("", 1, 0)
-		entryDeci.SetPlaceHolder("Decimal:")
-		entryDeci.Validator = func(s string) error {
-			u, err := entryDeci.Uint64()
-			if err != nil {
-				return fmt.Errorf("enter a number 0-5")
-			}
-
-			if u > 5 {
-				return fmt.Errorf("less than 6")
-			}
-
-			return nil
-		}
-
 		var add *dialog.CustomDialog
 		btnAdd := widget.NewButton("Add", nil)
 		btnAdd.Importance = widget.HighImportance
@@ -282,19 +267,7 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 				return
 			}
 
-			err = entryDeci.Validate()
-			if err != nil {
-				dialog.NewError(err, d.Window).Show()
-				return
-			}
-
-			u, err := entryDeci.Uint64()
-			if err != nil {
-				dialog.NewError(err, d.Window).Show()
-				return
-			}
-
-			err = rpc.Wallet.TokenAdd(entryName.Text, entrySCID.Text, int(u))
+			err = rpc.Wallet.TokenAdd(entryName.Text, entrySCID.Text)
 			if err != nil {
 				dialog.NewError(err, d.Window).Show()
 				return
@@ -323,7 +296,6 @@ func PlaceSwap(d *dreams.AppObject) *container.Split {
 		form = append(form, widget.NewFormItem("Name", entryName))
 		form = append(form, widget.NewFormItem("", container.NewVBox(dwidget.NewLine(20, 1, bundle.TextColor))))
 		form = append(form, widget.NewFormItem("SCID", entrySCID))
-		form = append(form, widget.NewFormItem("Decimal", entryDeci))
 
 		add = dialog.NewCustom("Add Token", "", container.NewStack(dwidget.NewSpacer(400, 0), widget.NewForm(form...)), d.Window)
 

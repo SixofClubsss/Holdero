@@ -27,7 +27,7 @@ const (
 	appID   = "dreamdapps.io.holdero"
 )
 
-var version = semver.MustParse("0.3.1-dev.8")
+var version = semver.MustParse("0.3.1-dev.9")
 var gnomon = gnomes.NewGnomes()
 
 // Check holdero package version
@@ -56,8 +56,7 @@ func StartApp() {
 		"On-chain Texas Hold'em style poker",
 		bundle.DeroTheme(config.Skin),
 		ResourceHolderoIconPng,
-		menu.DefaultBackgroundResource(),
-		true)
+		menu.DefaultBackgroundResource())
 
 	// Set one channel for Holdero routine
 	d.SetChannels(1)
