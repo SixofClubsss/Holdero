@@ -27,7 +27,7 @@ const (
 	appID   = "dreamdapps.io.holdero"
 )
 
-var version = semver.MustParse("0.3.1-dev.9")
+var version = semver.MustParse("0.3.1-dev.10")
 var gnomon = gnomes.NewGnomes()
 
 // Check holdero package version
@@ -198,8 +198,8 @@ func StartApp() {
 					connection.Connected.SetChecked(false)
 				}
 
-				if !synced && gnomon.IsReady() && rpc.Wallet.Address != "" {
-					menu.CheckWalletNames(rpc.Wallet.Address)
+				if !synced && gnomon.IsReady() {
+					menu.CheckWalletNames()
 					synced = true
 				}
 

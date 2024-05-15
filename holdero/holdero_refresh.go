@@ -108,7 +108,7 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 				continue
 			}
 
-			if !Settings.synced && gnomes.Scan(d.IsConfiguring()) {
+			if !Settings.synced && gnomes.Scan() {
 				reset := cont.Objects[1]
 				screen, bar := syncScreen()
 				cont.Objects[1] = screen

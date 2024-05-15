@@ -28,7 +28,7 @@ func checkTableOwner(scid string) bool {
 
 	owner, _ := gnomon.GetSCIDValuesByKey(scid, "owner:")
 	if owner != nil {
-		return owner[0] == rpc.Wallet.Address
+		return rpc.Wallet.IsAddress(owner[0])
 	}
 
 	return false

@@ -144,7 +144,7 @@ func (s *settings) SortAvatarAsset() {
 }
 
 func (s *settings) AddAvatar(add, check string) {
-	if check == rpc.Wallet.Address {
+	if rpc.Wallet.IsAddress(check) {
 		avatars := s.avatars.Select.Options
 		new_avatar := append(avatars, add)
 		s.avatars.Select.Options = new_avatar
@@ -153,7 +153,7 @@ func (s *settings) AddAvatar(add, check string) {
 }
 
 func (s *settings) AddFaces(add, check string) {
-	if check == rpc.Wallet.Address {
+	if rpc.Wallet.IsAddress(check) {
 		current := s.faces.Select.Options
 		new := append(current, add)
 		s.faces.Select.Options = new
@@ -170,7 +170,7 @@ func (s *settings) CurrentBacks() []string {
 }
 
 func (s *settings) AddBacks(add, check string) {
-	if check == rpc.Wallet.Address {
+	if rpc.Wallet.IsAddress(check) {
 		current := s.backs.Select.Options
 		new := append(current, add)
 		s.backs.Select.Options = new
