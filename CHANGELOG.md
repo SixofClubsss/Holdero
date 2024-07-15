@@ -13,7 +13,7 @@ This file lists the changes to Holdero repo with each version.
 
 ### Changed
 
-* Fyne 2.4.5
+* Fyne 2.5.0
 * dReams 0.12.0
 * Updated card file paths
 * Player handKey and stats stored in account DB
