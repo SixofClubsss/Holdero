@@ -3,11 +3,11 @@ module github.com/SixofClubsss/Holdero
 go 1.21.5
 
 require (
-	fyne.io/fyne/v2 v2.5.0
+	fyne.io/fyne/v2 v2.5.2
 	github.com/blang/semver/v4 v4.0.0
 	github.com/civilware/Gnomon v0.0.0-20240403103529-8b2fdb2b3106
-	github.com/dReam-dApps/dReams v0.11.2-0.20240715182211-cdb4bee095b1
-	github.com/deroproject/derohe v0.0.0-20240326214000-81d61c264e16
+	github.com/dReam-dApps/dReams v0.11.2-0.20241130213918-41980e31706a
+	github.com/deroproject/derohe v0.0.0-20240405032004-bd300c0e086e
 	github.com/sirupsen/logrus v1.9.3
 )
 
@@ -17,15 +17,14 @@ require (
 	fyne.io/systray v1.11.0 // indirect
 	fyne.io/x/fyne v0.0.0-20240326131024-3ba9170cc3be // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/beevik/ntp v1.1.1 // indirect
 	github.com/caarlos0/env/v6 v6.10.1 // indirect
 	github.com/cenkalti/hub v1.0.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/civilware/tela v0.0.0-20241112035835-6f5b3bf03ff0 // indirect
 	github.com/creachadair/jrpc2 v0.35.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/siphash v1.2.3 // indirect
 	github.com/deroproject/graviton v0.0.0-20220130070622-2c248a53b2e1 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fredbi/uri v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
@@ -36,8 +35,8 @@ require (
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20240506104042-037f3cc74f2a // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/zapr v1.2.3 // indirect
-	github.com/go-text/render v0.1.0 // indirect
-	github.com/go-text/typesetting v0.1.0 // indirect
+	github.com/go-text/render v0.2.0 // indirect
+	github.com/go-text/typesetting v0.2.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
@@ -53,10 +52,9 @@ require (
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/nicksnyder/go-i18n/v2 v2.4.0 // indirect
-	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
-	github.com/rymdport/portal v0.2.2 // indirect
+	github.com/rymdport/portal v0.2.6 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect

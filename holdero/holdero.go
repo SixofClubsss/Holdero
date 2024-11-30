@@ -1521,7 +1521,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 	stats_label := widget.NewLabel("")
 
 	tabs := container.NewAppTabs(
-		container.NewTabItem("Bot", container.NewBorder(nil, nil, nil, nil, bet_bot)),
+		container.NewTabItem("Bot", container.NewVScroll(bet_bot)),
 		container.NewTabItem("Odds", max),
 		container.NewTabItem("Stats", stats_label),
 	)
