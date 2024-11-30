@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/menu"
@@ -103,7 +104,7 @@ func createTableList(progress *widget.ProgressBar) {
 								img.SetMinSize(fyne.NewSize(66, 66))
 								info.image = &img
 							} else {
-								logger.Errorln("[Holdero]", err)
+								logger.Errorf("[Holdero] %s\n", err)
 							}
 						}
 					}

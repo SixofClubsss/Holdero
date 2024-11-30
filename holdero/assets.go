@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/gnomes"
@@ -29,7 +30,7 @@ func getCardDeck(url string) {
 	Settings.faces.URL = url
 	face := filepath.Join(cardPath, Settings.faces.Name, "card1.png")
 	if !dreams.FileExists(face, "Holdero") {
-		logger.Println("[Holdero] Downloading " + Settings.faces.URL)
+		logger.Printf("[Holdero] Downloading %s\n", Settings.faces.URL)
 		go GetZipDeck(Settings.faces.Name, Settings.faces.URL)
 	}
 }
@@ -88,9 +89,9 @@ func getCardBack(s, url string) {
 	Settings.backs.URL = url
 	back := filepath.Join(cardPath, "backs", s+".png")
 	if !dreams.FileExists(back, "Holdero") {
-		logger.Println("[Holdero] Downloading " + Settings.backs.URL)
+		logger.Printf("[Holdero] Downloading %s\n", Settings.backs.URL)
 		if err := downloadFileLocal(back, Settings.backs.URL); err != nil {
-			logger.Errorln("[Holdero]", err)
+			logger.Errorf("[Holdero] %s\n", err)
 		}
 	}
 }
@@ -244,19 +245,19 @@ func getAgentNumber(scid string) int {
 
 		err := client.CallFor(ctx, &result, "DERO.GetSC", params)
 		if err != nil {
-			logger.Errorln("[getAgentNumber]", err)
+			logger.Errorf("[getAgentNumber] %s\n", err)
 			return 1200
 		}
 
 		data, ok := result.VariableStringKeys["metadata"].(string)
 		if !ok {
-			logger.Errorln("[getAgentNumber] expecting metadata to be string")
+			logger.Errorf("[getAgentNumber] expecting metadata to be string\n")
 			return 1200
 		}
 
 		hx, err := hex.DecodeString(data)
 		if err != nil {
-			logger.Errorln("[getAgentNumber]", err)
+			logger.Errorf("[getAgentNumber] %s\n", err)
 			return 1200
 		}
 
@@ -275,12 +276,12 @@ func SharedDecks(d *dreams.AppObject) fyne.Widget {
 	options := []string{"Shared Decks"}
 	Settings.shared = widget.NewRadioGroup(options, func(string) {
 		if Settings.sharing || ((len(round.cards.Faces.Name) < 3 || len(round.cards.Backs.Name) < 3) && round.ID != 1) {
-			logger.Println("[Holdero] Shared Decks Off")
+			logger.Printf("[Holdero] Shared Decks Off\n")
 			Settings.sharing = false
 			Settings.faces.Select.Enable()
 			Settings.backs.Select.Enable()
 		} else {
-			logger.Println("[Holdero] Shared Decks On")
+			logger.Printf("[Holdero] Shared Decks On\n")
 			Settings.sharing = true
 			if round.ID == 1 {
 				if Settings.faces.Name != "" && Settings.faces.URL != "" && Settings.backs.Name != "" && Settings.backs.URL != "" {
@@ -296,7 +297,7 @@ func SharedDecks(d *dreams.AppObject) fyne.Widget {
 
 					if !dreams.FileExists(back, "Holdero") {
 						if err := downloadFileLocal(back, Settings.backs.URL); err != nil {
-							logger.Errorln("[Holdero]", err)
+							logger.Errorf("[Holdero] %s\n", err)
 						}
 					}
 				}
@@ -313,7 +314,7 @@ func SharedDecks(d *dreams.AppObject) fyne.Widget {
 
 				if !dreams.FileExists(back, "Holdero") {
 					if err := downloadFileLocal(back, round.cards.Backs.Url); err != nil {
-						logger.Errorln("[Holdero]", err)
+						logger.Errorf("[Holdero] %s\n", err)
 					}
 				}
 			}

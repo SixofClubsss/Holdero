@@ -3,6 +3,7 @@ package holdero
 import (
 	"path/filepath"
 
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 
@@ -432,7 +433,7 @@ func Is_In(hash string, who int, end bool) int {
 //   - face defines which deck to look for
 func CustomCard(c int, face string) *canvas.Image {
 	if downloading {
-		logger.Debugln("[CustomCard] Waiting for download to complete")
+		logger.Debugf("[CustomCard] Waiting for download to complete\n")
 		return canvas.NewImageFromImage(nil)
 	}
 
@@ -449,7 +450,7 @@ func CustomCard(c int, face string) *canvas.Image {
 //   - back defines which back to look for
 func CustomBack(back string) *canvas.Image {
 	if downloading {
-		logger.Debugln("[CustomBack] Waiting for download to complete")
+		logger.Debugf("[CustomBack] Waiting for download to complete\n")
 		return canvas.NewImageFromImage(nil)
 	}
 

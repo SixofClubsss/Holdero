@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/civilware/tela/logger"
 	"github.com/dReam-dApps/dReams/rpc"
 )
 
@@ -245,7 +246,7 @@ func getAvatar(p int, id interface{}) string {
 	var player playerId
 
 	if err := json.Unmarshal([]byte(av), &player); err != nil {
-		logger.Errorln("[getAvatar]", err)
+		logger.Errorf("[getAvatar] %s\n", err)
 		return ""
 	}
 

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/rpc"
 	"github.com/deroproject/derohe/cryptography/crypto"
@@ -126,7 +127,7 @@ func fetchHolderoSC() {
 		}
 
 		if err := client.CallFor(ctx, &result, "DERO.GetSC", params); err != nil {
-			logger.Errorln("[fetchHolderoSC]", err)
+			logger.Errorf("[fetchHolderoSC] %s\n", err)
 			return
 		}
 
@@ -614,7 +615,7 @@ func DealHand() (tx string) {
 	updateStatsWager(float64(amount) / 100000)
 	if !Odds.Enabled {
 		if err := dreams.StoreAccount(saveAccount()); err != nil {
-			logger.Errorln("[Holdero] storing account", err)
+			logger.Errorf("[Holdero] storing account %s\n", err)
 		}
 	}
 
@@ -1094,7 +1095,7 @@ func GetHolderoCode(version int) string {
 		}
 
 		if err := client.CallFor(ctx, &result, "DERO.GetSC", params); err != nil {
-			logger.Errorln("[GetHolderoCode]", err)
+			logger.Errorf("[GetHolderoCode] %s\n", err)
 			return ""
 		}
 
@@ -1118,7 +1119,7 @@ func OwnerT3(o bool) (t *dero.Transfer) {
 		if fee, ok := rpc.GetStringKey(rpc.RatingSCID, "ContractUnlock", rpc.Daemon.Endpoint).(float64); ok {
 			unlockFee = uint64(fee)
 		} else {
-			logger.Println("[FetchFees] Could not get current contract unlock fee, using default")
+			logger.Printf("[FetchFees] Could not get current contract unlock fee, using default\n")
 		}
 
 		t = &dero.Transfer{

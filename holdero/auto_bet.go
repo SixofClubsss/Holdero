@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/rpc"
 
@@ -567,7 +568,7 @@ func pairOnBoard(cards []int, str string) (pair, trip int, sub []int) {
 
 		if i <= l-3 {
 			if sub[i] == sub[i+1] && sub[i] == sub[i+2] {
-				logger.Println("[" + str + "] Trip")
+				logger.Printf("[" + str + "] Trip\n")
 				sub = append(sub[0:i], sub[i+2:]...)
 				trip = cards[i]
 				break
@@ -575,7 +576,7 @@ func pairOnBoard(cards []int, str string) (pair, trip int, sub []int) {
 		}
 
 		if sub[i] == sub[i+1] {
-			logger.Println("[" + str + "] Pair")
+			logger.Printf("[" + str + "] Pair\n")
 			sub = append(sub[0:i], sub[i+1:]...)
 			pair = cards[i]
 		}
@@ -595,7 +596,7 @@ func runOnBoard(cards []int, str string) (run []int, run3, run4, off3, off4, in3
 		if i <= l-3 && !run4 && !off4 {
 			if cards[i] < 11 && cards[i] == cards[i+1]-1 && cards[i] == cards[i+2]-2 {
 				run = []int{cards[i], cards[i+1], cards[i+2]}
-				logger.Println("[" + str + "] Three outside")
+				logger.Printf("[" + str + "] Three outside\n")
 				run3 = true
 			}
 
@@ -605,13 +606,13 @@ func runOnBoard(cards []int, str string) (run []int, run3, run4, off3, off4, in3
 				(cards[l-1] == 14 && cards[i] == 2 && cards[i+1] == 4) ||
 				(cards[l-1] == 14 && cards[i] == 3 && cards[i+1] == 4) {
 				run = []int{cards[i], cards[i+1], cards[i+2]}
-				logger.Println("[" + str + "] Three inside")
+				logger.Printf("[" + str + "] Three inside\n")
 				off3 = true
 			}
 
 			if cards[i] == cards[i+1]-2 && cards[i] == cards[i+2]-4 {
 				run = []int{cards[i], cards[i+1], cards[i+2]}
-				logger.Println("[" + str + "] Three middle")
+				logger.Printf("[" + str + "] Three middle\n")
 				in3 = true
 			}
 		}
@@ -623,7 +624,7 @@ func runOnBoard(cards []int, str string) (run []int, run3, run4, off3, off4, in3
 		if i <= l-4 {
 			if cards[i] < 11 && cards[i] == cards[i+1]-1 && cards[i] == cards[i+2]-2 && cards[i] == cards[i+3]-3 {
 				run = []int{cards[i], cards[i+1], cards[i+2], cards[i+3]}
-				logger.Println("[" + str + "] Four outside")
+				logger.Printf("[" + str + "] Four outside\n")
 				run4 = true
 			}
 
@@ -636,7 +637,7 @@ func runOnBoard(cards []int, str string) (run []int, run3, run4, off3, off4, in3
 				(cards[l-1] == 14 && cards[i] == 3 && cards[i+1] == 4 && cards[i+2] == 5) ||
 				(cards[i] == 11 && cards[i+1] == 12 && cards[i+2] == 13 && cards[i+3] == 14) {
 				run = []int{cards[i], cards[i+1], cards[i+2], cards[i+3]}
-				logger.Println("[" + str + "] Four inside")
+				logger.Printf("[" + str + "] Four inside\n")
 				off4 = true
 			}
 		}
@@ -655,7 +656,7 @@ func suitedBoard(l int, cards []int, str string) (suit int, suit3, suit4 bool) {
 
 		if i <= l-3 && !suit3 {
 			if cards[i] == cards[i+1] && cards[i] == cards[i+2] {
-				logger.Println("[" + str + "] Three suited")
+				logger.Printf("[" + str + "] Three suited\n")
 				suit = cards[i]
 				suit3 = true
 			}
@@ -663,7 +664,7 @@ func suitedBoard(l int, cards []int, str string) (suit int, suit3, suit4 bool) {
 
 		if i <= l-4 {
 			if cards[i] == cards[i+1] && cards[i] == cards[i+2] && cards[i] == cards[i+3] {
-				logger.Println("[" + str + "] Four suited")
+				logger.Printf("[" + str + "] Four suited\n")
 				suit = cards[i]
 				suit4 = true
 			}
@@ -965,7 +966,7 @@ func randomize() (float64, float64, float64) {
 func findMyOuts(l, rank int, value, suit []int) (run []int, flush int, straight_outs, flush_outs float64) {
 	sort.Ints(value)
 	sort.Ints(suit)
-	logger.Println("[findMyOuts]", value, suit)
+	logger.Printf("[findMyOuts] %v %v\n", value, suit)
 	_, _, sub := pairOnBoard(value, "findMyOuts")
 	var run3, run4, off3, off4, in3, suit3, suit4 bool
 	run, run3, run4, off3, off4, in3 = runOnBoard(sub, "findMyOuts")
@@ -1432,7 +1433,7 @@ func BetLogic(odds, future float64, live bool) {
 
 // Prints odds info and adds to gui log
 func oddsLog(f, str string) {
-	logger.Print(f, " ", str)
+	logger.Printf("[oddsLog] %s %s %s\n", f, " ", str)
 	Odds.Label.SetText(Odds.Label.Text + str)
 }
 
@@ -1507,7 +1508,7 @@ func updateStatsWins(amt uint64, player string, fold bool) {
 		}
 
 		if err := dreams.StoreAccount(saveAccount()); err != nil {
-			logger.Errorln("[Holdero] storing account", err)
+			logger.Errorf("[Holdero] storing account %s\n", err)
 		}
 		signals.odds = true
 	}
@@ -1528,7 +1529,7 @@ func updateStatsWager(amt float64) {
 		}
 
 		if err := dreams.StoreAccount(saveAccount()); err != nil {
-			logger.Errorln("[Holdero] storing account", err)
+			logger.Errorf("[Holdero] storing account %s\n", err)
 		}
 	}
 }
@@ -1615,7 +1616,7 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			}
 
 			if err := dreams.StoreAccount(saveAccount()); err != nil {
-				logger.Errorln("[Holdero] storing account", err)
+				logger.Errorf("[Holdero] storing account %s\n", err)
 			}
 		} else {
 			if !fold {
@@ -1636,7 +1637,7 @@ func updateStatsPush(r ranker, amt uint64, f1, f2, f3, f4, f5, f6 bool) {
 			}
 
 			if err := dreams.StoreAccount(saveAccount()); err != nil {
-				logger.Errorln("[Holdero] storing account", err)
+				logger.Errorf("[Holdero] storing account %s\n", err)
 			}
 		}
 		signals.odds = true

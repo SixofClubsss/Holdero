@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
@@ -112,7 +113,7 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 				reset := cont.Objects[1]
 				screen, bar := syncScreen()
 				cont.Objects[1] = screen
-				logger.Println("[Holdero] Syncing")
+				logger.Printf("[Holdero] Syncing\n")
 				setHandKey()
 				createTableList(bar)
 				Settings.synced = true
@@ -260,7 +261,7 @@ func fetch(d *dreams.AppObject, cont *fyne.Container) {
 
 			d.WorkDone()
 		case <-d.CloseDapp():
-			logger.Println("[Holdero] Done")
+			logger.Printf("[Holdero] Done\n")
 			return
 		}
 	}

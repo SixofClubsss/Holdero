@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/civilware/tela/logger"
 	"github.com/dReam-dApps/dReams/rpc"
 )
 

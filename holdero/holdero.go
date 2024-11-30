@@ -11,14 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/civilware/Gnomon/structures"
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/bundle"
 	"github.com/dReam-dApps/dReams/dwidget"
 	"github.com/dReam-dApps/dReams/gnomes"
 	"github.com/dReam-dApps/dReams/menu"
 	"github.com/dReam-dApps/dReams/rpc"
-	"github.com/sirupsen/logrus"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -93,7 +92,6 @@ var ownedTables []tableInfo
 var favoriteTables []tableInfo
 var table holderoObjects
 var Settings settings
-var logger = structures.Logger.WithFields(logrus.Fields{})
 
 func DreamsMenuIntro() (entries map[string][]string) {
 	entries = map[string][]string{
@@ -293,7 +291,7 @@ func publicList(d *dreams.AppObject) fyne.CanvasObject {
 		favoriteTables = append(favoriteTables, item)
 		table.Favorites.SCIDs = append(table.Favorites.SCIDs, item.scid)
 		if err := dreams.StoreAccount(saveAccount()); err != nil {
-			logger.Errorln("[Holdero] storing account", err)
+			logger.Errorf("[Holdero] storing account %s\n", err)
 		}
 	})
 	save_favorite.Importance = widget.LowImportance
@@ -304,7 +302,7 @@ func publicList(d *dreams.AppObject) fyne.CanvasObject {
 				menu.RateConfirm(round.Contract, d)
 			} else {
 				dialog.NewInformation("Can't rate", "You are the owner of this SCID", d.Window).Show()
-				logger.Warnln("[Holdero] Can't rate, you own this contract")
+				logger.Warnf("[Holdero] Can't rate, you own this contract\n")
 			}
 		}
 	})
@@ -354,7 +352,7 @@ func favoritesList() fyne.CanvasObject {
 		}
 		table.Favorites.List.Refresh()
 		if err := dreams.StoreAccount(saveAccount()); err != nil {
-			logger.Errorln("[Holdero] storing account", err)
+			logger.Errorf("[Holdero] storing account %s\n", err)
 		}
 	})
 	remove.Importance = widget.LowImportance
@@ -418,7 +416,7 @@ func Player1_label(a, f, t fyne.Resource) fyne.CanvasObject {
 				if img, err := dreams.DownloadCanvas(round.p1.url, "P1"); err == nil {
 					shared.avatar.p1 = &img
 				} else {
-					logger.Errorln("[Holdero] Player 1 avatar:", err)
+					logger.Errorf("[Holdero] Player 1 avatar: %s\n", err)
 					shared.avatar.p1 = canvas.NewImageFromResource(a)
 				}
 			}
@@ -480,7 +478,7 @@ func Player2_label(a, f, t fyne.Resource) fyne.CanvasObject {
 				if img, err := dreams.DownloadCanvas(round.p2.url, "P2"); err == nil {
 					shared.avatar.p2 = &img
 				} else {
-					logger.Errorln("[Holdero] Player 2 avatar:", err)
+					logger.Errorf("[Holdero] Player 2 avatar: %s\n", err)
 					shared.avatar.p2 = canvas.NewImageFromResource(a)
 				}
 			}
@@ -534,7 +532,7 @@ func Player3_label(a, f, t fyne.Resource) fyne.CanvasObject {
 				if img, err := dreams.DownloadCanvas(round.p3.url, "P3"); err == nil {
 					shared.avatar.p3 = &img
 				} else {
-					logger.Errorln("[Holdero] Player 3 avatar:", err)
+					logger.Errorf("[Holdero] Player 3 avatar: %s\n", err)
 					shared.avatar.p3 = canvas.NewImageFromResource(a)
 				}
 			}
@@ -588,7 +586,7 @@ func Player4_label(a, f, t fyne.Resource) fyne.CanvasObject {
 				if img, err := dreams.DownloadCanvas(round.p4.url, "P4"); err == nil {
 					shared.avatar.p4 = &img
 				} else {
-					logger.Errorln("[Holdero] Player 4 avatar:", err)
+					logger.Errorf("[Holdero] Player 4 avatar: %s\n", err)
 					shared.avatar.p4 = canvas.NewImageFromResource(a)
 				}
 			}
@@ -642,7 +640,7 @@ func Player5_label(a, f, t fyne.Resource) fyne.CanvasObject {
 				if img, err := dreams.DownloadCanvas(round.p5.url, "P5"); err == nil {
 					shared.avatar.p5 = &img
 				} else {
-					logger.Errorln("[Holdero] Player 5 avatar:", err)
+					logger.Errorf("[Holdero] Player 5 avatar: %s\n", err)
 					shared.avatar.p5 = canvas.NewImageFromResource(a)
 				}
 			}
@@ -696,7 +694,7 @@ func Player6_label(a, f, t fyne.Resource) fyne.CanvasObject {
 				if img, err := dreams.DownloadCanvas(round.p6.url, "P6"); err == nil {
 					shared.avatar.p6 = &img
 				} else {
-					logger.Errorln("[Holdero] Player 6 avatar:", err)
+					logger.Errorf("[Holdero] Player 6 avatar: %s\n", err)
 					shared.avatar.p6 = canvas.NewImageFromResource(a)
 				}
 			}
@@ -757,36 +755,36 @@ func checkNames(seats string) bool {
 		return true
 	}
 
-	err := "[Holdero] Name already used"
+	err := "[Holdero] Name already used\n"
 
 	switch seats {
 	case "2":
 		if menu.Username == round.p1.name {
-			logger.Warnln(err)
+			logger.Warnf(err)
 			return false
 		}
 		return true
 	case "3":
 		if menu.Username == round.p1.name || menu.Username == round.p2.name || menu.Username == round.p3.name {
-			logger.Warnln(err)
+			logger.Warnf(err)
 			return false
 		}
 		return true
 	case "4":
 		if menu.Username == round.p1.name || menu.Username == round.p2.name || menu.Username == round.p3.name || menu.Username == round.p4.name {
-			logger.Warnln(err)
+			logger.Warnf(err)
 			return false
 		}
 		return true
 	case "5":
 		if menu.Username == round.p1.name || menu.Username == round.p2.name || menu.Username == round.p3.name || menu.Username == round.p4.name || menu.Username == round.p5.name {
-			logger.Warnln(err)
+			logger.Warnf(err)
 			return false
 		}
 		return true
 	case "6":
 		if menu.Username == round.p1.name || menu.Username == round.p2.name || menu.Username == round.p3.name || menu.Username == round.p4.name || menu.Username == round.p5.name || menu.Username == round.p6.name {
-			logger.Warnln(err)
+			logger.Warnf(err)
 			return false
 		}
 		return true
@@ -808,7 +806,7 @@ func SitButton(d *dreams.AppObject) fyne.Widget {
 				}
 			}
 		} else {
-			logger.Warnln("[Holdero] Pick a name")
+			logger.Warnf("[Holdero] Pick a name\n")
 		}
 	})
 
@@ -946,7 +944,7 @@ func BetAmount() fyne.CanvasObject {
 				}
 			}
 		} else {
-			logger.Errorln("[BetAmount]", err)
+			logger.Errorf("[BetAmount] %s\n", err)
 			if round.Ante == 0 {
 				table.betEntry.SetText(strconv.FormatFloat(float64(round.BB)/100000, 'f', int(table.betEntry.Decimal), 64))
 			} else {
@@ -1344,7 +1342,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 			var new []Bot_config
 			for i := range stats.Bots {
 				if stats.Bots[i].Name == entry.Text {
-					logger.Println("[Holdero] Deleting bot config")
+					logger.Printf("[Holdero] Deleting bot config\n")
 					if i > 0 {
 						new = append(stats.Bots[0:i], stats.Bots[i+1:]...)
 						config_opts = append(config_opts[0:i], config_opts[i+1:]...)
@@ -1364,7 +1362,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 
 			stats.Bots = new
 			if err := dreams.StoreAccount(saveAccount()); err != nil {
-				logger.Errorln("[Holdero] storing account", err)
+				logger.Errorf("[Holdero] storing account %s\n", err)
 			}
 
 			entry.SetOptions(config_opts)
@@ -1396,7 +1394,7 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 			for i := range stats.Bots {
 				if entry.Text == stats.Bots[i].Name {
 					ex = true
-					logger.Warnln("[Holdero] Bot config name exists")
+					logger.Warnf("[Holdero] Bot config name exists\n")
 				}
 			}
 
@@ -1405,9 +1403,9 @@ func holderoTools(deal, check *widget.Check, button *widget.Button) {
 				if err := dreams.StoreAccount(saveAccount()); err == nil {
 					config_opts = append(config_opts, entry.Text)
 					entry.SetOptions(config_opts)
-					logger.Println("[Holdero] Saved bot config")
+					logger.Printf("[Holdero] Saved bot config\n")
 				} else {
-					logger.Errorln("[Holdero] storing account", err)
+					logger.Errorf("[Holdero] storing account %s\n", err)
 				}
 			}
 		}

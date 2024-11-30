@@ -5,13 +5,12 @@ go 1.21.5
 require (
 	fyne.io/fyne/v2 v2.5.2
 	github.com/blang/semver/v4 v4.0.0
-	github.com/civilware/Gnomon v0.0.0-20240403103529-8b2fdb2b3106
+	github.com/civilware/tela v0.0.0-20241112035835-6f5b3bf03ff0
 	github.com/dReam-dApps/dReams v0.11.2-0.20241130213918-41980e31706a
 	github.com/deroproject/derohe v0.0.0-20240405032004-bd300c0e086e
-	github.com/sirupsen/logrus v1.9.3
 )
 
-replace github.com/deroproject/derohe => github.com/civilware/derohe v0.0.0-20240623183508-41c781704d12
+replace github.com/deroproject/derohe => github.com/civilware/derohe v0.0.0-20240909003240-fa76d6016cc6
 
 require (
 	fyne.io/systray v1.11.0 // indirect
@@ -20,7 +19,8 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1 // indirect
 	github.com/cenkalti/hub v1.0.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
-	github.com/civilware/tela v0.0.0-20241112035835-6f5b3bf03ff0 // indirect
+	github.com/civilware/Gnomon v0.0.0-20240403103529-8b2fdb2b3106 // indirect
+	github.com/coder/websocket v1.8.12 // indirect
 	github.com/creachadair/jrpc2 v0.35.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/siphash v1.2.3 // indirect
@@ -42,7 +42,6 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/jeandeaual/go-locale v0.0.0-20240223122105-ce5225dcaa49 // indirect
 	github.com/jsummers/gobmp v0.0.0-20151104160322-e2ba15ffa76e // indirect
-	github.com/klauspost/compress v1.15.13 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/klauspost/reedsolomon v1.12.0 // indirect
 	github.com/lesismal/llib v1.1.13 // indirect
@@ -57,6 +56,7 @@ require (
 	github.com/rymdport/portal v0.2.6 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
@@ -83,5 +83,4 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	nhooyr.io/websocket v1.8.7 // indirect
 )

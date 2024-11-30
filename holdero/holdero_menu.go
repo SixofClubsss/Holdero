@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 	"github.com/dReam-dApps/dReams/dwidget"
 	"github.com/dReam-dApps/dReams/menu"
@@ -171,7 +172,7 @@ func ownersBox(d *dreams.AppObject) fyne.CanvasObject {
 		c, err := strconv.Atoi(clean_entry.Text)
 		if err != nil {
 			dialog.NewInformation("Clean Table", "Invalid clean amount", d.Window).Show()
-			logger.Errorln("[Holdero] Invalid Clean Amount")
+			logger.Errorf("[Holdero] Invalid Clean Amount\n")
 			return
 		}
 

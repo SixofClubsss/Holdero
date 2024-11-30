@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"fyne.io/fyne/v2/canvas"
+	"github.com/civilware/tela/logger"
 	dreams "github.com/dReam-dApps/dReams"
 )
 
@@ -477,24 +478,24 @@ func downloadFileLocal(outpath string, url string) (err error) {
 
 	_, dir := os.Stat(cardPath)
 	if os.IsNotExist(dir) {
-		logger.Debugln("[Holdero] Creating cards directory")
+		logger.Debugf("[Holdero] Creating cards directory\n")
 		mkdir := os.MkdirAll(cardPath, 0755)
 		if mkdir != nil {
-			logger.Errorln("[Holdero]", mkdir)
+			logger.Errorf("[Holdero] %s\n", mkdir)
 		} else {
 			mksub := os.MkdirAll(bpath, 0755)
 			if mksub != nil {
-				logger.Errorln("[Holdero]", mksub)
+				logger.Errorf("[Holdero] %s\n", mksub)
 			}
 		}
 	}
 
 	_, subdir := os.Stat(bpath)
 	if os.IsNotExist(subdir) {
-		logger.Debugln("[Holdero] Creating backs directory")
+		logger.Debugf("[Holdero] Creating backs directory\n")
 		mkdir := os.MkdirAll(bpath, 0755)
 		if mkdir != nil {
-			logger.Errorln("[Holdero]", mkdir)
+			logger.Errorf("[Holdero] %s\n", mkdir)
 		}
 	}
 
@@ -508,16 +509,16 @@ func GetZipDeck(face, url string) {
 	path := filepath.Join(cardPath, face+".zip")
 
 	if err := downloadFileLocal(path, url); err != nil {
-		logger.Errorln("[GetZipDeck]", err)
+		logger.Errorf("[GetZipDeck] %s\n", err)
 		return
 	}
 
 	files, err := dreams.UnzipFile(path, strings.TrimSuffix(path, ".zip"))
 	if err != nil {
-		logger.Errorln("[GetZipDeck]", err)
+		logger.Errorf("[GetZipDeck] %s\n", err)
 		return
 	}
 
-	logger.Debugln("[GetZipDeck] Unzipped files:\n" + strings.Join(files, "\n"))
+	logger.Debugf("[GetZipDeck] Unzipped files: %s\n" + strings.Join(files, "\n"))
 	downloading = false
 }
